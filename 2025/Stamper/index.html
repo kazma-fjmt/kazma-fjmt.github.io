@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF一括押印</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem 0; }
+        .container { background-color: white; padding: 2rem 3rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); width: 100%; max-width: 600px; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 0.5rem; }
+        p { text-align: center; color: #7f8c8d; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #34495e; }
+        input[type="file"], input[type="number"] { width: 100%; padding: 0.75rem; border: 1px solid #bdc3c7; border-radius: 4px; box-sizing: border-box; }
+        .coord-group { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+        .coord-group > label { width: 100%; }
+        .coord-group div { flex: 1; }
+        .coord-note { width: 100%; text-align: left; font-size: 0.9em; margin-top: 0.5rem; margin-bottom: 0; }
+        .coord-note.red { color: #e74c3c; }
+        .coord-note.gray { color: #7f8c8d; }
+        button { width: 100%; padding: 1rem; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        #status { margin-top: 1.5rem; text-align: center; font-weight: bold; min-height: 50px; }
+        .download-link { display: inline-block; padding: 1rem 1.5rem; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 4px; transition: background-color 0.3s; }
+        .download-link:hover { background-color: #27ae60; }
+    </style>
+    <!-- pdf-libライブラリをCDNから読み込み -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>PDF一括押印</h1>
+
+        <form id="stamp-form">
+            <div class="form-group">
+                <label for="pdf-file">1. 一括で押印したいPDFファイルを選択</label>
+                <input type="file" id="pdf-file" accept=".pdf" required>
+            </div>
+
+            <div class="form-group">
+                <label for="stamp-file">2. 印鑑のPNG画像を選択</label>
+                <input type="file" id="stamp-file" accept=".png" required>
+            </div>
+
+            <div class="form-group coord-group">
+                <label>3. 押印する座標を指定 (左下隅が原点)</label>
+                <div>
+                    <label for="x-coord">X座標</label>
+                    <!-- ▼▼▼ デフォルト値を427に変更 ▼▼▼ -->
+                    <input type="number" id="x-coord" value="427" required>
+                </div>
+                <div>
+                    <label for="y-coord">Y座標</label>
+                    <!-- ▼▼▼ デフォルト値を30に変更 ▼▼▼ -->
+                    <input type="number" id="y-coord" value="30" required>
+                </div>
+                <p class="coord-note red">※座標の原点(0, 0)はページの**左下**です。</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="scale-input">4. 印鑑のサイズ (%)</label>
+                <!-- ▼▼▼ デフォルト値を15に変更 ▼▼▼ -->
+                <input type="number" id="scale-input" min="10" max="500" value="15" step="1" required>
+                <p class="coord-note red">※100%が元のサイズです。10%～500%の範囲で指定できます。</p>
+            </div>
+            
+            <button type="submit" id="process-btn">PDFを生成する</button>
+        </form>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // DOM要素を取得
+        const form = document.getElementById('stamp-form');
+        const pdfFileInput = document.getElementById('pdf-file');
+        const stampFileInput = document.getElementById('stamp-file');
+        const xCoordInput = document.getElementById('x-coord');
+        const yCoordInput = document.getElementById('y-coord');
+        const scaleInput = document.getElementById('scale-input');
+        const statusDiv = document.getElementById('status');
+        const processBtn = document.getElementById('process-btn');
+
+        // pdf-libから必要なクラスを分割代入で取得
+        const { PDFDocument } = PDFLib;
+
+        // ステータスをクリアする関数
+        const clearStatus = () => {
+            statusDiv.innerHTML = '';
+        };
+
+        // 入力値が変更されたらステータスをクリア
+        pdfFileInput.addEventListener('change', clearStatus);
+        stampFileInput.addEventListener('change', clearStatus);
+        xCoordInput.addEventListener('input', clearStatus);
+        yCoordInput.addEventListener('input', clearStatus);
+        scaleInput.addEventListener('input', clearStatus);
+
+        // フォームの送信イベントを監視
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const pdfFile = pdfFileInput.files[0];
+            const stampFile = stampFileInput.files[0];
+            const x = parseInt(xCoordInput.value, 10);
+            const y = parseInt(yCoordInput.value, 10);
+            
+            const scalePercentage = parseFloat(scaleInput.value);
+            if (isNaN(scalePercentage) || scalePercentage <= 0) {
+                statusDiv.textContent = 'サイズには有効な数値を入力してください。';
+                statusDiv.style.color = 'red';
+                return;
+            }
+            const scale = scalePercentage / 100.0;
+
+            if (!pdfFile || !stampFile) {
+                statusDiv.textContent = 'PDFと印鑑画像の両方を選択してください。';
+                statusDiv.style.color = 'red';
+                return;
+            }
+
+            statusDiv.innerHTML = '処理中... 少々お待ちください。';
+            statusDiv.style.color = 'black';
+            processBtn.disabled = true;
+
+            try {
+                const pdfBytes = await pdfFile.arrayBuffer();
+                const stampBytes = await stampFile.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(pdfBytes);
+                const stampImage = await pdfDoc.embedPng(stampBytes);
+                
+                const stampDims = stampImage.scale(scale);
+
+                const pages = pdfDoc.getPages();
+
+                for (const page of pages) {
+                    page.drawImage(stampImage, {
+                        x: x,
+                        y: y,
+                        width: stampDims.width,
+                        height: stampDims.height,
+                    });
+                }
+
+                const modifiedPdfBytes = await pdfDoc.save();
+                
+                // ▼▼▼ ダウンロードファイル名を生成 ▼▼▼
+                const originalFileName = pdfFile.name;
+                // 元のファイル名から拡張子 .pdf (大文字小文字問わず) を除去
+                const baseName = originalFileName.replace(/\.pdf$/i, ''); 
+                const newFileName = `${baseName}_stamped.pdf`;
+                // ▲▲▲ ここまで変更 ▲▲▲
+
+                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                // ▼▼▼ 生成したファイル名をセット ▼▼▼
+                downloadLink.download = newFileName;
+                // ▲▲▲ ここまで変更 ▲▲▲
+                downloadLink.textContent = '押印済みPDF';
+                downloadLink.className = 'download-link';
+
+                statusDiv.innerHTML = ''; 
+                statusDiv.appendChild(downloadLink);
+
+            } catch (error) {
+                console.error('エラーが発生しました:', error);
+                statusDiv.textContent = `エラーが発生しました: ${error.message}`;
+                statusDiv.style.color = 'red';
+            } finally {
+                processBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>

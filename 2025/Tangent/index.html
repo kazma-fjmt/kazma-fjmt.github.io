@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>微分係数と接線の可視化</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>微分係数と接線の可視化</h1>
+  <div class="controls">
+    <label>関数 y = <input type="text" id="functionInput" value="x^3"></label>
+    <label>x最小 <input type="number" id="xMin" value="-10"></label>
+    <label>x最大 <input type="number" id="xMax" value="10"></label>
+    <label>y最小 <input type="number" id="yMin" value="-10"></label>
+    <label>y最大 <input type="number" id="yMax" value="10"></label>
+    <label>アスペクト比 <input type="number" id="aspect" step="0.1" value="1"></label>
+    <button id="drawBtn">グラフ描画</button>
+  </div>
+  <canvas id="graphCanvas" width="600" height="600"></canvas>
+  <p id="pointInfo">接点: 未指定</p>
+  <p id="tangentInfo">接線: 未描画</p>
+  <script src="script.js"></script>
+</body>
+</html>

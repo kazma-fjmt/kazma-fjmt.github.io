@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>チェバの定理・インタラクティブ</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="title">チェバの定理を動かして確認</div>
+    <div class="controls">
+      <button id="resetBtn" class="btn">リセット</button>
+      <span id="hint" class="hint">A・B・C の順に頂点をタップしてください</span>
+    </div>
+  </header>
+
+  <main class="stage-wrap">
+    <svg id="stage" class="stage" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+      <defs>
+        <pattern id="dashGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M0 0 L40 0" stroke="#e5e7eb" stroke-width="1.2" stroke-dasharray="4 6" />
+          <path d="M0 0 L0 40" stroke="#e5e7eb" stroke-width="1.2" stroke-dasharray="4 6" />
+        </pattern>
+        <pattern id="dotGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <circle cx="0.5" cy="0.5" r="1.2" fill="#c9d1d9" opacity="0.8" />
+        </pattern>
+      </defs>
+      <rect x="0" y="0" width="1000" height="1000" fill="url(#dashGrid)"></rect>
+      <rect x="0" y="0" width="1000" height="1000" fill="url(#dotGrid)" opacity="0.7"></rect>
+
+      <g id="layer-triangle"></g>
+      <g id="layer-cevians"></g>
+      <g id="layer-segments"></g>
+      <g id="layer-intersections"></g>
+      <g id="layer-points"></g>
+      <g id="layer-labels"></g>
+    </svg>
+  </main>
+
+  <footer class="panel">
+    <div class="formula" id="formula">
+      <span class="mono">( <span class="chip chip-BD">BD</span> ) / ( <span class="chip chip-DC">DC</span> ) *</span>
+      <span class="mono">( <span class="chip chip-CE">CE</span> ) / ( <span class="chip chip-EA">EA</span> ) *</span>
+      <span class="mono">( <span class="chip chip-AF">AF</span> ) / ( <span class="chip chip-FB">FB</span> ) =</span>
+      <span id="product" class="product">—</span>
+    </div>
+    <div id="lengthLegend" class="legend"></div>
+    <div class="note">※ 長さは絶対値で表示（数値誤差あり）。点はドラッグ／タッチで移動できます。</div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
