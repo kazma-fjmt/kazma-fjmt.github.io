@@ -65,8 +65,8 @@
     transition: box-shadow .15s ease, transform .15s ease;
     user-select: none;
     text-align: center;
+    min-height: 120px;
   }
-  .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.07); transform: translateY(-1px); }
   .card.active { box-shadow: 0 4px 18px rgba(42,109,244,.18); border-color: var(--accent); }
   .card .mono { margin: 0 0 .75rem; min-height: 2.6rem; display:flex; align-items:center; justify-content:center; }
   .card .mono .katex { font-size: 1.9rem; }
@@ -105,7 +105,7 @@
     font-weight: 600;
     font-size: .95rem;
   }
-  .pill .katex { font-size: 1rem; }
+  .pill .katex { font-size: 1rem; color: var(--accent); }
   .factor-dots { display: flex; gap: .35rem; }
   .factor-dots .dot {
     width: 1.2rem; height: 1.2rem;
@@ -122,7 +122,9 @@
     color: var(--muted);
     font-size: .9rem;
     margin-top: 1rem;
+    line-height: 2;
   }
+  .note .katex { font-size: 1rem; }
 
   /* Playground */
   .playground {
@@ -144,11 +146,14 @@
     color: var(--muted);
     margin-bottom: .25rem;
   }
+  .control label .katex { font-size: .9rem; }
   .control input[type=range] { width: 100%; }
   .control .value {
     text-align: center;
     font-weight: 600;
+    min-height: 1.4rem;
   }
+  .control .value .katex { font-size: 1.05rem; }
   .pg-display {
     text-align: center;
     padding: 1rem 0 .5rem;
@@ -162,26 +167,19 @@
     font-size: .95rem;
     color: var(--muted);
   }
-  .pg-meta b { color: var(--fg); }
+  .pg-meta .pg-meta-val { color: var(--fg); font-weight: 600; }
+  .pg-meta .katex { font-size: 1rem; color: var(--fg); }
   .pg-dots-row {
     display: flex;
     justify-content: center;
+    align-items: center;
     margin-top: .75rem;
+    min-height: 1.4rem;
   }
-
-  .nav-back {
-    display: inline-block;
-    margin-bottom: 1rem;
-    font-size: .85rem;
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .nav-back:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <main>
-  <a class="nav-back" href="../">← 2026年度</a>
   <h1>単項式・次数・係数</h1>
   <p class="subtitle">1章1節 式の計算 / 単項式と多項式</p>
 
@@ -214,30 +212,29 @@
       <div class="control">
         <label>係数 (数)</label>
         <input type="range" id="pg-coef" min="-5" max="5" step="1" value="2">
-        <div class="value" id="pg-coef-v">2</div>
+        <div class="value" id="pg-coef-v"></div>
       </div>
       <div class="control">
-        <label>x の指数</label>
+        <label><span class="lbl-x"></span> の指数</label>
         <input type="range" id="pg-x" min="0" max="4" step="1" value="2">
-        <div class="value" id="pg-x-v">2</div>
+        <div class="value" id="pg-x-v"></div>
       </div>
       <div class="control">
-        <label>y の指数</label>
+        <label><span class="lbl-y"></span> の指数</label>
         <input type="range" id="pg-y" min="0" max="4" step="1" value="1">
-        <div class="value" id="pg-y-v">1</div>
+        <div class="value" id="pg-y-v"></div>
       </div>
     </div>
     <div class="pg-display" id="pg-display"></div>
     <div class="pg-meta">
-      <div>係数 = <b id="pg-coef-out">2</b></div>
-      <div>次数 = <b id="pg-deg-out">3</b></div>
+      <div>係数 = <span class="pg-meta-val" id="pg-coef-out"></span></div>
+      <div>次数 = <span class="pg-meta-val" id="pg-deg-out"></span></div>
     </div>
     <div class="pg-dots-row" id="pg-dots"></div>
   </div>
 </main>
 
 <script>
-  // Color hexes (kept in sync with CSS variables)
   const NUM = "#d9534f";
   const VAR = "#2a6df4";
 
@@ -247,35 +244,41 @@
   function texHTML(latex, displayMode = false) {
     return katex.renderToString(latex, { throwOnError: false, displayMode });
   }
+  // Shorthand: render TeX as inline HTML string
+  const T = (latex) => texHTML(latex);
 
   // ---------- Examples ----------
+  // Notes are built lazily inside renderDetail() because they require KaTeX.
   const examples = {
     "2a": {
       tex: "2a",
       decomposeTex: `\\textcolor{${NUM}}{2} \\cdot \\textcolor{${VAR}}{a}`,
       coef: 2,
       vars: [["a", 1]],
-      note: "a が 1 個。係数は 2、次数は 1。"
+      buildNote: () =>
+        `${T('a')} が ${T('1')} 個。係数は ${T('2')}、次数は ${T('1')}。`
     },
     "-x2y": {
       tex: "-x^{2}y",
       decomposeTex: `\\textcolor{${NUM}}{(-1)} \\cdot \\textcolor{${VAR}}{x} \\cdot \\textcolor{${VAR}}{x} \\cdot \\textcolor{${VAR}}{y}`,
       coef: -1,
       vars: [["x", 2], ["y", 1]],
-      note: "x² は x·x のこと。x が 2 個、y が 1 個で合計 3 個。係数は −1、次数は 3。"
+      buildNote: () =>
+        `${T('x^{2}')} は ${T('x \\cdot x')} のこと。${T('x')} が ${T('2')} 個、${T('y')} が ${T('1')} 個で合計 ${T('3')} 個。係数は ${T('-1')}、次数は ${T('3')}。`
     },
     "3": {
       tex: "3",
       decomposeTex: `\\textcolor{${NUM}}{3}`,
       coef: 3,
       vars: [],
-      note: "文字を一つも含まない。係数は 3、次数は 0。"
+      buildNote: () =>
+        `文字を一つも含まない。係数は ${T('3')}、次数は ${T('0')}。`
     }
   };
 
   function dotsHTML(total) {
     if (total === 0) {
-      return '<span style="color:var(--muted);font-size:.9rem;">文字なし (0個)</span>';
+      return `<span style="color:var(--muted);font-size:.9rem;">文字なし (${T('0')} 個)</span>`;
     }
     let html = '<div class="factor-dots">';
     for (let i = 0; i < total; i++) html += '<span class="dot"></span>';
@@ -290,22 +293,22 @@
     detail.innerHTML = `
       <div class="detail-row">
         <span class="detail-label">単項式</span>
-        <span class="mono-big">${texHTML(ex.tex)}</span>
+        <span class="mono-big">${T(ex.tex)}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">分解</span>
-        <span>${texHTML(ex.decomposeTex)}</span>
+        <span>${T(ex.decomposeTex)}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">係数</span>
-        <span class="pill">${texHTML(String(ex.coef))}</span>
+        <span class="pill">${T(String(ex.coef))}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">次数</span>
-        <span class="pill">${texHTML(String(degree))}</span>
+        <span class="pill">${T(String(degree))}</span>
         ${dotsHTML(degree)}
       </div>
-      <p class="note">${ex.note}</p>
+      <p class="note">${ex.buildNote()}</p>
     `;
   }
 
@@ -324,16 +327,16 @@
     const coef = parseInt(document.getElementById("pg-coef").value, 10);
     const xe = parseInt(document.getElementById("pg-x").value, 10);
     const ye = parseInt(document.getElementById("pg-y").value, 10);
-    document.getElementById("pg-coef-v").textContent = coef;
-    document.getElementById("pg-x-v").textContent = xe;
-    document.getElementById("pg-y-v").textContent = ye;
+    tex(String(coef), document.getElementById("pg-coef-v"));
+    tex(String(xe), document.getElementById("pg-x-v"));
+    tex(String(ye), document.getElementById("pg-y-v"));
     tex(buildPgLatex(coef, xe, ye), document.getElementById("pg-display"));
-    document.getElementById("pg-coef-out").textContent = coef;
-    document.getElementById("pg-deg-out").textContent = xe + ye;
+    tex(String(coef), document.getElementById("pg-coef-out"));
+    tex(String(xe + ye), document.getElementById("pg-deg-out"));
     const total = xe + ye;
     let dots = "";
     if (total === 0) {
-      dots = '<span style="color:var(--muted);font-size:.85rem;">次数 0</span>';
+      dots = `<span style="color:var(--muted);font-size:.85rem;">次数 ${T('0')}</span>`;
     } else {
       dots = '<div class="factor-dots">';
       for (let i = 0; i < xe; i++) dots += '<span class="dot" style="background:#2a6df4;"></span>';
@@ -343,12 +346,15 @@
     document.getElementById("pg-dots").innerHTML = dots;
   }
 
-  // ---------- Init (after KaTeX is ready) ----------
+  // ---------- Init ----------
   function init() {
     // Render card monomials
     document.querySelectorAll(".card .mono").forEach(el => {
       tex(el.dataset.tex, el);
     });
+    // Slider label inline math
+    document.querySelectorAll(".lbl-x").forEach(el => tex("x", el));
+    document.querySelectorAll(".lbl-y").forEach(el => tex("y", el));
     // Wire up cards
     document.querySelectorAll(".card").forEach(card => {
       card.addEventListener("click", () => {
@@ -370,7 +376,6 @@
   else window.addEventListener("DOMContentLoaded", () => {
     if (window.katex) init();
     else {
-      // KaTeX script is deferred; wait until it's available
       const wait = setInterval(() => {
         if (window.katex) { clearInterval(wait); init(); }
       }, 30);
