@@ -60,7 +60,7 @@
 <body>
 <main>
   <h1>パスカルの三角形</h1>
-  <p class="subtitle">$(a+b)^n$ の展開式の係数を並べた数の三角形です。段をタップして展開式を確認しましょう。</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>パスカルの三角形</h2>
   <div class="row-controls" id="row-controls"></div>
@@ -114,7 +114,7 @@
     let html='';
     for(let n=0;n<=MAX_N;n++){
       const row=ROWS[n];
-      html+=`<div class="prow"><span class="nlabel">n=${n}</span>`;
+      html+=`<div class="prow"><span class="nlabel">${T('n='+n)}</span>`;
       for(let k=0;k<row.length;k++){
         let cls='cell';
         if(n===activeN) cls+=' active';
@@ -141,13 +141,14 @@
   }
 
   function init(){
+    document.getElementById('sub1').innerHTML=T('(a+b)^n')+' の展開式の係数を並べた数の三角形です。段をタップして展開式を確認しましょう。';
     // Row selector buttons
     const ctrl=document.getElementById('row-controls');
     for(let n=0;n<=MAX_N;n++){
       const btn=document.createElement('button');
       btn.className='row-btn'+(n===activeN?' active':'');
       btn.dataset.n=n;
-      btn.textContent=`n=${n}`;
+      btn.innerHTML=T('n='+n);
       btn.addEventListener('click',()=>setActive(n));
       ctrl.appendChild(btn);
     }

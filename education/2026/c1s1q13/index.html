@@ -70,7 +70,7 @@
     <div class="id-card" id="id1">
       <div class="label">x = 1 を代入</div>
       <div id="id1f"></div>
-      <div class="sub">「すべての二項係数の和は 2ⁿ」</div>
+      <div class="sub" id="id1sub"></div>
     </div>
     <div class="id-card" id="id2">
       <div class="label">x = −1 を代入</div>
@@ -126,6 +126,7 @@
       {title:"左辺を計算: 0",
        formula:`\\textcolor{${CG}}{0} = {}_nC_0 - {}_nC_1 + {}_nC_2 - \\cdots + (-1)^n\\,{}_nC_n`,type:"result"},
     ];
+    document.getElementById('id1sub').innerHTML='「すべての二項係数の和は '+T('2^n')+'」';
     tex(BINOMIAL_THM,document.getElementById('binomial-thm'));
     tex(`2^n = {}_nC_0 + {}_nC_1 + \\cdots + {}_nC_n`,document.getElementById('id1f'));
     tex(`0 = {}_nC_0 - {}_nC_1 + {}_nC_2 - \\cdots + (-1)^n\\,{}_nC_n`,document.getElementById('id2f'));

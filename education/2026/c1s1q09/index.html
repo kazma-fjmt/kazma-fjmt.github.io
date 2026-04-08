@@ -57,7 +57,7 @@
 <body>
 <main>
   <h1>二項定理</h1>
-  <p class="subtitle">組合せの考えで $(a+b)^n$ の展開式の係数を求めます。</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>導出と公式</h2>
   <p class="subtitle">「次へ」で1ステップずつ進みます。</p>
@@ -86,21 +86,7 @@
   const T=l=>katex.renderToString(l,{throwOnError:false});
   const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
 
-  // Part 1: derivation
-  const part1=[
-    {title:"$(a+b)^4$ の因数積分解",
-     formula:"(a+b)^4=(a+b)(a+b)(a+b)(a+b)\\quad\\cdots\\text{4個の因数}"},
-    {title:"$a^3b$ の項はどこから来るか",
-     formula:"\\text{4個のうち }\\mathbf{1}\\text{個から }b\\text{ を、残り }\\mathbf{3}\\text{個から }a\\text{ を取り出す}"},
-    {title:"選び方の数 = 係数",
-     formula:"\\text{4個から1個を選ぶ組合せ数}={}_4C_1=4\\quad\\Rightarrow\\quad a^3b\\text{ の係数は }4"},
-    {title:"すべての項の係数",
-     formula:"a^4:{}_{4}C_0,\\quad a^3b:{}_{4}C_1,\\quad a^2b^2:{}_{4}C_2,\\quad ab^3:{}_{4}C_3,\\quad b^4:{}_{4}C_4"},
-    {title:"二項定理（一般形）",
-     formula:"(a+b)^n=\\sum_{r=0}^{n}{}_{n}C_r\\,a^{n-r}b^r",type:"result"},
-    {title:"一般項",
-     formula:"\\text{一般項}={}_{n}C_r\\,a^{n-r}b^r\\quad(r=0,1,\\dots,n)",type:"result"}
-  ];
+  let part1=[];
 
   // Part 2: examples
   const CA="#d9534f", CB="#2a6df4";
@@ -164,6 +150,21 @@
   function selectEx(idx){ ex2=idx; s2=0; document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.idx)===idx)); render2(); }
 
   function init(){
+    document.getElementById('sub1').innerHTML='組合せの考えで '+T('(a+b)^n')+' の展開式の係数を求めます。';
+    part1=[
+      {title:`${T('(a+b)^4')} の因数分解`,
+       formula:"(a+b)^4=(a+b)(a+b)(a+b)(a+b)\\quad\\cdots\\text{4個の因数}"},
+      {title:`${T('a^3b')} の項はどこから来るか`,
+       formula:"\\text{4個のうち }\\mathbf{1}\\text{個から }b\\text{ を、残り }\\mathbf{3}\\text{個から }a\\text{ を取り出す}"},
+      {title:"選び方の数 = 係数",
+       formula:"\\text{4個から1個を選ぶ組合せ数}={}_4C_1=4\\quad\\Rightarrow\\quad a^3b\\text{ の係数は }4"},
+      {title:"すべての項の係数",
+       formula:"a^4:{}_{4}C_0,\\quad a^3b:{}_{4}C_1,\\quad a^2b^2:{}_{4}C_2,\\quad ab^3:{}_{4}C_3,\\quad b^4:{}_{4}C_4"},
+      {title:"二項定理（一般形）",
+       formula:"(a+b)^n=\\sum_{r=0}^{n}{}_{n}C_r\\,a^{n-r}b^r",type:"result"},
+      {title:"一般項",
+       formula:"\\text{一般項}={}_{n}C_r\\,a^{n-r}b^r\\quad(r=0,1,\\dots,n)",type:"result"}
+    ];
     document.getElementById('prev1').addEventListener('click',()=>{if(s1>0){s1--;render1();}});
     document.getElementById('next1').addEventListener('click',()=>{if(s1<part1.length-1){s1++;render1();}});
     document.getElementById('prev2').addEventListener('click',()=>{if(s2>0){s2--;render2();}});

@@ -141,7 +141,7 @@
   function renderContent(s, isCur){
     if(s.type==='pascal'){
       return makePascal(s.showRows, 3, true)+
-        `<p class="sum-note">青：$(a+b)^3$ の係数 ／ 橙：$(a+b)^4$ の係数<br>各段の数は、上の2つの数の和</p>`;
+        `<p class="sum-note">青：${T('(a+b)^3')} の係数 ／ 橙：${T('(a+b)^4')} の係数<br>各段の数は、上の2つの数の和</p>`;
     }
     if(s.type==='special'){
       // Custom coefficients layout

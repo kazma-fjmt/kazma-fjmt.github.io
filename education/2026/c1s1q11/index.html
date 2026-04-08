@@ -40,7 +40,7 @@
 <body>
 <main>
   <h1>3変数式の係数</h1>
-  <p class="subtitle">$(x+y+z)^6$ の展開式における特定の項の係数を求めます。</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>方針</h2>
   <div class="idea-box" id="idea"></div>
@@ -95,13 +95,14 @@
        formula:`\\{(\\textcolor{${CX}}{x+y})+\\textcolor{${CZ}}{z}\\}^6\\text{ の一般項}={}_6C_r\\,(\\textcolor{${CX}}{x+y})^{6-r}\\,\\textcolor{${CZ}}{z}^r`},
       {title:`${T('\\textcolor{'+CZ+'}{z}')} の次数に着目: ${T('r=1')} のとき`,
        formula:`r=1\\text{ のとき: }{}_6C_1\\,(x+y)^5\\cdot z`},
-      {title:`$(x+y)^5$ の中の ${T('\\textcolor{'+CX+'}{x}^2\\textcolor{'+CY+'}{y}^3')} の係数`,
+      {title:`${T('(x+y)^5')} の中の ${T('\\textcolor{'+CX+'}{x}^2\\textcolor{'+CY+'}{y}^3')} の係数`,
        formula:`(x+y)^5\\text{ における }x^2y^3\\text{ の係数}={}_5C_3=10`},
       {title:"2つを合わせる",
        formula:`x^2y^3z\\text{ の係数}={}_6C_1\\times {}_5C_3=6\\times 10=60`},
       {title:"答え",
        formula:`(x+y+z)^6\\text{ における }x^2y^3z\\text{ の係数}=60`,type:"result"}
     ];
+    document.getElementById('sub1').innerHTML=T('(x+y+z)^6')+' の展開式における特定の項の係数を求めます。';
     tex(IDEA,document.getElementById('idea'));
     document.getElementById('prev').addEventListener('click',()=>{if(cur>0){cur--;render();}});
     document.getElementById('next').addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});

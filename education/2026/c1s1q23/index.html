@@ -81,10 +81,7 @@
   // Example: P = (1 + 1/x) / (1 - 1/x²)  →  x/(x-1)
   let EXAMPLES=[];
 
-  const DESCS=[
-    `方法A: 全体を除法として計算する`,
-    `方法B: 分子・分母に公倍式 x² を掛ける`,
-  ];
+  let DESCS=[];
 
   let tabIdx=0, cur=0;
   function getSteps(){ return EXAMPLES[tabIdx]; }
@@ -92,7 +89,7 @@
   function render(){
     const steps=getSteps();
     const root=document.getElementById('walkthrough');
-    document.getElementById('ex-desc').textContent=DESCS[tabIdx];
+    document.getElementById('ex-desc').innerHTML=DESCS[tabIdx];
     let html='';
     for(let i=0;i<=cur;i++){
       const s=steps[i];
@@ -117,6 +114,10 @@
   }
 
   function init(){
+    DESCS=[
+      `方法A: 全体を除法として計算する`,
+      `方法B: 分子・分母に公倍式 ${T('x^2')} を掛ける`,
+    ];
     EXAMPLES=[
       // tab0: Method A (division)
       [
