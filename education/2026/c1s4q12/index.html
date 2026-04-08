@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>不等式の証明: a²+b² ≧ ab</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula .katex { font-size: 1.35rem; }
+
+  .property-box {
+    background: #eef4ff;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    text-align: center;
+  }
+  .property-box .katex { font-size: 1.25rem; }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    margin: 0 0 .75rem;
+    min-height: 9rem;
+    overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem;
+    border-bottom: 1px dashed #eee;
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: .75rem;
+    margin: .25rem -.5rem;
+    border-bottom: none;
+  }
+  .step .label {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-bottom: .25rem;
+  }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid #d4dbeb;
+    background: #fff;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 110px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    flex: 1;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>不等式の証明: 2乗の和と積</h1>
+  <p class="subtitle">実数の2乗は常に0以上であることを利用して不等式を証明します。</p>
+
+  <h2>基本性質</h2>
+  <div class="property-box" id="property"></div>
+  <p>等号が成り立つのは <span id="eq-cond"></span> のときです。</p>
+
+  <h2>証明する不等式</h2>
+  <div class="formula" id="target-ineq"></div>
+
+  <h2>証明のステップ</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+
+<script>
+  function tex(latex, target, displayMode = false) {
+    katex.render(latex, target, { throwOnError: false, displayMode });
+  }
+  function T(l) {
+    return katex.renderToString(l, { throwOnError: false });
+  }
+
+  const C_RED = "#d9534f";
+  const C_BLUE = "#2a6df4";
+  const C_GREEN = "#28a745";
+  const C_PURPLE = "#7b61ff";
+
+  const steps = [
+    {
+      title: "証明の方針",
+      tex: `a^2 + b^2 \\ge ab \\quad \\text{を示すには} \\quad a^2 + b^2 - ab \\ge 0 \\quad \\text{を示せばよい}`
+    },
+    {
+      title: "左辺 - 右辺を計算する",
+      tex: `a^2 + b^2 - ab`
+    },
+    {
+      title: "平方完成する",
+      tex: `a^2 - ab + b^2 = \\textcolor{${C_RED}}{\\left(a - \\frac{b}{2}\\right)^2} - \\frac{b^2}{4} + b^2`
+    },
+    {
+      title: "整理する",
+      tex: `= \\textcolor{${C_RED}}{\\left(a - \\frac{b}{2}\\right)^2} + \\textcolor{${C_PURPLE}}{\\frac{3}{4}b^2}`
+    },
+    {
+      title: "各項の符号を確認する",
+      tex: `\\textcolor{${C_RED}}{\\left(a - \\frac{b}{2}\\right)^2 \\ge 0}\\,,\\quad \\textcolor{${C_PURPLE}}{\\frac{3}{4}b^2 \\ge 0}`
+    },
+    {
+      title: "したがって",
+      tex: `\\left(a - \\frac{b}{2}\\right)^2 + \\frac{3}{4}b^2 \\ge 0 \\quad \\text{よって} \\quad a^2 + b^2 \\ge ab`
+    },
+    {
+      title: "等号条件",
+      tex: `a - \\frac{b}{2} = 0 \\quad \\text{かつ} \\quad b = 0 \\quad \\text{すなわち} \\quad \\textcolor{${C_GREEN}}{a = b = 0}`
+    }
+  ];
+
+  let curStep = 0;
+
+  function renderWalkthrough() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = steps[i];
+      const isCurrent = i === curStep;
+      html += `<div class="step ${isCurrent ? 'current' : ''}" style="animation-delay:${isCurrent ? '0.05s' : '0s'}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    tex(String(curStep + 1), document.getElementById('step-cur'));
+    tex(String(steps.length), document.getElementById('step-tot'));
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    tex('a^2 \\ge 0 \\,,\\quad b^2 \\ge 0 \\quad \\Longrightarrow \\quad a^2 + b^2 \\ge 0', document.getElementById('property'), true);
+    tex('a = b = 0', document.getElementById('eq-cond'));
+    tex('a^2 + b^2 \\ge ab', document.getElementById('target-ineq'), true);
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalkthrough(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < steps.length - 1) { curStep++; renderWalkthrough(); }
+    });
+
+    renderWalkthrough();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const wait = setInterval(() => {
+        if (window.katex) { clearInterval(wait); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>

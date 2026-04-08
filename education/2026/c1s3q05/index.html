@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>剰余の定理の応用 - 2次式で割った余り</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888;
+    --accent: #2a6df4; --c-a: #d9534f; --c-b: #2a6df4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .problem-box {
+    background: #e3f2fd; border: 2px solid #2196f3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }
+  .problem-box .title { font-weight: 700; color: #1565c0; margin-bottom: .5rem; }
+  .problem-box .katex { font-size: 1.1rem; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0 1rem; flex-wrap: wrap; }
+  .tab {
+    flex: 1 1 200px; appearance: none; background: #fff;
+    border: 1.5px solid #d4dbeb; color: var(--fg); border-radius: 10px;
+    padding: 1rem .75rem; font-size: 1rem; font-family: inherit;
+    cursor: pointer; min-height: 56px; user-select: none;
+    transition: border-color .15s ease, background .15s ease;
+    text-align: center;
+  }
+  .tab.active { border-color: var(--accent); background: #eef4ff; }
+  .tab:active { transform: scale(.98); }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 9rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .35s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.03); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>剰余の定理の応用</h1>
+  <p class="subtitle">2次式で割ったときの余りを、剰余の定理を使って求めます。</p>
+
+  <div class="problem-box" id="problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p class="subtitle">タブで「方針」と「計算」を切り替え、「次へ」で1ステップずつ進みます。</p>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-idx="0">方針を立てる</button>
+    <button class="tab" data-idx="1">計算を進める</button>
+  </div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+const C_A = "#d9534f";
+const C_B = "#2a6df4";
+
+function tex(latex, target, displayMode) {
+  katex.render(latex, target, { throwOnError: false, displayMode: !!displayMode });
+}
+function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+let examples = [];
+let curEx = 0, curStep = 0;
+
+function renderWalkthrough() {
+  const root = document.getElementById('walkthrough');
+  const ex = examples[curEx];
+  let html = '';
+  for (let i = 0; i <= curStep; i++) {
+    const s = ex.steps[i];
+    const isCurrent = i === curStep;
+    html += `<div class="step ${isCurrent ? 'current' : ''}">
+      <div class="label">${s.title}</div>
+      <div class="formula-line">${T(s.tex)}</div>
+    </div>`;
+  }
+  root.innerHTML = html;
+  tex(String(curStep + 1), document.getElementById('step-cur'));
+  tex(String(ex.steps.length), document.getElementById('step-tot'));
+  document.getElementById('prev').disabled = curStep === 0;
+  document.getElementById('next').disabled = curStep === ex.steps.length - 1;
+}
+
+function selectExample(idx) {
+  curEx = idx; curStep = 0;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', parseInt(t.dataset.idx, 10) === idx);
+  });
+  renderWalkthrough();
+}
+
+function init() {
+  const prob = document.getElementById('problem');
+  prob.innerHTML = `<div class="title">例題（応用）</div>
+    <p>多項式 ${T('P(x)')} を ${T('x - 2')} で割ると ${T('4')} 余り、${T('x + 3')} で割ると ${T('-11')} 余る。</p>
+    <p>このとき、${T('P(x)')} を ${T('(x-2)(x+3)')} で割ったときの余りを求めよ。</p>`;
+
+  examples = [
+    {
+      steps: [
+        { title: '割り算の式を立てる',
+          tex: `P(x) = (x-2)(x+3)\\,Q(x) + \\textcolor{${C_A}}{a}x + \\textcolor{${C_B}}{b}` },
+        { title: '余りが1次式以下であることを確認',
+          tex: `\\text{2次式で割る} \\Rightarrow \\text{余りは1次以下} \\Rightarrow \\textcolor{${C_A}}{a}x + \\textcolor{${C_B}}{b}` },
+        { title: '剰余の定理の条件を確認',
+          tex: `P(2) = 4, \\quad P(-3) = -11` },
+        { title: `${T('x = 2')} を代入する`,
+          tex: `P(2) = (2-2)(2+3)\\,Q(2) + 2\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = 2\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b}` },
+        { title: `${T('x = -3')} を代入する`,
+          tex: `P(-3) = (-3-2)(-3+3)\\,Q(-3) - 3\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = -3\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b}` },
+        { title: '連立方程式を立てる',
+          tex: `\\begin{cases} 2\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = 4 \\\\ -3\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = -11 \\end{cases}` }
+      ]
+    },
+    {
+      steps: [
+        { title: '連立方程式を確認する',
+          tex: `\\begin{cases} 2\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = 4 \\quad \\cdots \\unicode{x2460} \\\\ -3\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b} = -11 \\quad \\cdots \\unicode{x2461} \\end{cases}` },
+        { title: `${T('\\unicode{x2460} - \\unicode{x2461}')} で ${T('\\textcolor{' + C_B + '}{b}')} を消去`,
+          tex: `(2\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b}) - (-3\\textcolor{${C_A}}{a} + \\textcolor{${C_B}}{b}) = 4 - (-11)` },
+        { title: '左辺を整理する',
+          tex: `5\\textcolor{${C_A}}{a} = 15` },
+        { title: `${T('\\textcolor{' + C_A + '}{a}')} を求める`,
+          tex: `\\textcolor{${C_A}}{a} = 3` },
+        { title: `${T('\\unicode{x2460}')} に代入して ${T('\\textcolor{' + C_B + '}{b}')} を求める`,
+          tex: `2 \\cdot 3 + \\textcolor{${C_B}}{b} = 4 \\quad \\Rightarrow \\quad \\textcolor{${C_B}}{b} = -2` },
+        { title: '最終結果',
+          tex: `\\boxed{\\text{余り} = \\textcolor{${C_A}}{3}x + (\\textcolor{${C_B}}{-2}) = 3x - 2}` }
+      ]
+    }
+  ];
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => selectExample(parseInt(tab.dataset.idx, 10)));
+  });
+
+  document.getElementById('prev').addEventListener('click', () => {
+    if (curStep > 0) { curStep--; renderWalkthrough(); }
+  });
+  document.getElementById('next').addEventListener('click', () => {
+    if (curStep < examples[curEx].steps.length - 1) { curStep++; renderWalkthrough(); }
+  });
+
+  renderWalkthrough();
+}
+
+if (window.katex) init();
+else window.addEventListener("DOMContentLoaded", () => {
+  if (window.katex) init();
+  else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+});
+</script>
+</body>
+</html>

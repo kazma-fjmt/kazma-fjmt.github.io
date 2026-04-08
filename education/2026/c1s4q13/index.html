@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>相加平均と相乗平均の関係</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .def-box {
+    background: #eef4ff;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .def-box .katex { font-size: 1.2rem; }
+  .def-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin: .4rem 0;
+  }
+
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula .katex { font-size: 1.35rem; }
+
+  .example-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+
+  /* Bar chart */
+  .chart-container {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1.5rem 1rem 1rem;
+    margin: 1rem 0;
+  }
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2.5rem;
+    height: 200px;
+    padding-bottom: 2rem;
+    position: relative;
+  }
+  .bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .3rem;
+  }
+  .bar {
+    width: 60px;
+    border-radius: 6px 6px 0 0;
+    transition: height 1s ease;
+  }
+  .bar-label {
+    font-size: .85rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .bar-value {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .ineq-box {
+    background: #fffbe6;
+    border: 2px solid var(--c-orange);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    text-align: center;
+  }
+  .ineq-box .katex { font-size: 1.3rem; }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    margin: 0 0 .75rem;
+    min-height: 9rem;
+    overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem;
+    border-bottom: 1px dashed #eee;
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: .75rem;
+    margin: .25rem -.5rem;
+    border-bottom: none;
+  }
+  .step .label {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-bottom: .25rem;
+  }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    margin: .75rem 0 1rem;
+    flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1 1 200px;
+    appearance: none;
+    background: #fff;
+    border: 1.5px solid #d4dbeb;
+    color: var(--fg);
+    border-radius: 10px;
+    padding: 1rem .75rem;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    min-height: 56px;
+    user-select: none;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .tab.active {
+    border-color: var(--accent);
+    background: #eef4ff;
+  }
+  .tab:active { transform: scale(.98); }
+  .tab .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid #d4dbeb;
+    background: #fff;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 110px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    flex: 1;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>相加平均と相乗平均</h1>
+  <p class="subtitle">2つの正の数の平均の取り方と、その大小関係を学びます。</p>
+
+  <h2>定義</h2>
+  <div class="def-box">
+    <p>正の実数 <span id="def-ab"></span> に対し：</p>
+    <div class="def-row">
+      <span>相加平均（算術平均）：</span><span id="def-am"></span>
+    </div>
+    <div class="def-row">
+      <span>相乗平均（幾何平均）：</span><span id="def-gm"></span>
+    </div>
+  </div>
+
+  <h2>具体例で確認</h2>
+  <div class="example-box">
+    <p><span id="ex-vals"></span> のとき</p>
+    <p>相加平均：<span id="ex-am"></span></p>
+    <p>相乗平均：<span id="ex-gm"></span></p>
+  </div>
+
+  <div class="chart-container">
+    <div class="bars">
+      <div class="bar-wrap">
+        <div class="bar-value" id="bar-am-val"></div>
+        <div class="bar" id="bar-am" style="height:0; background: var(--c-red);"></div>
+        <div class="bar-label">相加平均</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-value" id="bar-gm-val"></div>
+        <div class="bar" id="bar-gm" style="height:0; background: var(--c-blue);"></div>
+        <div class="bar-label">相乗平均</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>相加平均と相乗平均の関係</h2>
+  <div class="ineq-box" id="amgm-ineq"></div>
+  <p>等号が成り立つのは <span id="amgm-eq"></span> のときです。</p>
+
+  <h2>証明と応用</h2>
+  <p class="subtitle">タブで切り替え、「次へ」で1ステップずつ進みます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-idx="0">定理の証明</button>
+    <button class="tab" data-idx="1" id="tab-ex11"></button>
+  </div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+
+<script>
+  function tex(latex, target, displayMode = false) {
+    katex.render(latex, target, { throwOnError: false, displayMode });
+  }
+  function T(l) {
+    return katex.renderToString(l, { throwOnError: false });
+  }
+
+  const C_RED = "#d9534f";
+  const C_BLUE = "#2a6df4";
+  const C_GREEN = "#28a745";
+
+  const examples = [
+    {
+      label: "定理の証明",
+      steps: [
+        {
+          title: "示す不等式",
+          tex: `a > 0,\\; b > 0 \\quad \\text{のとき} \\quad \\frac{a+b}{2} \\ge \\sqrt{ab}`
+        },
+        {
+          title: "基本的な不等式から出発",
+          tex: `(\\sqrt{a} - \\sqrt{b})^2 \\ge 0`
+        },
+        {
+          title: "展開する",
+          tex: `a - 2\\sqrt{ab} + b \\ge 0`
+        },
+        {
+          title: "移項する",
+          tex: `a + b \\ge 2\\sqrt{ab}`
+        },
+        {
+          title: "両辺を2で割る",
+          tex: `\\frac{a+b}{2} \\ge \\sqrt{ab}`
+        },
+        {
+          title: "等号条件",
+          tex: `\\sqrt{a} - \\sqrt{b} = 0 \\quad \\text{すなわち} \\quad \\textcolor{${C_GREEN}}{a = b} \\quad \\text{のとき等号成立}`
+        }
+      ]
+    },
+    {
+      label: `a + \\frac{1}{a} \\ge 2`,
+      steps: [
+        {
+          title: "条件を確認する",
+          tex: `a > 0 \\quad \\text{のとき} \\quad a + \\frac{1}{a} \\ge 2 \\quad \\text{を示す}`
+        },
+        {
+          title: "正であることを確認する",
+          tex: `a > 0 \\quad \\text{より} \\quad a > 0,\\; \\frac{1}{a} > 0`
+        },
+        {
+          title: "相加平均と相乗平均の関係を適用",
+          tex: `a + \\frac{1}{a} \\ge 2\\sqrt{a \\cdot \\frac{1}{a}}`
+        },
+        {
+          title: "右辺を計算する",
+          tex: `= 2\\sqrt{1} = 2`
+        },
+        {
+          title: "結論",
+          tex: `\\text{ゆえに} \\quad a + \\frac{1}{a} \\ge 2`
+        },
+        {
+          title: "等号条件",
+          tex: `a = \\frac{1}{a} \\;\\Rightarrow\\; a^2 = 1 \\;\\Rightarrow\\; \\textcolor{${C_GREEN}}{a = 1} \\quad (a > 0 \\text{ より})`
+        }
+      ]
+    }
+  ];
+
+  let curEx = 0;
+  let curStep = 0;
+
+  function renderWalkthrough() {
+    const root = document.getElementById('walkthrough');
+    const ex = examples[curEx];
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = ex.steps[i];
+      const isCurrent = i === curStep;
+      html += `<div class="step ${isCurrent ? 'current' : ''}" style="animation-delay:${isCurrent ? '0.05s' : '0s'}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    tex(String(curStep + 1), document.getElementById('step-cur'));
+    tex(String(ex.steps.length), document.getElementById('step-tot'));
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === ex.steps.length - 1;
+  }
+
+  function selectExample(idx) {
+    curEx = idx;
+    curStep = 0;
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', parseInt(t.dataset.idx, 10) === idx);
+    });
+    renderWalkthrough();
+  }
+
+  function animateBars() {
+    setTimeout(() => {
+      document.getElementById('bar-am').style.height = '150px';
+      document.getElementById('bar-gm').style.height = '120px';
+    }, 200);
+  }
+
+  function init() {
+    tex('a, b', document.getElementById('def-ab'));
+    tex('\\dfrac{a+b}{2}', document.getElementById('def-am'));
+    tex('\\sqrt{ab}', document.getElementById('def-gm'));
+
+    tex('a = 6,\\; b = 24', document.getElementById('ex-vals'));
+    tex('\\dfrac{6 + 24}{2} = 15', document.getElementById('ex-am'));
+    tex('\\sqrt{6 \\times 24} = \\sqrt{144} = 12', document.getElementById('ex-gm'));
+
+    tex('15', document.getElementById('bar-am-val'));
+    tex('12', document.getElementById('bar-gm-val'));
+
+    tex('a > 0,\\; b > 0 \\;\\Longrightarrow\\; \\frac{a+b}{2} \\ge \\sqrt{ab}', document.getElementById('amgm-ineq'), true);
+    tex('a = b', document.getElementById('amgm-eq'));
+
+    // Tab labels
+    tex(examples[1].label, document.getElementById('tab-ex11'));
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      const idx = parseInt(tab.dataset.idx, 10);
+      tab.addEventListener('click', () => selectExample(idx));
+    });
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalkthrough(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < examples[curEx].steps.length - 1) { curStep++; renderWalkthrough(); }
+    });
+
+    renderWalkthrough();
+    animateBars();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const wait = setInterval(() => {
+        if (window.katex) { clearInterval(wait); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>

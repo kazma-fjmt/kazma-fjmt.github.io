@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>解を変換した方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;margin:0 0 1rem; }
+  .arrow-diagram { display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.75rem 0; }
+  .arrow-box { background:#f0f5ff;border-radius:8px;padding:.5rem .75rem;font-size:.9rem; }
+  .arrow-mid { color:var(--accent);font-weight:700;font-size:1.2rem; }
+  .walkthrough { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:.75rem 1.25rem;margin:0 0 .75rem;min-height:9rem;overflow-x:auto; }
+  .step { padding:.75rem .25rem;border-bottom:1px dashed #eee; }
+  .step:last-child { border-bottom:none; }
+  .step.current { background:#f0f5ff;border-radius:8px;padding:.75rem;margin:.25rem -.5rem;animation:stepIn .3s ease-out; }
+  @keyframes stepIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .step.current.result-step { animation:stepIn .3s ease-out,pulse .9s ease-out .35s both; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(42,109,244,.45)} 70%{box-shadow:0 0 0 14px rgba(42,109,244,0)} 100%{box-shadow:0 0 0 0 rgba(42,109,244,0)} }
+  .step .label { color:var(--muted);font-size:.8rem;margin-bottom:.2rem; }
+  .step .formula-line { overflow-x:auto; }
+  .step .formula-line .katex { font-size:1.15rem; }
+  .step.current .formula-line .katex { font-size:1.28rem; }
+  .controls-row { display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:1rem 0 0; }
+  .btn { appearance:none;border:1px solid #d4dbeb;background:#fff;color:var(--accent);font-size:1rem;font-weight:600;padding:.85rem 1.2rem;border-radius:10px;cursor:pointer;min-height:48px;min-width:100px;font-family:inherit;user-select:none; }
+  .btn.primary { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .btn:disabled { opacity:.3;cursor:not-allowed; }
+  .btn:active:not(:disabled) { transform:scale(.97); }
+  .step-counter { color:var(--muted);font-size:.9rem;text-align:center;flex:1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>解を変換した方程式</h1>
+  <p class="subtitle">元の解から変換した解を持つ方程式を求める</p>
+
+  <h2>問題</h2>
+  <div class="card">
+    <p id="setup-text"></p>
+    <p><span id="new-roots"></span> を解にもつ2次方程式を求めよ。</p>
+  </div>
+
+  <h2>解法の流れ</h2>
+  <div class="arrow-diagram">
+    <div class="arrow-box" id="d1"></div>
+    <div class="arrow-mid">→</div>
+    <div class="arrow-box" id="d2"></div>
+    <div class="arrow-mid">→</div>
+    <div class="arrow-box" id="d3"></div>
+  </div>
+
+  <h2>解答ステップ</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">◀ 前へ</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ ▶</button>
+  </div>
+</main>
+<script>
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+  let steps=[], cur=0;
+
+  function render(){
+    const root=document.getElementById('walkthrough');
+    let html='';
+    for(let i=0;i<=cur;i++){
+      const s=steps[i];
+      const isCur=i===cur, isRes=s.type==='result';
+      html+=`<div class="step${isCur?' current':''}${isCur&&isRes?' result-step':''}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.formula)}</div>
+      </div>`;
+    }
+    root.innerHTML=html;
+    document.getElementById('step-cur').textContent=String(cur+1);
+    document.getElementById('step-tot').textContent=String(steps.length);
+    document.getElementById('prev').disabled=cur===0;
+    document.getElementById('next').disabled=cur===steps.length-1;
+    root.lastElementChild?.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+
+  function init(){
+    document.getElementById('setup-text').innerHTML =
+      T('x^2-2x+7=0') + ' の解を ' + T('\\alpha,\\beta') + ' とする。';
+    document.getElementById('new-roots').innerHTML = T('\\alpha+2,\\; \\beta+2');
+    document.getElementById('d1').innerHTML = T('\\alpha+\\beta,\\;\\alpha\\beta') + '<br>（元の方程式から）';
+    document.getElementById('d2').innerHTML = T('(\\alpha+2)+(\\beta+2)') + '<br>（新しい和・積を計算）';
+    document.getElementById('d3').innerHTML = '新しい方程式を<br>構成';
+
+    steps=[
+      {title:'元の方程式の解と係数の関係', formula:'\\alpha+\\beta=2,\\quad \\alpha\\beta=7', type:'def'},
+      {title:'新しい解の和', formula:'(\\alpha+2)+(\\beta+2)=\\alpha+\\beta+4=2+4=6', type:'def'},
+      {title:'新しい解の積', formula:'(\\alpha+2)(\\beta+2)=\\alpha\\beta+2(\\alpha+\\beta)+4=7+2\\cdot2+4=15', type:'def'},
+      {title:'新しい方程式を構成', formula:'x^2-6x+15=0', type:'result'},
+    ];
+
+    document.getElementById('prev').addEventListener('click',()=>{if(cur>0){cur--;render();}});
+    document.getElementById('next').addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+    render();
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リアルタイム画像分類</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <h1>🤖 リアルタイム画像分類</h1>
+  <div id="camera-container">
+    <video id="webcam" autoplay playsinline></video>
+    <div id="controls">
+      <button id="switchBtn">カメラ切替</button>
+      <label>ズーム: <input type="range" id="zoomSlider" min="1" max="1" step="0.1" disabled></label>
+    </div>
+  </div>
+  <p id="prediction">モデル読み込み中...</p>
+</body>
+</html>

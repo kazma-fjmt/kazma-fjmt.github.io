@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>剰余の定理 計算ツール</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888;
+    --accent: #2a6df4; --c-a: #d9534f; --c-b: #2a6df4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .theorem-box {
+    background: #fff3e0; border: 2px solid #ff9800; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; text-align: center;
+  }
+  .theorem-box .title { font-weight: 700; color: #e65100; margin-bottom: .5rem; }
+  .theorem-box .katex { font-size: 1.25rem; }
+
+  .input-group {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1.25rem; margin: 1rem 0;
+  }
+  .input-group label { display: block; font-weight: 600; margin-bottom: .5rem; }
+  .coeff-row {
+    display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
+    margin-bottom: .75rem;
+  }
+  .coeff-row input {
+    width: 60px; text-align: center; font-size: 1.1rem;
+    border: 1.5px solid #d4dbeb; border-radius: 8px; padding: .5rem;
+    min-height: 48px; font-family: inherit;
+  }
+  .coeff-row .katex { font-size: 1.1rem; }
+  .alpha-row { display: flex; gap: .5rem; align-items: center; }
+  .alpha-row input {
+    width: 80px; text-align: center; font-size: 1.1rem;
+    border: 1.5px solid #d4dbeb; border-radius: 8px; padding: .5rem;
+    min-height: 48px; font-family: inherit;
+  }
+
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+    margin-top: .75rem;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:active { transform: scale(.97); }
+
+  .result-area {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; min-height: 4rem;
+    overflow-x: auto;
+  }
+  .result-area .step {
+    padding: .5rem .25rem; border-bottom: 1px dashed #eee;
+    animation: slideIn .3s ease;
+  }
+  .result-area .step:last-child { border-bottom: none; }
+  .result-area .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .2rem; }
+  .result-area .step .formula-line { overflow-x: auto; }
+  .result-area .step .formula-line .katex { font-size: 1.2rem; }
+
+  .result-highlight {
+    background: #e8f5e9; border: 2px solid #4caf50; border-radius: 10px;
+    padding: 1rem; text-align: center; margin-top: .75rem;
+    animation: pulse .5s ease;
+  }
+  .result-highlight .katex { font-size: 1.35rem; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.03); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>剰余の定理 計算ツール</h1>
+  <p class="subtitle">剰余の定理を使って、多項式を1次式で割ったときの余りを求めます。</p>
+
+  <div class="theorem-box">
+    <div class="title">剰余の定理</div>
+    <div id="theorem"></div>
+  </div>
+
+  <h2>多項式の係数を入力</h2>
+  <div class="input-group">
+    <label id="poly-label"></label>
+    <div class="coeff-row" id="coeff-row"></div>
+
+    <label id="divisor-label" style="margin-top: 1rem;"></label>
+    <div class="alpha-row">
+      <span id="alpha-prefix"></span>
+      <input type="number" id="alpha-input" value="-2">
+    </div>
+
+    <button class="btn primary" id="calc-btn">計算する</button>
+  </div>
+
+  <h2>計算結果</h2>
+  <div class="result-area" id="result-area">
+    <p style="color: var(--muted); text-align: center;">上の「計算する」をタップしてください</p>
+  </div>
+</main>
+
+<script>
+const C_A = "#d9534f";
+
+function tex(latex, target, displayMode) {
+  katex.render(latex, target, { throwOnError: false, displayMode: !!displayMode });
+}
+function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+function init() {
+  tex('P(x) \\text{ を } x - \\alpha \\text{ で割ったときの余りは } P(\\alpha)', document.getElementById('theorem'));
+
+  document.getElementById('poly-label').innerHTML = T('P(x) = a_3 x^3 + a_2 x^2 + a_1 x + a_0');
+  document.getElementById('divisor-label').innerHTML = `割る式: ${T('x - \\alpha')} の ${T('\\alpha')} の値`;
+  document.getElementById('alpha-prefix').innerHTML = T('\\alpha = ');
+
+  const coeffRow = document.getElementById('coeff-row');
+  const defaults = [1, -2, 0, 3];
+  const labels = ['x^3', 'x^2', 'x', ''];
+  coeffRow.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.value = defaults[i];
+    input.id = 'c' + (3 - i);
+    coeffRow.appendChild(input);
+    if (i < 3) {
+      const span = document.createElement('span');
+      span.innerHTML = T(labels[i] + ' + ');
+      coeffRow.appendChild(span);
+    }
+  }
+
+  document.getElementById('calc-btn').addEventListener('click', calculate);
+  calculate();
+}
+
+function calculate() {
+  const a3 = parseFloat(document.getElementById('c3').value) || 0;
+  const a2 = parseFloat(document.getElementById('c2').value) || 0;
+  const a1 = parseFloat(document.getElementById('c1').value) || 0;
+  const a0 = parseFloat(document.getElementById('c0').value) || 0;
+  const alpha = parseFloat(document.getElementById('alpha-input').value) || 0;
+
+  // Build polynomial string
+  function buildPoly(coeffs) {
+    const parts = [];
+    const exps = [3, 2, 1, 0];
+    for (let i = 0; i < 4; i++) {
+      const c = coeffs[i];
+      if (c === 0) continue;
+      let term = '';
+      if (parts.length > 0) {
+        term += c > 0 ? ' + ' : ' - ';
+      } else {
+        if (c < 0) term += '-';
+      }
+      const absC = Math.abs(c);
+      if (exps[i] === 0) {
+        term += absC;
+      } else if (absC !== 1) {
+        term += absC;
+      }
+      if (exps[i] >= 2) term += 'x^{' + exps[i] + '}';
+      else if (exps[i] === 1) term += 'x';
+      parts.push(term);
+    }
+    return parts.join('') || '0';
+  }
+
+  const polyStr = buildPoly([a3, a2, a1, a0]);
+  const alphaStr = alpha < 0 ? '(' + alpha + ')' : '' + alpha;
+  const alphaColor = `\\textcolor{${C_A}}{${alphaStr}}`;
+
+  // Substitution
+  function termSub(c, exp) {
+    if (c === 0) return null;
+    const absC = Math.abs(c);
+    let base = '';
+    if (exp === 0) {
+      base = '' + absC;
+    } else if (exp === 1) {
+      base = (absC === 1 ? '' : absC) + ' \\cdot ' + alphaColor;
+    } else {
+      base = (absC === 1 ? '' : absC + ' \\cdot ') + alphaColor + '^{' + exp + '}';
+    }
+    return { coeff: c, base: base };
+  }
+
+  const subTerms = [termSub(a3, 3), termSub(a2, 2), termSub(a1, 1), termSub(a0, 0)].filter(t => t !== null);
+  let subStr = '';
+  subTerms.forEach((t, i) => {
+    if (i > 0) subStr += t.coeff > 0 ? ' + ' : ' - ';
+    else if (t.coeff < 0) subStr += '-';
+    subStr += t.base;
+  });
+
+  // Evaluate powers
+  const v3 = a3 * Math.pow(alpha, 3);
+  const v2 = a2 * Math.pow(alpha, 2);
+  const v1 = a1 * alpha;
+  const v0 = a0;
+  const vals = [v3, v2, v1, v0].filter((_, i) => [a3, a2, a1, a0][i] !== 0);
+  let valStr = '';
+  vals.forEach((v, i) => {
+    if (i > 0) valStr += v >= 0 ? ' + ' : ' - ';
+    else if (v < 0) valStr += '-';
+    valStr += Math.abs(v);
+  });
+
+  const result = a3 * Math.pow(alpha, 3) + a2 * Math.pow(alpha, 2) + a1 * alpha + a0;
+
+  const area = document.getElementById('result-area');
+  area.innerHTML = `
+    <div class="step"><div class="label">多項式</div><div class="formula-line">${T('P(x) = ' + polyStr)}</div></div>
+    <div class="step"><div class="label">剰余の定理を適用</div><div class="formula-line">${T('\\text{余り} = P(' + alpha + ')')}</div></div>
+    <div class="step"><div class="label">代入する</div><div class="formula-line">${T('P(' + alpha + ') = ' + subStr)}</div></div>
+    <div class="step"><div class="label">各項を計算する</div><div class="formula-line">${T('= ' + valStr)}</div></div>
+    <div class="result-highlight">${T('\\boxed{\\text{余り} = ' + result + '}')}</div>
+  `;
+}
+
+if (window.katex) init();
+else window.addEventListener("DOMContentLoaded", () => {
+  if (window.katex) init();
+  else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+});
+</script>
+</body>
+</html>

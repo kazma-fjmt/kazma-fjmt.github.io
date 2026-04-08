@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>1の3乗根</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .theorem-box {
+    background: #eef4ff; border: 2px solid var(--accent);
+    border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0;
+    text-align: center;
+  }
+  .theorem-box .katex { font-size: 1.3rem; }
+  .theorem-label { font-weight: 700; color: var(--accent); font-size: .95rem; margin-bottom: .5rem; }
+
+  .root-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .75rem; margin: 1rem 0; }
+  .root-card {
+    background: #fff; border: 2px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem; text-align: center;
+    opacity: 0; transform: scale(.9);
+    animation: popIn .5s ease forwards;
+  }
+  .root-card:nth-child(1) { animation-delay: 0s; border-color: #2a6df4; }
+  .root-card:nth-child(2) { animation-delay: .2s; border-color: #d9534f; }
+  .root-card:nth-child(3) { animation-delay: .4s; border-color: #27ae60; }
+  .root-card .root-name { font-size: .85rem; color: var(--muted); margin-bottom: .35rem; }
+  .root-card .katex { font-size: 1.2rem; }
+
+  @keyframes popIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeSlideIn { to { opacity: 1; transform: translateY(0); } }
+
+  .canvas-wrap { position: relative; margin: 1rem auto; width: 100%; max-width: 420px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 10px; background: #fff; border: 1px solid #e3e3e3; }
+
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: var(--accent);
+    color: #fff; font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.5rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; font-family: inherit; user-select: none;
+    display: block; margin: 1rem auto 0;
+  }
+  .btn:active { transform: scale(.97); }
+
+  .verify-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; text-align: center;
+    min-height: 60px;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>1の3乗根</h1>
+  <p class="subtitle">方程式 <span id="eq-inline"></span> の3つの解を「1の3乗根」といいます。</p>
+
+  <h2>1の3乗根とは</h2>
+  <div class="theorem-box">
+    <div class="theorem-label">定義</div>
+    <div id="def-eq"></div>
+    <p style="font-size:.9rem;margin:.5rem 0 0;">の3つの解を <strong>1の3乗根</strong>（1の立方根）という。</p>
+  </div>
+
+  <h2>3つの解</h2>
+  <div class="root-cards" id="root-cards">
+    <div class="root-card"><div class="root-name">実数解</div><div id="r1"></div></div>
+    <div class="root-card"><div class="root-name">虚数解 1</div><div id="r2"></div></div>
+    <div class="root-card"><div class="root-name">虚数解 2</div><div id="r3"></div></div>
+  </div>
+
+  <h2>複素数平面上の1の3乗根</h2>
+  <p>3つの解は単位円上に等間隔（<span id="deg-inline"></span>間隔）で並びます。</p>
+  <div class="canvas-wrap">
+    <canvas id="cplane" width="420" height="420"></canvas>
+  </div>
+
+  <h2 id="omega-section"></h2>
+  <p>虚数であるものの1つを <span id="omega-def"></span> とおくと、1の3乗根は <span id="omega-list"></span> の3つで表せます。</p>
+  <div class="verify-box" id="verify-box"></div>
+  <button class="btn" id="verify-btn">アニメーションを再生</button>
+</main>
+
+<script>
+  function tex(l, el, dm) { katex.render(l, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  var roots = [
+    { re: 1, im: 0, angle: 0 },
+    { re: -0.5, im: Math.sqrt(3)/2, angle: 2*Math.PI/3 },
+    { re: -0.5, im: -Math.sqrt(3)/2, angle: 4*Math.PI/3 }
+  ];
+
+  var animId = null;
+
+  function drawPlane(progress) {
+    var canvas = document.getElementById('cplane');
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width, h = canvas.height;
+    var cx = w/2, cy = h/2, sc = 155;
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid
+    ctx.strokeStyle = '#eee'; ctx.lineWidth = 1;
+    for (var g = -2; g <= 2; g++) {
+      ctx.beginPath(); ctx.moveTo(cx + g*sc, 0); ctx.lineTo(cx + g*sc, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, cy + g*sc); ctx.lineTo(w, cy + g*sc); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '13px sans-serif';
+    ctx.fillText('Re', w - 28, cy - 8);
+    ctx.fillText('Im', cx + 8, 16);
+    // tick marks
+    ctx.fillText('1', cx + sc - 3, cy + 18);
+    ctx.fillText('-1', cx - sc - 10, cy + 18);
+
+    // Unit circle
+    var circProg = Math.min(1, progress * 1.5);
+    if (circProg > 0) {
+      ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, sc, 0, Math.PI * 2 * circProg); ctx.stroke();
+    }
+
+    // Rotating arrow to show omega^3 = 1
+    var arrowProg = Math.max(0, Math.min(1, (progress - 0.4) / 0.5));
+    if (arrowProg > 0) {
+      var totalAngle = arrowProg * 2 * Math.PI; // sweeps full circle
+      ctx.strokeStyle = 'rgba(42,109,244,0.25)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, sc * 0.4, 0, totalAngle); ctx.stroke();
+      // arrow head
+      var ax = cx + Math.cos(totalAngle) * sc * 0.4;
+      var ay = cy - Math.sin(totalAngle) * sc * 0.4;
+      ctx.fillStyle = 'rgba(42,109,244,0.4)';
+      ctx.beginPath(); ctx.arc(ax, ay, 4, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Roots and labels
+    var colors = ['#2a6df4', '#d9534f', '#27ae60'];
+    var labels = ['1', '\u03c9', '\u03c9\u00b2'];
+    var labelTexts = ['1', '(-1+\u221a3i)/2', '(-1-\u221a3i)/2'];
+
+    for (var i = 0; i < 3; i++) {
+      var appear = Math.min(1, Math.max(0, progress * 3 - i * 0.7));
+      if (appear <= 0) continue;
+      var r = roots[i];
+      var px = cx + r.re * sc;
+      var py = cy - r.im * sc;
+
+      // Line from origin
+      ctx.globalAlpha = appear;
+      ctx.strokeStyle = colors[i]; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + (px - cx) * appear, cy + (py - cy) * appear);
+      ctx.stroke();
+
+      // Dot
+      ctx.fillStyle = colors[i];
+      ctx.beginPath(); ctx.arc(px, py, 8 * appear, 0, Math.PI*2); ctx.fill();
+
+      // White center
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(px, py, 4 * appear, 0, Math.PI*2); ctx.fill();
+
+      // Label
+      if (appear > 0.5) {
+        ctx.fillStyle = colors[i]; ctx.font = 'bold 14px sans-serif';
+        var lx = px + 12, ly = py - 10;
+        if (r.im < 0) ly = py + 22;
+        if (i === 0) { lx = px + 12; ly = py - 12; }
+        ctx.fillText(labels[i] + ' = ' + labelTexts[i], lx, ly);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Triangle
+    if (progress > 0.7) {
+      var ta = (progress - 0.7) / 0.3;
+      ctx.globalAlpha = ta * 0.15;
+      ctx.fillStyle = '#2a6df4';
+      ctx.beginPath();
+      for (var j = 0; j < 3; j++) {
+        var rr = roots[j];
+        if (j === 0) ctx.moveTo(cx + rr.re*sc, cy - rr.im*sc);
+        else ctx.lineTo(cx + rr.re*sc, cy - rr.im*sc);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = ta * 0.6;
+      ctx.strokeStyle = '#2a6df4'; ctx.lineWidth = 2; ctx.stroke();
+
+      // Angle labels
+      ctx.globalAlpha = ta;
+      ctx.fillStyle = '#666'; ctx.font = '12px sans-serif';
+      var angR = sc * 0.3;
+      ctx.fillText('120\u00b0', cx + angR * Math.cos(Math.PI/3) - 5, cy - angR * Math.sin(Math.PI/3));
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function animatePlane() {
+    if (animId) cancelAnimationFrame(animId);
+    var start = null;
+    function frame(ts) {
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / 2500);
+      drawPlane(p);
+      if (p < 1) animId = requestAnimationFrame(frame);
+    }
+    animId = requestAnimationFrame(frame);
+  }
+
+  function init() {
+    tex("x^3 = 1", document.getElementById('eq-inline'));
+    tex("x^3 = 1", document.getElementById('def-eq'), true);
+    tex("1", document.getElementById('r1'));
+    tex("\\frac{-1 + \\sqrt{3}\\,i}{2}", document.getElementById('r2'));
+    tex("\\frac{-1 - \\sqrt{3}\\,i}{2}", document.getElementById('r3'));
+    tex("120^\\circ", document.getElementById('deg-inline'));
+
+    tex("\\omega \\text{ のこと}", document.getElementById('omega-section'));
+    document.getElementById('omega-section').innerHTML = '';
+    var h2 = document.getElementById('omega-section');
+    h2.style.borderLeft = '4px solid var(--accent)';
+    h2.style.paddingLeft = '.6rem';
+    h2.textContent = '';
+    var h2Span = document.createElement('span');
+    h2.appendChild(h2Span);
+    tex("\\omega", h2Span);
+    h2.appendChild(document.createTextNode(' の表記'));
+
+    tex("\\omega = \\frac{-1 + \\sqrt{3}\\,i}{2}", document.getElementById('omega-def'));
+    tex("1,\\; \\omega,\\; \\omega^2", document.getElementById('omega-list'));
+
+    var vb = document.getElementById('verify-box');
+    vb.innerHTML = '<div style="margin-bottom:.5rem">' + T("\\omega^3 = 1") + '</div>' +
+      '<div style="color:var(--muted);font-size:.9rem;">' +
+      T("\\omega") + ' を3乗すると1に戻る（単位円上を ' + T("120^\\circ") + ' ずつ回転）</div>';
+
+    document.getElementById('verify-btn').addEventListener('click', animatePlane);
+
+    drawPlane(0);
+    // Auto-play on load
+    setTimeout(animatePlane, 300);
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", function() {
+    if (window.katex) init();
+    else { var w = setInterval(function() { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

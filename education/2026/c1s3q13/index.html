@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>重解とグラフの関係</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; --green:#4fd47e; --orange:#f5a623; --red:#d9534f; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;margin:0 0 1rem; }
+  .btn { display:inline-block;padding:.75rem 1.5rem;border-radius:10px;border:2px solid var(--accent);background:#fff;color:var(--accent);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s;margin:.5rem .25rem; }
+  .btn:active { transform:scale(.97); }
+  .btn.active { background:var(--accent);color:#fff; }
+  .btn-row { display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin:.75rem 0; }
+  .cv-wrap { display:flex;justify-content:center;margin:1rem 0; }
+  #cv-box { position:relative;display:inline-block;width:100%;max-width:560px; }
+  canvas { display:block;width:100%;border-radius:10px;border:1px solid #e3e3e3;background:#fff; }
+  .cv-lbl { position:absolute;pointer-events:none;line-height:1;font-size:13px; }
+  .info { text-align:center;min-height:3rem;font-size:.95rem;margin:.5rem 0;padding:.75rem;background:#f8f9ff;border-radius:8px; }
+  .legend { display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;font-size:.85rem;margin:.5rem 0; }
+  .legend-item { display:flex;align-items:center;gap:.25rem; }
+  .legend-dot { width:12px;height:12px;border-radius:50%; }
+</style>
+</head>
+<body>
+<main>
+  <h1>重解とグラフの関係</h1>
+  <p class="subtitle">解の重複度がグラフの挙動にどう影響するか</p>
+
+  <h2>重解の定義</h2>
+  <div class="card">
+    <p id="def1"></p>
+    <p id="def2"></p>
+  </div>
+
+  <h2>重複度とグラフの挙動</h2>
+  <div class="card">
+    <p id="behavior"></p>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <h2>グラフで確認</h2>
+  <div class="btn-row" id="btnRow"></div>
+  <div class="cv-wrap">
+    <div id="cv-box">
+      <canvas id="cv" width="560" height="360"></canvas>
+    </div>
+  </div>
+  <div class="info" id="info"></div>
+
+  <h2>アニメーション: 重複度の変化</h2>
+  <div class="card" style="text-align:center;">
+    <p id="animDesc"></p>
+    <button class="btn" id="animBtn" onclick="startMorphAnim()">アニメーション開始</button>
+    <div class="cv-wrap">
+      <div id="cv-box2" style="position:relative;display:inline-block;width:100%;max-width:560px;">
+        <canvas id="cv2" width="560" height="360" style="display:block;width:100%;border-radius:10px;border:1px solid #e3e3e3;background:#fff;"></canvas>
+      </div>
+    </div>
+    <div class="info" id="animInfo"></div>
+  </div>
+</main>
+<script>
+const T=l=>katex.renderToString(l,{throwOnError:false});
+
+const examples=[];
+let currentExample=0;
+let morphAnim=null;
+
+function drawGraph(cvId, fn, roots, color, xRange, yRange){
+  const cv=document.getElementById(cvId);
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const pad=30;
+  ctx.clearRect(0,0,W,H);
+
+  const xMin=xRange[0], xMax=xRange[1];
+  const yMin=yRange[0], yMax=yRange[1];
+  function toPixel(x,y){
+    return [ pad+(x-xMin)/(xMax-xMin)*(W-2*pad), H-pad-(y-yMin)/(yMax-yMin)*(H-2*pad) ];
+  }
+
+  /* Grid */
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;
+  for(let gx=Math.ceil(xMin);gx<=Math.floor(xMax);gx++){
+    const [px]=toPixel(gx,0);
+    ctx.beginPath();ctx.moveTo(px,pad);ctx.lineTo(px,H-pad);ctx.stroke();
+  }
+  for(let gy=Math.ceil(yMin);gy<=Math.floor(yMax);gy++){
+    const [,py]=toPixel(0,gy);
+    ctx.beginPath();ctx.moveTo(pad,py);ctx.lineTo(W-pad,py);ctx.stroke();
+  }
+
+  /* Axes */
+  ctx.strokeStyle='#bbb';ctx.lineWidth=1.5;
+  const [axL]=toPixel(xMin,0), [axR]=toPixel(xMax,0);
+  const [,ayT]=toPixel(0,yMax), [,ayB]=toPixel(0,yMin);
+  const [ox0,oy0]=toPixel(0,0);
+  ctx.beginPath();ctx.moveTo(pad,oy0);ctx.lineTo(W-pad,oy0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox0,pad);ctx.lineTo(ox0,H-pad);ctx.stroke();
+
+  /* Curve */
+  ctx.strokeStyle=color;ctx.lineWidth=3;
+  ctx.beginPath();
+  let first=true;
+  for(let px=pad;px<=W-pad;px++){
+    const x=xMin+(px-pad)/(W-2*pad)*(xMax-xMin);
+    const y=fn(x);
+    const [,py]=toPixel(x,y);
+    if(py<-50||py>H+50){ first=true; continue; }
+    if(first){ ctx.moveTo(px,py);first=false; } else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  /* Root dots */
+  roots.forEach(r=>{
+    const [px,py]=toPixel(r.x,0);
+    ctx.beginPath();ctx.arc(px,py,r.mult===1?6:8,0,Math.PI*2);
+    ctx.fillStyle=r.mult===1?'#2a6df4':r.mult===2?'#f5a623':'#d9534f';
+    ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  });
+}
+
+function selectExample(idx){
+  currentExample=idx;
+  const ex=examples[idx];
+  drawGraph('cv',ex.fn,ex.roots,ex.color,ex.xRange,ex.yRange);
+  document.getElementById('info').innerHTML=ex.infoHtml;
+  document.querySelectorAll('#btnRow .btn').forEach((b,i)=>{
+    b.classList.toggle('active',i===idx);
+  });
+}
+
+function startMorphAnim(){
+  if(morphAnim) cancelAnimationFrame(morphAnim);
+  const cv=document.getElementById('cv2');
+  const dur=4000;
+  const start=performance.now();
+  const info=document.getElementById('animInfo');
+
+  function frame(now){
+    const elapsed=now-start;
+    const cycle=elapsed%dur;
+    const phase=cycle/dur;
+
+    /* Morph parameter: 0->1 moves a from -2 towards 1 */
+    let a;
+    if(phase<0.33) a=-2+3*(phase/0.33);        /* single root moving to double */
+    else if(phase<0.66) a=1;                     /* stay at double root */
+    else a=1+1.5*((phase-0.66)/0.34);           /* double root becomes crossing again (but triple-like) */
+
+    /* y = (x - 1)(x - a)^2 normalized */
+    const fn=x=>(x-1)*(x-a)*(x-a);
+    const roots=[];
+    if(Math.abs(a-1)<0.1){
+      roots.push({x:1,mult:3});
+    } else {
+      roots.push({x:1,mult:1});
+      roots.push({x:a,mult:2});
+    }
+
+    drawGraph('cv2',fn,roots,'#2a6df4',[-3,4],[-10,10]);
+
+    if(phase<0.33){
+      info.innerHTML='根 '+T('x = '+a.toFixed(1))+' が '+T('x = 1')+' に近づいています...';
+    } else if(phase<0.66){
+      info.innerHTML='3重解! グラフは '+T('x = 1')+' で接線的に通過';
+    } else {
+      info.innerHTML='根が再び分離中: '+T('x = '+a.toFixed(1));
+    }
+
+    morphAnim=requestAnimationFrame(frame);
+  }
+  morphAnim=requestAnimationFrame(frame);
+  document.getElementById('animBtn').textContent='停止';
+  document.getElementById('animBtn').onclick=stopMorphAnim;
+}
+
+function stopMorphAnim(){
+  if(morphAnim) cancelAnimationFrame(morphAnim);
+  morphAnim=null;
+  document.getElementById('animBtn').textContent='アニメーション開始';
+  document.getElementById('animBtn').onclick=startMorphAnim;
+}
+
+function init(){
+  /* Definitions */
+  document.getElementById('def1').innerHTML=
+    '方程式 '+T('(x-1)(x+2)^2 = 0')+' の解は '+T('x = 1, -2')+' である。このうち '+T('x = -2')+' を<strong>2重解</strong>という。';
+  document.getElementById('def2').innerHTML=
+    '同様に '+T('(x-1)^3 = 0')+' の解 '+T('x = 1')+' を<strong>3重解</strong>という。';
+
+  document.getElementById('behavior').innerHTML=
+    '<strong>重複度（多重度）</strong>は根でのグラフの振る舞いを決める:<br>'+
+    '- <strong>単根</strong>（1重）: グラフが'+T('x')+'軸を<strong>横切る</strong><br>'+
+    '- <strong>2重解</strong>: グラフが'+T('x')+'軸に<strong>接する</strong>（跳ね返る）<br>'+
+    '- <strong>3重解</strong>: グラフが'+T('x')+'軸を<strong>変曲点で通過</strong>';
+
+  document.getElementById('legend').innerHTML=
+    '<div class="legend-item"><div class="legend-dot" style="background:#2a6df4"></div>単根</div>'+
+    '<div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>2重解</div>'+
+    '<div class="legend-item"><div class="legend-dot" style="background:#d9534f"></div>3重解</div>';
+
+  /* Examples */
+  examples.push({
+    label:T('(x-1)(x+2)^2=0'),
+    fn:x=>(x-1)*(x+2)*(x+2)/3,
+    roots:[{x:1,mult:1},{x:-2,mult:2}],
+    color:'#2a6df4',
+    xRange:[-4,3], yRange:[-4,6],
+    infoHtml:T('x=1')+' は単根（横切る）、'+T('x=-2')+' は2重解（接する）'
+  });
+  examples.push({
+    label:T('(x-1)^3=0'),
+    fn:x=>(x-1)*(x-1)*(x-1),
+    roots:[{x:1,mult:3}],
+    color:'#d9534f',
+    xRange:[-2,4], yRange:[-8,8],
+    infoHtml:T('x=1')+' は3重解（変曲点で通過）'
+  });
+  examples.push({
+    label:T('(x-1)(x-2)(x+1)^2=0'),
+    fn:x=>(x-1)*(x-2)*(x+1)*(x+1)/2,
+    roots:[{x:1,mult:1},{x:2,mult:1},{x:-1,mult:2}],
+    color:'#2a6df4',
+    xRange:[-3,4], yRange:[-4,6],
+    infoHtml:T('x=1,2')+' は単根（横切る）、'+T('x=-1')+' は2重解（接する）'
+  });
+  examples.push({
+    label:T('(x+1)^2(x-1)^2=0'),
+    fn:x=>(x+1)*(x+1)*(x-1)*(x-1),
+    roots:[{x:-1,mult:2},{x:1,mult:2}],
+    color:'#f5a623',
+    xRange:[-3,3], yRange:[-1,5],
+    infoHtml:T('x=-1')+' と '+T('x=1')+' は共に2重解（両方接する）'
+  });
+
+  const btnRow=document.getElementById('btnRow');
+  examples.forEach((ex,i)=>{
+    const b=document.createElement('button');
+    b.className='btn'+(i===0?' active':'');
+    b.innerHTML=ex.label;
+    b.onclick=()=>selectExample(i);
+    btnRow.appendChild(b);
+  });
+
+  selectExample(0);
+
+  document.getElementById('animDesc').innerHTML=
+    '根の位置が変化するとき、グラフがどう変わるか観察しましょう。';
+
+  drawGraph('cv2',x=>(x-1)*(x+2)*(x+2)/3,[{x:1,mult:1},{x:-2,mult:2}],'#2a6df4',[-3,4],[-10,10]);
+  document.getElementById('animInfo').innerHTML='タップして開始';
+}
+
+if(window.katex) init();
+else document.addEventListener('DOMContentLoaded',()=>{
+  if(window.katex) init();
+  else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+});
+</script>
+</body>
+</html>

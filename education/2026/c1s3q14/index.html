@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>高次方程式とその解</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; --green:#4fd47e; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;margin:0 0 1rem;overflow-x:auto; }
+  .step { opacity:0;transform:translateY(12px);transition:opacity .5s ease, transform .5s ease; }
+  .step.show { opacity:1;transform:translateY(0); }
+  .btn { display:inline-block;padding:.75rem 1.5rem;border-radius:10px;border:2px solid var(--accent);background:#fff;color:var(--accent);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s;margin:.5rem .25rem; }
+  .btn:active { transform:scale(.97); }
+  .btn.primary { background:var(--accent);color:#fff; }
+  .result-box { background:#e8fdf0;border:2px solid var(--green);border-radius:10px;padding:1rem 1.25rem;text-align:center;margin:1rem 0;opacity:0;transform:scale(.95);transition:all .5s ease; }
+  .result-box.show { opacity:1;transform:scale(1); }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+  .result-box.pulse { animation:pulse .6s ease; }
+  .theorem { background:#fff7e6;border:2px solid #f5c842;border-radius:10px;padding:1rem 1.25rem;margin:1rem 0; }
+  .theorem-title { font-weight:700;color:#856404;margin-bottom:.5rem; }
+  .note { background:#f0f5ff;border-left:4px solid var(--accent);padding:.75rem 1rem;margin:.75rem 0;border-radius:0 8px 8px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>高次方程式とその解</h1>
+  <p class="subtitle" id="sub1"></p>
+
+  <h2 id="thm-title"></h2>
+  <div class="theorem">
+    <div class="theorem-title">定理</div>
+    <p id="thm1"></p>
+  </div>
+
+  <div class="note" id="conjugate"></div>
+
+  <h2>応用例題</h2>
+  <div class="card">
+    <p id="problem"></p>
+  </div>
+
+  <h2>解法ステップ</h2>
+  <div style="text-align:center;margin-bottom:1rem;">
+    <button class="btn primary" id="nextBtn" onclick="nextStep()">ステップを表示</button>
+    <button class="btn" onclick="resetSteps()">リセット</button>
+  </div>
+
+  <div class="card step" id="s1">
+    <p><strong>Step 1:</strong> 解を代入する</p>
+    <p id="s1a"></p>
+    <p id="s1b"></p>
+  </div>
+
+  <div class="card step" id="s2">
+    <p><strong>Step 2:</strong> <span id="s2title"></span></p>
+    <p id="s2a"></p>
+    <p id="s2b"></p>
+    <p id="s2c"></p>
+  </div>
+
+  <div class="card step" id="s3">
+    <p><strong>Step 3:</strong> 整理して実部と虚部を分ける</p>
+    <p id="s3a"></p>
+    <p id="s3b"></p>
+  </div>
+
+  <div class="card step" id="s4">
+    <p><strong>Step 4:</strong> 連立方程式を解く</p>
+    <p id="s4a"></p>
+    <p id="s4b"></p>
+  </div>
+
+  <div class="result-box" id="result1">
+    <p id="r1Text" style="font-size:1.05rem;margin:0;"></p>
+  </div>
+
+  <div class="card step" id="s5">
+    <p><strong>Step 5:</strong> 方程式を因数分解して他の解を求める</p>
+    <p id="s5a"></p>
+    <p id="s5b"></p>
+    <p id="s5c"></p>
+  </div>
+
+  <div class="result-box" id="result2">
+    <p id="r2Text" style="font-size:1.05rem;margin:0;"></p>
+  </div>
+</main>
+<script>
+const T=l=>katex.renderToString(l,{throwOnError:false});
+
+let stepIdx=0;
+const totalSteps=7;
+
+function nextStep(){
+  stepIdx++;
+  if(stepIdx>totalSteps) return;
+  if(stepIdx<=5){
+    document.getElementById('s'+stepIdx).classList.add('show');
+  }
+  if(stepIdx===6){
+    const r=document.getElementById('result1');
+    r.classList.add('show');
+    setTimeout(()=>r.classList.add('pulse'),100);
+  }
+  if(stepIdx===7){
+    const r=document.getElementById('result2');
+    r.classList.add('show');
+    setTimeout(()=>r.classList.add('pulse'),100);
+  }
+  if(stepIdx>=totalSteps) document.getElementById('nextBtn').textContent='完了';
+}
+
+function resetSteps(){
+  stepIdx=0;
+  for(let i=1;i<=5;i++) document.getElementById('s'+i).classList.remove('show');
+  ['result1','result2'].forEach(id=>{
+    document.getElementById(id).classList.remove('show','pulse');
+  });
+  document.getElementById('nextBtn').textContent='ステップを表示';
+}
+
+function init(){
+  document.getElementById('sub1').innerHTML=T('n')+' 次方程式は '+T('n')+' 個の解をもつ（重解を重複度だけ数える）';
+
+  document.getElementById('thm-title').textContent='n次方程式の解の個数';
+  document.getElementById('thm1').innerHTML=
+    '複素数の範囲で、'+T('m')+' 重解を '+T('m')+' 個と数えると、<br>'+
+    '<strong>'+T('n')+' 次方程式は常に '+T('n')+' 個の解をもつ。</strong>';
+
+  document.getElementById('conjugate').innerHTML=
+    '<strong>共役複素数の性質:</strong> 係数がすべて実数である方程式が虚数解 '+T('a+bi')+' をもつならば、共役な '+T('a-bi')+' もまた解である。';
+
+  document.getElementById('problem').innerHTML=
+    T('x = 1+i')+' が方程式 '+T('x^3 + ax + b = 0')+' の解であるとき、実数 '+T('a, b')+' の値を求めよ。また、他の解を求めよ。';
+
+  /* Step 1 */
+  document.getElementById('s1a').innerHTML=
+    T('x = 1+i')+' を代入:';
+  document.getElementById('s1b').innerHTML=
+    T('(1+i)^3 + a(1+i) + b = 0');
+
+  /* Step 2 */
+  document.getElementById('s2title').textContent='(1+i) の累乗を計算';
+  document.getElementById('s2a').innerHTML=
+    T('(1+i)^2 = 1 + 2i + i^2 = 1 + 2i - 1 = 2i');
+  document.getElementById('s2b').innerHTML=
+    T('(1+i)^3 = (1+i) \\cdot 2i = 2i + 2i^2 = 2i - 2 = -2 + 2i');
+  document.getElementById('s2c').innerHTML=
+    '代入すると: '+T('(-2+2i) + a(1+i) + b = 0');
+
+  /* Step 3 */
+  document.getElementById('s3a').innerHTML=
+    '展開: '+T('(-2 + a + b) + (2 + a)i = 0');
+  document.getElementById('s3b').innerHTML=
+    T('a, b')+' は実数なので、実部と虚部がそれぞれ '+T('0')+' :<br>'+
+    T('\\begin{cases} a + b - 2 = 0 \\\\ a + 2 = 0 \\end{cases}');
+
+  /* Step 4 */
+  document.getElementById('s4a').innerHTML=
+    T('a + 2 = 0')+' より '+T('a = -2');
+  document.getElementById('s4b').innerHTML=
+    T('a + b - 2 = 0')+' に代入: '+T('-2 + b - 2 = 0')+' より '+T('b = 4');
+
+  document.getElementById('r1Text').innerHTML=
+    T('a = -2,\\quad b = 4');
+
+  /* Step 5 */
+  document.getElementById('s5a').innerHTML=
+    'もとの方程式は '+T('x^3 - 2x + 4 = 0');
+  document.getElementById('s5b').innerHTML=
+    '因数分解: '+T('(x+2)(x^2 - 2x + 2) = 0');
+  document.getElementById('s5c').innerHTML=
+    T('x^2 - 2x + 2 = 0')+' を解くと '+T('x = \\dfrac{2 \\pm \\sqrt{4-8}}{2} = 1 \\pm i');
+
+  document.getElementById('r2Text').innerHTML=
+    '他の解: '+T('x = -2,\\; 1-i')+'<br>'+
+    '（'+T('1+i')+' と '+T('1-i')+' は共役複素数のペア）';
+}
+
+if(window.katex) init();
+else document.addEventListener('DOMContentLoaded',()=>{
+  if(window.katex) init();
+  else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+});
+</script>
+</body>
+</html>

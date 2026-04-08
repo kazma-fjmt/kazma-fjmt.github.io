@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>3次式の展開公式を使う</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  /* Reference formulas */
+  .formulas {
+    display: grid;
+    gap: .75rem;
+  }
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula .katex { font-size: 1.35rem; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    margin: .75rem 0 1rem;
+    flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1 1 200px;
+    appearance: none;
+    background: #fff;
+    border: 1.5px solid #d4dbeb;
+    color: var(--fg);
+    border-radius: 10px;
+    padding: 1rem .75rem;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    min-height: 56px;
+    user-select: none;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .tab.active {
+    border-color: var(--accent);
+    background: #eef4ff;
+  }
+  .tab:active { transform: scale(.98); }
+  .tab .katex { font-size: 1.25rem; }
+
+  /* Walkthrough */
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    margin: 0 0 .75rem;
+    min-height: 9rem;
+    overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem;
+    border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: .75rem;
+    margin: .25rem -.5rem;
+    border-bottom: none;
+  }
+  .step .label {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-bottom: .25rem;
+  }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  /* Controls */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid #d4dbeb;
+    background: #fff;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 110px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: .3;
+    cursor: not-allowed;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(.97);
+  }
+  .step-counter {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    flex: 1;
+  }
+  .step-counter .katex { font-size: 1.05rem; color: var(--fg); font-weight: 600; }
+
+  /* Color legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: .5rem;
+  }
+  .legend .swatch {
+    display: inline-block;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    margin-right: .35rem;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>3次式の展開公式を使う</h1>
+  <p class="subtitle">公式の <span class="lbl-a"></span> と <span class="lbl-b"></span> に式を当てはめて、3次式を展開してみましょう。</p>
+
+  <h2>使う公式</h2>
+  <div class="formulas">
+    <div class="formula" id="formula-plus"></div>
+    <div class="formula" id="formula-minus"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#d9534f;"></span><span class="lbl-a-leg"></span> に入る部分</span>
+    <span><span class="swatch" style="background:#2a6df4;"></span><span class="lbl-b-leg"></span> に入る部分</span>
+  </div>
+
+  <h2>例題</h2>
+  <p class="subtitle">例題をタップで切り替え、「次へ」で1ステップずつ進みます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-idx="0"></button>
+    <button class="tab" data-idx="1"></button>
+  </div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+
+<script>
+  const C_A = "#d9534f";
+  const C_B = "#2a6df4";
+
+  function tex(latex, target, displayMode = false) {
+    katex.render(latex, target, { throwOnError: false, displayMode });
+  }
+  function texHTML(latex, displayMode = false) {
+    return katex.renderToString(latex, { throwOnError: false, displayMode });
+  }
+  const T = (l) => texHTML(l);
+
+  // Reference formulas (a, b color-coded)
+  const FORMULA_PLUS = `(\\textcolor{${C_A}}{a}+\\textcolor{${C_B}}{b})^{3} = \\textcolor{${C_A}}{a}^{3} + 3\\textcolor{${C_A}}{a}^{2}\\textcolor{${C_B}}{b} + 3\\textcolor{${C_A}}{a}\\textcolor{${C_B}}{b}^{2} + \\textcolor{${C_B}}{b}^{3}`;
+  const FORMULA_MINUS = `(\\textcolor{${C_A}}{a}-\\textcolor{${C_B}}{b})^{3} = \\textcolor{${C_A}}{a}^{3} - 3\\textcolor{${C_A}}{a}^{2}\\textcolor{${C_B}}{b} + 3\\textcolor{${C_A}}{a}\\textcolor{${C_B}}{b}^{2} - \\textcolor{${C_B}}{b}^{3}`;
+
+  // Examples
+  const examples = [
+    {
+      label: "(x-2)^{3}",
+      steps: [
+        {
+          title: "使う公式を確認する",
+          tex: FORMULA_MINUS
+        },
+        {
+          titleParts: [{tex:`\\textcolor{${C_A}}{a}`}, " と ", {tex:`\\textcolor{${C_B}}{b}`}, " を決める"],
+          tex: `\\textcolor{${C_A}}{a} = \\textcolor{${C_A}}{x}, \\quad \\textcolor{${C_B}}{b} = \\textcolor{${C_B}}{2}`
+        },
+        {
+          title: "公式に代入する",
+          tex: `(\\textcolor{${C_A}}{x}-\\textcolor{${C_B}}{2})^{3} = \\textcolor{${C_A}}{x}^{3} - 3\\cdot\\textcolor{${C_A}}{x}^{2}\\cdot\\textcolor{${C_B}}{2} + 3\\cdot\\textcolor{${C_A}}{x}\\cdot\\textcolor{${C_B}}{2}^{2} - \\textcolor{${C_B}}{2}^{3}`
+        },
+        {
+          title: "それぞれの項を計算する",
+          tex: `\\phantom{(x-2)^{3}}\\, = x^{3} - 6x^{2} + 12x - 8`
+        }
+      ]
+    },
+    {
+      label: "(3x+2y)^{3}",
+      steps: [
+        {
+          title: "使う公式を確認する",
+          tex: FORMULA_PLUS
+        },
+        {
+          titleParts: [{tex:`\\textcolor{${C_A}}{a}`}, " と ", {tex:`\\textcolor{${C_B}}{b}`}, " を決める"],
+          tex: `\\textcolor{${C_A}}{a} = \\textcolor{${C_A}}{3x}, \\quad \\textcolor{${C_B}}{b} = \\textcolor{${C_B}}{2y}`
+        },
+        {
+          title: "公式に代入する",
+          tex: `(\\textcolor{${C_A}}{3x}+\\textcolor{${C_B}}{2y})^{3} = (\\textcolor{${C_A}}{3x})^{3} + 3(\\textcolor{${C_A}}{3x})^{2}(\\textcolor{${C_B}}{2y}) + 3(\\textcolor{${C_A}}{3x})(\\textcolor{${C_B}}{2y})^{2} + (\\textcolor{${C_B}}{2y})^{3}`
+        },
+        {
+          title: "それぞれの項を計算する",
+          tex: `\\phantom{(3x+2y)^{3}}\\, = 27x^{3} + 54x^{2}y + 36xy^{2} + 8y^{3}`
+        }
+      ]
+    }
+  ];
+
+  let curEx = 0;
+  let curStep = 0;
+
+  function buildLabel(parts) {
+    return parts.map(p => typeof p === 'string' ? p : T(p.tex)).join('');
+  }
+
+  function renderWalkthrough() {
+    const root = document.getElementById('walkthrough');
+    const ex = examples[curEx];
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = ex.steps[i];
+      const isCurrent = i === curStep;
+      const label = s.titleParts ? buildLabel(s.titleParts) : s.title;
+      html += `<div class="step ${isCurrent ? 'current' : ''}">
+        <div class="label">${label}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    tex(String(curStep + 1), document.getElementById('step-cur'));
+    tex(String(ex.steps.length), document.getElementById('step-tot'));
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === ex.steps.length - 1;
+    const last = root.lastElementChild;
+    if (last && last.scrollIntoView) {
+      last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  function selectExample(idx) {
+    curEx = idx;
+    curStep = 0;
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', parseInt(t.dataset.idx, 10) === idx);
+    });
+    renderWalkthrough();
+  }
+
+  function init() {
+    // Top inline labels
+    document.querySelectorAll('.lbl-a').forEach(el => tex(`\\textcolor{${C_A}}{a}`, el));
+    document.querySelectorAll('.lbl-b').forEach(el => tex(`\\textcolor{${C_B}}{b}`, el));
+    document.querySelectorAll('.lbl-a-leg').forEach(el => tex(`\\textcolor{${C_A}}{a}`, el));
+    document.querySelectorAll('.lbl-b-leg').forEach(el => tex(`\\textcolor{${C_B}}{b}`, el));
+
+    // Reference formulas
+    tex(FORMULA_PLUS, document.getElementById('formula-plus'));
+    tex(FORMULA_MINUS, document.getElementById('formula-minus'));
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      const idx = parseInt(tab.dataset.idx, 10);
+      tex(examples[idx].label, tab);
+      tab.addEventListener('click', () => selectExample(idx));
+    });
+
+    // Controls
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalkthrough(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < examples[curEx].steps.length - 1) { curStep++; renderWalkthrough(); }
+    });
+
+    renderWalkthrough();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const wait = setInterval(() => {
+        if (window.katex) { clearInterval(wait); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>

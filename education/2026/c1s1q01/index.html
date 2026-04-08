@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>3次式の乗法公式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c1: #d9534f;
+    --c2: #2a6df4;
+    --c3: #28a745;
+    --c4: #6f42c1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 2rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.5rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  .formula .katex { font-size: 1.5rem; }
+
+  /* Derivation panel */
+  .derivation {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    margin: 1rem 0 .75rem;
+    min-height: 9rem;
+    overflow-x: auto;
+  }
+  .step {
+    padding: .65rem .25rem;
+    border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: .65rem .75rem;
+    margin: .25rem -.5rem;
+    border-bottom: none;
+  }
+  .step .label {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-bottom: .25rem;
+  }
+  .step .label .katex { font-size: .85rem; color: var(--muted); }
+  .step .formula-line {
+    text-align: left;
+    overflow-x: auto;
+  }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 1rem 0 1.5rem;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid #d4dbeb;
+    background: #fff;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 110px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: .3;
+    cursor: not-allowed;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(.97);
+  }
+  .step-counter {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    flex: 1;
+  }
+  .step-counter .katex { font-size: 1.05rem; color: var(--fg); font-weight: 600; }
+
+  /* Final result card */
+  .result-card {
+    background: #fff;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 1.75rem 1rem;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  .result-card .katex { font-size: 1.7rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>3次式の乗法公式</h1>
+
+  <h2>2次式のおさらい</h2>
+  <p>数学Ⅰで学んだ2次式の展開公式から始めましょう。</p>
+  <div class="formula" id="recap"></div>
+  <p>これをもとに <span class="inline-tex" data-tex="(a+b)^{3}"></span> の展開を導いていきます。</p>
+
+  <h2>展開の手順</h2>
+  <p class="subtitle">「次へ」をタップして1ステップずつ進みます。</p>
+  <div class="derivation" id="derivation"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+
+  <h2>3次式の乗法公式</h2>
+  <div class="result-card" id="result"></div>
+</main>
+
+<script>
+  function tex(latex, target, displayMode = false) {
+    katex.render(latex, target, { throwOnError: false, displayMode });
+  }
+  function texHTML(latex, displayMode = false) {
+    return katex.renderToString(latex, { throwOnError: false, displayMode });
+  }
+  const T = (l) => texHTML(l);
+
+  // Build a label that mixes plain Japanese text and inline TeX fragments.
+  function buildLabel(parts) {
+    return parts.map(p => typeof p === 'string' ? p : T(p.tex)).join('');
+  }
+
+  // Step-by-step derivation of (a+b)^3.
+  // \phantom{(a+b)^{3}} keeps the "=" of subsequent steps aligned with step 2's "=".
+  const steps = [
+    {
+      label: ["出発点"],
+      tex: "(a+b)^{3}"
+    },
+    {
+      label: [{tex:"(a+b)^{2}"}, " を取り出す"],
+      tex: "(a+b)^{3} = (a+b)(a+b)^{2}"
+    },
+    {
+      label: [{tex:"(a+b)^{2}"}, " を展開する"],
+      tex: "\\phantom{(a+b)^{3}}\\, = (a+b)(a^{2}+2ab+b^{2})"
+    },
+    {
+      label: ["分配法則を使う"],
+      tex: "\\phantom{(a+b)^{3}}\\, = a(a^{2}+2ab+b^{2}) + b(a^{2}+2ab+b^{2})"
+    },
+    {
+      label: ["かっこを展開する"],
+      tex: "\\phantom{(a+b)^{3}}\\, = \\textcolor{#d9534f}{a^{3}} + \\textcolor{#2a6df4}{2a^{2}b} + \\textcolor{#28a745}{ab^{2}} + \\textcolor{#2a6df4}{a^{2}b} + \\textcolor{#28a745}{2ab^{2}} + \\textcolor{#6f42c1}{b^{3}}"
+    },
+    {
+      label: ["同類項をまとめる"],
+      tex: "\\phantom{(a+b)^{3}}\\, = \\textcolor{#d9534f}{a^{3}} + \\textcolor{#2a6df4}{3a^{2}b} + \\textcolor{#28a745}{3ab^{2}} + \\textcolor{#6f42c1}{b^{3}}"
+    }
+  ];
+
+  let cur = 0;
+
+  function renderDerivation() {
+    const root = document.getElementById('derivation');
+    let html = '';
+    for (let i = 0; i <= cur; i++) {
+      const s = steps[i];
+      const isCurrent = i === cur;
+      html += `<div class="step ${isCurrent ? 'current' : ''}">
+        <div class="label">${buildLabel(s.label)}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    tex(String(cur + 1), document.getElementById('step-cur'));
+    tex(String(steps.length), document.getElementById('step-tot'));
+    document.getElementById('prev').disabled = cur === 0;
+    document.getElementById('next').disabled = cur === steps.length - 1;
+    // Scroll the latest step into view inside the derivation panel
+    const last = root.lastElementChild;
+    if (last && last.scrollIntoView) {
+      last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  function init() {
+    tex("(a+b)^{2} = a^{2} + 2ab + b^{2}", document.getElementById('recap'));
+    document.querySelectorAll('.inline-tex').forEach(el => tex(el.dataset.tex, el));
+    tex("(a+b)^{3} = a^{3} + 3a^{2}b + 3ab^{2} + b^{3}", document.getElementById('result'));
+    document.getElementById('prev').addEventListener('click', () => {
+      if (cur > 0) { cur--; renderDerivation(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (cur < steps.length - 1) { cur++; renderDerivation(); }
+    });
+    renderDerivation();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const wait = setInterval(() => {
+        if (window.katex) { clearInterval(wait); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>
