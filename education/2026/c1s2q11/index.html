@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>判別式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;margin:0 0 1rem; }
+  .d-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin:.75rem 0; }
+  @media(max-width:500px){ .d-grid { grid-template-columns:1fr; } }
+  .d-item { border-radius:8px;padding:.75rem 1rem;text-align:center; }
+  .d-pos { background:#e8fdf0;border:1.5px solid #4fd47e; }
+  .d-zero { background:#fff7e6;border:1.5px solid #f5c842; }
+  .d-neg { background:#fde8e8;border:1.5px solid #f54e4e; }
+  .d-item .d-label { font-weight:700;font-size:.95rem;margin-bottom:.3rem; }
+  /* Canvas */
+  .canvas-wrap { display:flex;justify-content:center;margin:1rem 0; }
+  canvas { width:100%;max-width:500px;border-radius:10px;border:1px solid #e3e3e3;background:#fff; }
+  /* Case buttons */
+  .case-btns { display:flex;gap:.5rem;justify-content:center;margin:.75rem 0; }
+  .cbtn { flex:1;max-width:160px;padding:.7rem .5rem;border-radius:10px;border:2px solid #d4dbeb;background:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s; }
+  .cbtn.pos-active { background:#e8fdf0;border-color:#4fd47e;color:#1a9a4e; }
+  .cbtn.zero-active { background:#fff7e6;border-color:#f5c842;color:#856404; }
+  .cbtn.neg-active { background:#fde8e8;border-color:#f54e4e;color:#b01010; }
+  .cbtn:active { transform:scale(.97); }
+  .case-desc { text-align:center;min-height:2.5rem;font-size:.95rem;margin:.5rem 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>判別式</h1>
+  <p class="subtitle">解の種類は判別式 D = b²-4ac で決まる</p>
+
+  <h2>判別式の定義と分類</h2>
+  <div class="card">
+    <p id="d-def"></p>
+    <div class="d-grid">
+      <div class="d-item d-pos">
+        <div class="d-label" id="d-pos-label"></div>
+        <div id="d-pos-desc">2つの異なる実数解</div>
+      </div>
+      <div class="d-item d-zero">
+        <div class="d-label" id="d-zero-label"></div>
+        <div id="d-zero-desc">重解（実数）</div>
+      </div>
+      <div class="d-item d-neg">
+        <div class="d-label" id="d-neg-label"></div>
+        <div id="d-neg-desc">2つの虚数解（共役）</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>放物線のグラフで確認</h2>
+  <div class="case-btns">
+    <button class="cbtn pos-active" id="btn-pos" onclick="setCase('pos')">D &gt; 0</button>
+    <button class="cbtn" id="btn-zero" onclick="setCase('zero')">D = 0</button>
+    <button class="cbtn" id="btn-neg" onclick="setCase('neg')">D &lt; 0</button>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="cv" width="500" height="260"></canvas>
+  </div>
+  <div class="case-desc" id="case-desc"></div>
+</main>
+<script>
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+
+  let currentCase='pos';
+  let animFrame=null, animT=0, fromC=1, toC=1;
+
+  // c parameter: pos=negative(crosses), zero=0(tangent), neg=positive(above)
+  const cases={
+    pos:{ c:-1.5, color:'#2a6df4', label:'D > 0：2つの異なる実数解' },
+    zero:{ c:0,   color:'#f5c842', label:'D = 0：重解（x軸に接する）' },
+    neg:{ c:1.5,  color:'#d9534f', label:'D < 0：実数解なし（虚数解）' },
+  };
+
+  function drawParabola(c, color, progress){
+    const cv=document.getElementById('cv');
+    const ctx=cv.getContext('2d');
+    const W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    // axes
+    ctx.strokeStyle='#ddd'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(20,H/2); ctx.lineTo(W-20,H/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2,10); ctx.lineTo(W/2,H-10); ctx.stroke();
+    // axis labels
+    ctx.fillStyle='#aaa'; ctx.font='13px sans-serif';
+    ctx.fillText('x',W-15,H/2-5);
+    ctx.fillText('y',W/2+5,18);
+    // parabola: y = x² + c, scaled
+    const scaleX=60, scaleY=55, ox=W/2, oy=H/2;
+    ctx.strokeStyle=color; ctx.lineWidth=3;
+    ctx.beginPath();
+    for(let px=20;px<=W-20;px++){
+      const x=(px-ox)/scaleX;
+      const yVal=x*x+c;
+      const py=oy-yVal*scaleY;
+      if(px===20) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // intersection markers
+    if(c < 0){
+      const xr=Math.sqrt(-c);
+      [xr,-xr].forEach(xi=>{
+        const px=ox+xi*scaleX;
+        ctx.beginPath(); ctx.arc(px,H/2,7,0,Math.PI*2);
+        ctx.fillStyle=color; ctx.fill();
+        ctx.fillStyle='#333'; ctx.font='bold 12px sans-serif';
+        ctx.fillText(xi>0?'x₂':'x₁',px-8,H/2+22);
+      });
+    } else if(c===0){
+      ctx.beginPath(); ctx.arc(ox,H/2,7,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.fill();
+      ctx.fillStyle='#333'; ctx.font='bold 12px sans-serif';
+      ctx.fillText('x₁=x₂',ox-18,H/2+22);
+    } else {
+      // show vertex above x-axis
+      const py=oy-c*scaleY;
+      ctx.beginPath(); ctx.arc(ox,py,5,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.fill();
+      ctx.setLineDash([4,4]);
+      ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(ox,py); ctx.lineTo(ox,H/2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  function animateTo(targetCase){
+    if(animFrame) cancelAnimationFrame(animFrame);
+    const from=cases[currentCase].c;
+    const to=cases[targetCase].c;
+    const col=cases[targetCase].color;
+    const startTime=performance.now();
+    const dur=400;
+    function step(now){
+      const t=Math.min((now-startTime)/dur,1);
+      const ease=t<.5?2*t*t:(1-Math.pow(-2*t+2,2)/2);
+      const c=from+(to-from)*ease;
+      drawParabola(c,col,ease);
+      if(t<1) animFrame=requestAnimationFrame(step);
+      else { currentCase=targetCase; drawParabola(to,col,1); }
+    }
+    animFrame=requestAnimationFrame(step);
+  }
+
+  function setCase(key){
+    ['pos','zero','neg'].forEach(k=>{
+      const btn=document.getElementById('btn-'+k);
+      btn.className='cbtn'+( k===key ? ' '+k+'-active' : '');
+    });
+    document.getElementById('case-desc').innerHTML=T('\\text{'+cases[key].label+'}');
+    animateTo(key);
+  }
+
+  function init(){
+    tex('D = b^2-4ac', document.getElementById('d-def'));
+    tex('D > 0', document.getElementById('d-pos-label'));
+    tex('D = 0', document.getElementById('d-zero-label'));
+    tex('D < 0', document.getElementById('d-neg-label'));
+    drawParabola(cases.pos.c, cases.pos.color, 1);
+    document.getElementById('case-desc').innerHTML=T('\\text{'+cases.pos.label+'}');
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>
