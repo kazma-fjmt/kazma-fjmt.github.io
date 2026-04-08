@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>置換による高次方程式の解法</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4; --success: #27ae60; --highlight: #f39c12; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .card {
+    background: #fff; border: 1px solid #e3e3e3;
+    border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    opacity: 0; transform: translateY(12px);
+    animation: fadeSlideIn .4s ease forwards;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  @keyframes fadeSlideIn { to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+  .subst-highlight {
+    background: #fff8e1; border: 2px solid var(--highlight);
+    border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0;
+    text-align: center;
+  }
+  .subst-highlight .katex { font-size: 1.3rem; }
+
+  .result-badge {
+    display: inline-block; padding: .35rem .8rem; border-radius: 8px;
+    font-weight: 700; font-size: .95rem; margin-top: .5rem;
+    animation: pulse .5s ease; background: #e8f8ef; color: var(--success);
+  }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>置換による高次方程式の解法</h1>
+  <p class="subtitle">式の一部を別の文字で置き換えて、低い次数の方程式に帰着させます。</p>
+
+  <h2>例題4</h2>
+  <p>方程式 <span id="problem"></span> を解け。</p>
+
+  <h2>ポイント：置換のアイデア</h2>
+  <div class="subst-highlight" id="subst-idea"></div>
+  <p><span id="subst-explain"></span></p>
+
+  <h2>解法ステップ</h2>
+  <div class="card" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+  function tex(l, el, dm) { katex.render(l, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  var C_T = "#f39c12";
+
+  var steps = [];
+  var curStep = 0;
+
+  function buildSteps() {
+    steps = [
+      { title: "元の方程式", tex: "x^4 - 2x^2 - 3 = 0" },
+      { title: "置換する", tex: "\\textcolor{" + C_T + "}{t} = x^2 \\text{ とおくと、} \\textcolor{" + C_T + "}{t}^2 - 2\\textcolor{" + C_T + "}{t} - 3 = 0" },
+      { title: "t の2次方程式を因数分解する", tex: "(\\textcolor{" + C_T + "}{t} - 3)(\\textcolor{" + C_T + "}{t} + 1) = 0" },
+      { title: "t の値を求める", tex: "\\textcolor{" + C_T + "}{t} = 3 \\quad \\text{または} \\quad \\textcolor{" + C_T + "}{t} = -1" },
+      { title: "x に戻す（t = 3 の場合）", tex: "x^2 = 3 \\quad \\Longrightarrow \\quad x = \\pm\\sqrt{3}" },
+      { title: "x に戻す（t = -1 の場合）", tex: "x^2 = -1 \\quad \\Longrightarrow \\quad x = \\pm i" },
+      { title: "解をまとめる", tex: "x = \\pm\\sqrt{3}, \\quad \\pm i", badge: true }
+    ];
+  }
+
+  function renderWalkthrough() {
+    var root = document.getElementById('walkthrough');
+    var html = '';
+    for (var i = 0; i <= curStep; i++) {
+      var s = steps[i];
+      var isCur = i === curStep;
+      html += '<div class="step ' + (isCur ? 'current' : '') + '" style="animation-delay:' + (i * 0.08) + 's">';
+      html += '<div class="label">' + s.title + '</div>';
+      html += '<div class="formula-line">' + T(s.tex) + '</div>';
+      if (s.badge && isCur) html += '<div class="result-badge">解が求まりました</div>';
+      html += '</div>';
+    }
+    root.innerHTML = html;
+    tex(String(curStep + 1), document.getElementById('step-cur'));
+    tex(String(steps.length), document.getElementById('step-tot'));
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    buildSteps();
+
+    tex("x^4 - 2x^2 - 3 = 0", document.getElementById('problem'));
+    tex("\\textcolor{" + C_T + "}{t} = x^2 \\text{ とおく}", document.getElementById('subst-idea'), true);
+
+    var explainEl = document.getElementById('subst-explain');
+    explainEl.innerHTML = T("x^4 = (x^2)^2 = \\textcolor{" + C_T + "}{t}^2") +
+      ' なので、' + T("\\textcolor{" + C_T + "}{t}") + ' の2次方程式として解けます。';
+
+    document.getElementById('prev').addEventListener('click', function() {
+      if (curStep > 0) { curStep--; renderWalkthrough(); }
+    });
+    document.getElementById('next').addEventListener('click', function() {
+      if (curStep < steps.length - 1) { curStep++; renderWalkthrough(); }
+    });
+
+    renderWalkthrough();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", function() {
+    if (window.katex) init();
+    else { var w = setInterval(function() { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>
