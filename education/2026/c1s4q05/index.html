@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>条件付き等式の検証ツール</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-left: #d9534f; --c-right: #2a6df4; --c-match: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .condition-box {
+    background: #fff8ee; border: 1px solid #f5d9a3; border-radius: 10px;
+    padding: .85rem 1rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+
+  .slider-area {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1.25rem; margin: 1rem 0;
+  }
+  .slider-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: .5rem; font-size: .95rem;
+  }
+  .slider-label .val { font-weight: 700; font-size: 1.1rem; }
+  input[type="range"] {
+    width: 100%; height: 44px; cursor: pointer;
+    -webkit-appearance: none; appearance: none; background: transparent;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px; background: #e0e0e0; border-radius: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 32px; height: 32px;
+    background: var(--accent); border-radius: 50%; margin-top: -12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+
+  .result-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    margin: 1rem 0;
+  }
+  .result-card {
+    background: #fff; border: 2px solid #e3e3e3; border-radius: 12px;
+    padding: 1rem; text-align: center; transition: border-color .3s ease, transform .3s ease;
+  }
+  .result-card.left { border-color: var(--c-left); }
+  .result-card.right { border-color: var(--c-right); }
+  .result-card .side-label { font-size: .8rem; color: var(--muted); margin-bottom: .25rem; }
+  .result-card .side-formula { margin-bottom: .5rem; overflow-x: auto; }
+  .result-card .side-formula .katex { font-size: 1.15rem; }
+  .result-card .value { font-size: 1.6rem; font-weight: 700; }
+  .result-card.left .value { color: var(--c-left); }
+  .result-card.right .value { color: var(--c-right); }
+
+  .match-banner {
+    text-align: center; padding: .75rem; border-radius: 10px;
+    font-weight: 700; font-size: 1.1rem; margin: .5rem 0;
+    background: #e8f5e9; color: var(--c-match); border: 1px solid #c8e6c9;
+    transition: transform .3s ease;
+  }
+  .match-banner.pulse { animation: pulse .5s ease; }
+
+  .xy-display {
+    display: flex; justify-content: center; gap: 2rem;
+    margin: .5rem 0; font-size: 1.1rem;
+  }
+
+  .number-line {
+    position: relative; height: 60px; margin: 1rem 0 .5rem;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .5rem 1rem;
+  }
+  .number-line-track {
+    position: relative; height: 4px; background: #e0e0e0;
+    border-radius: 2px; top: 20px;
+  }
+  .nl-marker {
+    position: absolute; top: -8px; width: 20px; height: 20px;
+    border-radius: 50%; transform: translateX(-50%);
+    transition: left .15s ease;
+  }
+  .nl-marker.x-mark { background: var(--c-left); }
+  .nl-marker.y-mark { background: var(--c-right); }
+  .nl-label {
+    position: absolute; top: 24px; font-size: .75rem; font-weight: 700;
+    transform: translateX(-50%); transition: left .15s ease;
+  }
+  .nl-label.x-lbl { color: var(--c-left); }
+  .nl-label.y-lbl { color: var(--c-right); }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .result-grid { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<main>
+  <h1>条件付き等式の検証ツール</h1>
+  <p class="subtitle">スライダーを動かして、条件のもとで等式が常に成り立つことを確認しましょう。</p>
+
+  <h2>条件</h2>
+  <div class="condition-box" id="condition"></div>
+
+  <h2>証明する等式</h2>
+  <div class="formula-box" id="identity"></div>
+
+  <h2>検証</h2>
+  <p>スライダーで値を変えると、条件を満たしたまま両辺の値が計算されます。</p>
+
+  <div class="slider-area">
+    <div class="slider-label">
+      <span id="x-label"></span>
+      <span class="val" id="x-val"></span>
+    </div>
+    <input type="range" id="slider" min="-30" max="30" value="7" step="1">
+    <div class="xy-display">
+      <span id="xy-x"></span>
+      <span id="xy-y"></span>
+    </div>
+  </div>
+
+  <div class="number-line">
+    <div class="number-line-track" id="nl-track">
+      <div class="nl-marker x-mark" id="nl-x"></div>
+      <div class="nl-marker y-mark" id="nl-y"></div>
+      <div class="nl-label x-lbl" id="nl-x-lbl"></div>
+      <div class="nl-label y-lbl" id="nl-y-lbl"></div>
+    </div>
+  </div>
+
+  <div class="result-grid">
+    <div class="result-card left">
+      <div class="side-label">左辺</div>
+      <div class="side-formula" id="left-formula"></div>
+      <div class="value" id="left-val"></div>
+    </div>
+    <div class="result-card right">
+      <div class="side-label">右辺</div>
+      <div class="side-formula" id="right-formula"></div>
+      <div class="value" id="right-val"></div>
+    </div>
+  </div>
+
+  <div class="match-banner" id="banner"></div>
+</main>
+
+<script>
+  function tex(latex, el, dm) {
+    katex.render(latex, el, { throwOnError: false, displayMode: !!dm });
+  }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  function update() {
+    const raw = parseInt(document.getElementById('slider').value);
+    const x = raw / 10;
+    const y = 1 - x;
+    const lhs = x * x - x;
+    const rhs = y * y - y;
+
+    document.getElementById('x-val').textContent = x.toFixed(1);
+    tex(`x = ${x.toFixed(1)}`, document.getElementById('xy-x'));
+    tex(`y = ${y.toFixed(1)}`, document.getElementById('xy-y'));
+
+    tex(`x^2 - x = (${x.toFixed(1)})^2 - (${x.toFixed(1)})`, document.getElementById('left-formula'));
+    tex(`y^2 - y = (${y.toFixed(1)})^2 - (${y.toFixed(1)})`, document.getElementById('right-formula'));
+
+    const fmt = (v) => Number.isInteger(v) ? v.toString() : v.toFixed(2);
+    document.getElementById('left-val').textContent = fmt(lhs);
+    document.getElementById('right-val').textContent = fmt(rhs);
+
+    // Number line positioning
+    const minV = -3, maxV = 4;
+    const pct = (v) => Math.max(0, Math.min(100, ((v - minV) / (maxV - minV)) * 100));
+    document.getElementById('nl-x').style.left = pct(x) + '%';
+    document.getElementById('nl-y').style.left = pct(y) + '%';
+    document.getElementById('nl-x-lbl').style.left = pct(x) + '%';
+    document.getElementById('nl-y-lbl').style.left = pct(y) + '%';
+    document.getElementById('nl-x-lbl').textContent = 'x=' + x.toFixed(1);
+    document.getElementById('nl-y-lbl').textContent = 'y=' + y.toFixed(1);
+
+    const banner = document.getElementById('banner');
+    const match = Math.abs(lhs - rhs) < 1e-9;
+    banner.textContent = match ? '左辺 = 右辺 （常に一致！）' : '';
+    banner.classList.remove('pulse');
+    void banner.offsetWidth;
+    banner.classList.add('pulse');
+  }
+
+  function init() {
+    tex("x + y = 1", document.getElementById('condition'), true);
+    tex("x^2 - x = y^2 - y", document.getElementById('identity'), true);
+    tex("x", document.getElementById('x-label'));
+
+    document.getElementById('slider').addEventListener('input', update);
+    update();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>
