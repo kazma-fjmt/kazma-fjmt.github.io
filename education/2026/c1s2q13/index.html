@@ -43,7 +43,7 @@
 <body>
 <main>
   <h1>重解を持つ条件</h1>
-  <p class="subtitle">D = 0 から k の値と重解を求める</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>問題</h2>
   <div class="card">
@@ -54,11 +54,11 @@
   <h2>答え</h2>
   <div class="ans-grid">
     <div class="ans-item" id="ans-k3">
-      <div class="alabel">k = 3 のとき</div>
+      <div class="alabel" id="lbl-k3"></div>
       <div id="ans-k3-val"></div>
     </div>
     <div class="ans-item" id="ans-k-1">
-      <div class="alabel">k = -1 のとき</div>
+      <div class="alabel" id="lbl-k-1"></div>
       <div id="ans-k-1-val"></div>
     </div>
   </div>
@@ -102,6 +102,9 @@
   function init(){
     tex('x^2+2kx+2k+3=0', document.getElementById('eq-card'));
     tex('k', document.getElementById('k-var'));
+    document.getElementById('sub1').innerHTML = T('D = 0') + ' から ' + T('k') + ' の値と重解を求める';
+    document.getElementById('lbl-k3').innerHTML = T('k = 3') + ' のとき';
+    document.getElementById('lbl-k-1').innerHTML = T('k = -1') + ' のとき';
     tex('x=-3', document.getElementById('ans-k3-val'));
     tex('x=1', document.getElementById('ans-k-1-val'));
 

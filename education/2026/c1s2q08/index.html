@@ -55,8 +55,8 @@
 
   <h2>例題を選んで確認</h2>
   <div class="tabs">
-    <button class="tab active" id="tab-a" onclick="switchEx('a')">√-8</button>
-    <button class="tab" id="tab-b" onclick="switchEx('b')">-√-50</button>
+    <button class="tab active" id="tab-a" onclick="switchEx('a')"></button>
+    <button class="tab" id="tab-b" onclick="switchEx('b')"></button>
   </div>
   <div class="walkthrough" id="walkthrough"></div>
   <div class="controls-row">
@@ -103,20 +103,22 @@
     tex('\\sqrt{-a}=\\sqrt{a}\\,i', document.getElementById('step1-text'));
     tex('\\sqrt{a}\\,i', document.getElementById('step1-result'));
     tex('k\\sqrt{m}\\,i', document.getElementById('step3-form'));
+    document.getElementById('tab-a').innerHTML = T('\\sqrt{-8}');
+    document.getElementById('tab-b').innerHTML = T('-\\sqrt{-50}');
 
     allSteps={
       a:[
         {title:'問題', formula:'\\sqrt{-8}', type:'def'},
         {title:'定義を使う', formula:'\\sqrt{-8}=\\sqrt{8}\\,i', type:'def'},
         {title:'8 を素因数分解', formula:'8=4\\times 2=2^2\\times 2', type:'def'},
-        {title:'√8 を簡単にする', formula:'\\sqrt{8}=\\sqrt{4\\cdot2}=2\\sqrt{2}', type:'def'},
+        {title:T('\\sqrt{8}')+' を簡単にする', formula:'\\sqrt{8}=\\sqrt{4\\cdot2}=2\\sqrt{2}', type:'def'},
         {title:'答え', formula:'\\sqrt{-8}=2\\sqrt{2}\\,i', type:'result'},
       ],
       b:[
         {title:'問題', formula:'-\\sqrt{-50}', type:'def'},
         {title:'定義を使う', formula:'-\\sqrt{-50}=-\\sqrt{50}\\,i', type:'def'},
         {title:'50 を素因数分解', formula:'50=25\\times 2=5^2\\times 2', type:'def'},
-        {title:'√50 を簡単にする', formula:'\\sqrt{50}=\\sqrt{25\\cdot2}=5\\sqrt{2}', type:'def'},
+        {title:T('\\sqrt{50}')+' を簡単にする', formula:'\\sqrt{50}=\\sqrt{25\\cdot2}=5\\sqrt{2}', type:'def'},
         {title:'答え', formula:'-\\sqrt{-50}=-5\\sqrt{2}\\,i', type:'result'},
       ],
     };

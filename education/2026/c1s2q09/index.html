@@ -55,8 +55,8 @@
 
   <h2>例題を選んで確認</h2>
   <div class="tabs">
-    <button class="tab active" id="tab-a" onclick="switchEx('a')">√-4+√-9</button>
-    <button class="tab" id="tab-b" onclick="switchEx('b')">√-8×√-6</button>
+    <button class="tab active" id="tab-a" onclick="switchEx('a')"></button>
+    <button class="tab" id="tab-b" onclick="switchEx('b')"></button>
   </div>
   <div class="walkthrough" id="walkthrough"></div>
   <div class="controls-row">
@@ -101,6 +101,8 @@
   function init(){
     tex('\\sqrt{-a}', document.getElementById('h1-math'));
     tex('\\sqrt{-8}\\times\\sqrt{-6} \\neq \\sqrt{48} \\quad \\text{（間違い！）}', document.getElementById('warn-formula'));
+    document.getElementById('tab-a').innerHTML = T('\\sqrt{-4}+\\sqrt{-9}');
+    document.getElementById('tab-b').innerHTML = T('\\sqrt{-8}\\times\\sqrt{-6}');
 
     allSteps={
       a:[
@@ -113,8 +115,8 @@
         {title:'問題（まず i に変換）', formula:'\\sqrt{-8}\\times\\sqrt{-6}', type:'def'},
         {title:'i に変換', formula:'\\sqrt{-8}=2\\sqrt{2}\\,i,\\quad \\sqrt{-6}=\\sqrt{6}\\,i', type:'def'},
         {title:'掛け算', formula:'2\\sqrt{2}\\,i \\times \\sqrt{6}\\,i = 2\\sqrt{12}\\,i^2', type:'def'},
-        {title:'i²=-1，√12=2√3 を代入', formula:'=2\\cdot2\\sqrt{3}\\cdot(-1)=-4\\sqrt{3}', type:'def'},
-        {title:'答え（√48 ではない！）', formula:'\\sqrt{-8}\\times\\sqrt{-6}=-4\\sqrt{3} \\neq \\sqrt{48}', type:'result'},
+        {title:T('i^2=-1')+'\uFF0C'+T('\\sqrt{12}=2\\sqrt{3}')+' を代入', formula:'=2\\cdot2\\sqrt{3}\\cdot(-1)=-4\\sqrt{3}', type:'def'},
+        {title:'答え\uFF08'+T('\\sqrt{48}')+' ではない！\uFF09', formula:'\\sqrt{-8}\\times\\sqrt{-6}=-4\\sqrt{3} \\neq \\sqrt{48}', type:'result'},
       ],
     };
 

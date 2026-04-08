@@ -46,18 +46,18 @@
 <body>
 <main>
   <h1>対称式とヴィエタの公式</h1>
-  <p class="subtitle">α²+β²，α³+β³ を和・積で表す</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>重要な恒等式</h2>
   <div class="ident-grid">
-    <div class="ident-item"><div class="il">α²+β² の変形</div><div id="id1"></div></div>
-    <div class="ident-item"><div class="il">α³+β³ の変形</div><div id="id2"></div></div>
+    <div class="ident-item"><div class="il" id="lbl0"></div><div id="id1"></div></div>
+    <div class="ident-item"><div class="il" id="lbl1"></div><div id="id2"></div></div>
   </div>
 
   <h2>例題</h2>
   <div class="tabs">
-    <button class="tab active" id="tab-sq" onclick="switchEx('sq')">α²+β²</button>
-    <button class="tab" id="tab-cu" onclick="switchEx('cu')">α³+β³</button>
+    <button class="tab active" id="tab-sq" onclick="switchEx('sq')"></button>
+    <button class="tab" id="tab-cu" onclick="switchEx('cu')"></button>
   </div>
   <p style="color:var(--muted);font-size:.88rem;margin:.25rem 0 .75rem;" id="eq-note"></p>
   <div class="walkthrough" id="walkthrough"></div>
@@ -104,6 +104,11 @@
   function init(){
     tex('\\alpha^2+\\beta^2=(\\alpha+\\beta)^2-2\\alpha\\beta', document.getElementById('id1'));
     tex('\\alpha^3+\\beta^3=(\\alpha+\\beta)^3-3\\alpha\\beta(\\alpha+\\beta)', document.getElementById('id2'));
+    document.getElementById('sub1').innerHTML = T('\\alpha^2+\\beta^2') + '，' + T('\\alpha^3+\\beta^3') + ' を和・積で表す';
+    document.getElementById('lbl0').innerHTML = T('\\alpha^2+\\beta^2') + ' の変形';
+    document.getElementById('lbl1').innerHTML = T('\\alpha^3+\\beta^3') + ' の変形';
+    document.getElementById('tab-sq').innerHTML = T('\\alpha^2+\\beta^2');
+    document.getElementById('tab-cu').innerHTML = T('\\alpha^3+\\beta^3');
     document.getElementById('eq-note').innerHTML=T('2x^2+8x+3=0 \\text{ の解を } \\alpha,\\beta \\text{ とする}');
 
     // 2x²+8x+3=0: α+β=-4, αβ=3/2
