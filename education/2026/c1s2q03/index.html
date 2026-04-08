@@ -47,19 +47,19 @@
 <body>
 <main>
   <h1>複素数の計算（基本）</h1>
-  <p class="subtitle">i を文字として扱い，i²=-1 で置き換える</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>計算の基本ルール</h2>
   <div class="card">
     <div class="rule-box" id="rule1"></div>
-    <p>i は文字と同じように計算し，<strong>i² が現れたら -1 に置き換える</strong>。</p>
+    <p id="rule-desc"></p>
   </div>
 
   <h2>タップして答えを確認</h2>
   <div class="example-grid" id="ex-grid"></div>
   <p class="hint">各カードをタップすると答えが表示されます</p>
 
-  <h2>i³ の計算（ステップ確認）</h2>
+  <h2 id="h2-i3"></h2>
   <div class="walkthrough" id="walkthrough"></div>
   <div class="controls-row">
     <button class="btn" id="prev">◀ 前へ</button>
@@ -105,6 +105,9 @@
 
   function init(){
     tex('i^2 = -1', document.getElementById('rule1'));
+    document.getElementById('sub1').innerHTML = T('i') + ' を文字として扱い，' + T('i^2=-1') + ' で置き換える';
+    document.getElementById('rule-desc').innerHTML = T('i') + ' は文字と同じように計算し，<strong>' + T('i^2') + ' が現れたら ' + T('-1') + ' に置き換える</strong>。';
+    document.getElementById('h2-i3').innerHTML = T('i^3') + ' の計算（ステップ確認）';
 
     examples=[
       {q:'3i - 5i', a:'3i-5i = -2i'},
@@ -114,10 +117,10 @@
     buildExamples();
 
     steps=[
-      {title:'i³ をi²×iに分解', formula:'i^3 = i^2 \\cdot i', type:'def'},
-      {title:'i²=-1 を代入', formula:'= (-1) \\cdot i', type:'def'},
+      {title:`${T('i^3')} を${T('i^2 \\times i')}に分解`, formula:'i^3 = i^2 \\cdot i', type:'def'},
+      {title:`${T('i^2=-1')} を代入`, formula:'= (-1) \\cdot i', type:'def'},
       {title:'答え', formula:'i^3 = -i', type:'result'},
-      {title:'同様に i⁴ を確認', formula:'i^4 = i^2 \\cdot i^2 = (-1)(-1) = 1', type:'def'},
+      {title:`同様に ${T('i^4')} を確認`, formula:'i^4 = i^2 \\cdot i^2 = (-1)(-1) = 1', type:'def'},
       {title:'iの累乗は周期4で繰り返す', formula:'i^1=i,\\; i^2=-1,\\; i^3=-i,\\; i^4=1,\\; i^5=i,\\ldots', type:'result'},
     ];
 

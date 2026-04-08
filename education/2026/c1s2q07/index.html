@@ -39,7 +39,7 @@
 <body>
 <main>
   <h1>負の数の平方根</h1>
-  <p class="subtitle">√-a = √a·i（a &gt; 0）の定義と使い方</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>定義</h2>
   <div class="card">
@@ -81,6 +81,7 @@
   }
 
   function init(){
+    document.getElementById('sub1').innerHTML = T('\\sqrt{-a} = \\sqrt{a} \\cdot i \\;(a > 0)') + ' の定義と使い方';
     tex('a > 0', document.getElementById('a-pos'));
     tex('x^2 = -a', document.getElementById('eq-xa'));
     tex('x = \\pm\\sqrt{a}\\,i', document.getElementById('sqrt-def'));
@@ -90,7 +91,7 @@
     steps=[
       {title:'方程式を立てる', formula:'x^2 = -5', type:'def'},
       {title:'右辺を変形', formula:'x^2 = -1 \\cdot 5', type:'def'},
-      {title:'i² = -1 を使う', formula:'x^2 = i^2 \\cdot 5', type:'def'},
+      {title:`${T('i^2 = -1')} を使う`, formula:'x^2 = i^2 \\cdot 5', type:'def'},
       {title:'解を求める', formula:'x = \\pm\\sqrt{5}\\,i', type:'def'},
       {title:'定義により', formula:'\\sqrt{-5} = \\sqrt{5}\\,i', type:'result'},
       {title:'一般化', formula:'\\sqrt{-a}=\\sqrt{a}\\,i \\;(a>0),\\quad \\sqrt{-1}=i', type:'result'},

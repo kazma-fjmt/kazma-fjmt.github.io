@@ -93,17 +93,17 @@
       <rect class="nr1" x="85" y="85" width="120" height="170" rx="12" ry="12"/>
       <!-- labels -->
       <text class="nlabel nl1" x="145" y="108">自然数</text>
-      <text class="nlabel nl1" x="92" y="125">1, 2, 3, …</text>
+      <foreignObject x="88" y="112" width="120" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-nat" style="font-size:11px;color:#1a7fd4"></span></foreignObject>
       <text class="nlabel nl2" x="80" y="260">整数</text>
-      <text class="nlabel nl2" x="80" y="278">…, -2, -1, 0</text>
+      <foreignObject x="76" y="265" width="130" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-int" style="font-size:11px;color:#1a9a4e"></span></foreignObject>
       <text class="nlabel nl3" x="50" y="290">有理数</text>
-      <text class="nlabel nl4" x="30" y="308">実数 √2, π, …</text>
+      <foreignObject x="26" y="295" width="170" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-real" style="font-size:11px;color:#c05a10"></span></foreignObject>
       <text class="nlabel nl5" x="420" y="308">複素数</text>
       <!-- dots -->
       <circle class="dot-i" cx="440" cy="170" r="6"/>
-      <text class="dot-label" x="450" y="175" fill="#7a1ab5">i</text>
+      <foreignObject x="450" y="160" width="30" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-i" style="font-size:12px;font-weight:700;color:#7a1ab5"></span></foreignObject>
       <circle class="dot-c" cx="460" cy="220" r="6"/>
-      <text class="dot-label" x="470" y="225" fill="#2a6df4">2+3i</text>
+      <foreignObject x="470" y="210" width="70" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-cpx" style="font-size:12px;font-weight:700;color:#2a6df4"></span></foreignObject>
     </svg>
   </div>
 
@@ -150,6 +150,13 @@
     tex('b \\quad (a,b \\in \\mathbb{R})', document.getElementById('im-part'));
     tex('b = 0 \\text{ のとき実数}', document.getElementById('real-num'));
     tex('a=0,\\; b\\neq 0 \\text{ のとき純虚数}', document.getElementById('pure-im'));
+
+    // SVG labels
+    document.getElementById('svg-lbl-nat').innerHTML = T('1,\\, 2,\\, 3,\\, \\ldots');
+    document.getElementById('svg-lbl-int').innerHTML = T('\\ldots,\\, {-2},\\, {-1},\\, 0');
+    document.getElementById('svg-lbl-real').innerHTML = '実数 ' + T('\\sqrt{2},\\, \\pi,\\, \\ldots');
+    document.getElementById('svg-lbl-i').innerHTML = T('i');
+    document.getElementById('svg-lbl-cpx').innerHTML = T('2{+}3i');
 
     steps=[
       {title:'虚数単位の定義', formula:'i^2 = -1', type:'def'},

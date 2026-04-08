@@ -74,8 +74,8 @@
       <!-- dots -->
       <circle class="dot-a" cx="260" cy="60" r="7"/>
       <circle class="dot-b" cx="260" cy="160" r="7"/>
-      <text x="268" y="58" font-size="13" fill="#2a6df4" font-weight="700">α = a+bi</text>
-      <text x="268" y="164" font-size="13" fill="#d9534f" font-weight="700">ᾱ = a−bi</text>
+      <foreignObject x="268" y="44" width="130" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-alpha" style="font-size:12px;font-weight:700;color:#2a6df4"></span></foreignObject>
+      <foreignObject x="268" y="150" width="130" height="22"><span xmlns="http://www.w3.org/1999/xhtml" id="svg-lbl-conj" style="font-size:12px;font-weight:700;color:#d9534f"></span></foreignObject>
     </svg>
   </div>
 
@@ -120,6 +120,8 @@
   }
 
   function init(){
+    document.getElementById('svg-lbl-alpha').innerHTML = T('\\alpha = a+bi');
+    document.getElementById('svg-lbl-conj').innerHTML = T('\\bar{\\alpha} = a-bi');
     tex('\\alpha = a+bi', document.getElementById('alpha'));
     tex('\\bar{\\alpha} = a-bi', document.getElementById('conj-def'));
     tex('2+3i', document.getElementById('ex1'));
@@ -136,7 +138,7 @@
       {title:'和を計算', formula:'\\alpha+\\bar{\\alpha}=(a+bi)+(a-bi)=2a', type:'def'},
       {title:'和は実数', formula:'\\alpha+\\bar{\\alpha}=2a \\in \\mathbb{R}', type:'result'},
       {title:'積を計算', formula:'\\alpha\\bar{\\alpha}=(a+bi)(a-bi)=a^2-(bi)^2=a^2-b^2i^2', type:'def'},
-      {title:'i²=-1 を代入', formula:'=a^2-b^2(-1)=a^2+b^2', type:'def'},
+      {title:`${T('i^2=-1')} を代入`, formula:'=a^2-b^2(-1)=a^2+b^2', type:'def'},
       {title:'積は実数かつ非負', formula:'\\alpha\\bar{\\alpha}=a^2+b^2 \\geq 0', type:'result'},
     ];
 
