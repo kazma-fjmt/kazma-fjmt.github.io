@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>4次方程式の解法</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; --green:#4fd47e; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;margin:0 0 1rem;overflow-x:auto; }
+  .step { opacity:0;transform:translateY(12px);transition:opacity .5s ease, transform .5s ease;margin:0 0 1rem; }
+  .step.show { opacity:1;transform:translateY(0); }
+  .btn { display:inline-block;padding:.75rem 1.5rem;border-radius:10px;border:2px solid var(--accent);background:#fff;color:var(--accent);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s;margin:.5rem .25rem; }
+  .btn:active { transform:scale(.97); }
+  .btn.primary { background:var(--accent);color:#fff; }
+  .result-box { background:#e8fdf0;border:2px solid var(--green);border-radius:10px;padding:1rem 1.25rem;text-align:center;margin:1rem 0;opacity:0;transform:scale(.95);transition:all .5s ease; }
+  .result-box.show { opacity:1;transform:scale(1); }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+  .result-box.pulse { animation:pulse .6s ease; }
+  .stage { border-left:3px solid var(--accent);padding-left:1rem;margin:.75rem 0; }
+  .stage-title { font-weight:700;color:var(--accent);margin-bottom:.25rem; }
+  .arrow { text-align:center;font-size:1.5rem;color:var(--accent);margin:.25rem 0; }
+  .factor-chain { display:flex;flex-direction:column;align-items:center;gap:.25rem;margin:1rem 0; }
+  .factor-chain .fc-item { background:#fff;border:2px solid #e3e3e3;border-radius:8px;padding:.5rem 1rem;transition:all .5s;opacity:0;transform:translateY(10px); }
+  .factor-chain .fc-item.show { opacity:1;transform:translateY(0); }
+  .factor-chain .fc-item.active { border-color:var(--accent);background:#f0f5ff; }
+  .factor-chain .fc-item.done { border-color:var(--green);background:#e8fdf0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>4次方程式の解法</h1>
+  <p class="subtitle">因数定理を繰り返し適用して4次方程式を解く</p>
+
+  <h2>問題</h2>
+  <div class="card">
+    <p id="problem"></p>
+  </div>
+
+  <h2>因数分解の流れ</h2>
+  <div class="factor-chain" id="chain"></div>
+
+  <h2>解法ステップ</h2>
+  <div style="text-align:center;margin-bottom:1rem;">
+    <button class="btn primary" id="nextBtn" onclick="nextStep()">ステップを表示</button>
+    <button class="btn" onclick="resetAll()">リセット</button>
+  </div>
+
+  <div class="card step" id="s1">
+    <div class="stage">
+      <div class="stage-title">第1段階: 1つ目の因数を見つける</div>
+      <p id="s1a"></p>
+      <p id="s1b"></p>
+      <p id="s1c"></p>
+    </div>
+  </div>
+
+  <div class="card step" id="s2">
+    <div class="stage">
+      <div class="stage-title">第1段階: 割り算の結果</div>
+      <p id="s2a"></p>
+      <p id="s2b"></p>
+    </div>
+  </div>
+
+  <div class="card step" id="s3">
+    <div class="stage">
+      <div class="stage-title">第2段階: 3次式をさらに因数分解</div>
+      <p id="s3a"></p>
+      <p id="s3b"></p>
+      <p id="s3c"></p>
+    </div>
+  </div>
+
+  <div class="card step" id="s4">
+    <div class="stage">
+      <div class="stage-title">第2段階: 割り算の結果</div>
+      <p id="s4a"></p>
+      <p id="s4b"></p>
+    </div>
+  </div>
+
+  <div class="card step" id="s5">
+    <div class="stage">
+      <div class="stage-title">第3段階: 2次式を因数分解</div>
+      <p id="s5a"></p>
+    </div>
+  </div>
+
+  <div class="card step" id="s6">
+    <div class="stage">
+      <div class="stage-title">最終結果</div>
+      <p id="s6a"></p>
+      <p id="s6b"></p>
+    </div>
+  </div>
+
+  <div class="result-box" id="result">
+    <p id="resultText" style="font-size:1.1rem;margin:0;"></p>
+  </div>
+</main>
+<script>
+const T=l=>katex.renderToString(l,{throwOnError:false});
+
+let stepIdx=0;
+const totalSteps=7;
+
+const chainData=[];
+
+function buildChain(){
+  const c=document.getElementById('chain');
+  c.innerHTML='';
+  chainData.forEach((item,i)=>{
+    if(i>0){
+      const arrow=document.createElement('div');
+      arrow.className='arrow';
+      arrow.textContent='\u25BC';
+      c.appendChild(arrow);
+    }
+    const el=document.createElement('div');
+    el.className='fc-item';
+    el.id='fc'+i;
+    el.innerHTML=item.html;
+    c.appendChild(el);
+  });
+}
+
+function showChainItem(idx,cls){
+  const el=document.getElementById('fc'+idx);
+  if(el){
+    el.classList.add('show');
+    if(cls) el.classList.add(cls);
+  }
+}
+
+function nextStep(){
+  stepIdx++;
+  if(stepIdx>totalSteps) return;
+  if(stepIdx<=6){
+    document.getElementById('s'+stepIdx).classList.add('show');
+  }
+  /* Update chain */
+  if(stepIdx===1) showChainItem(0,'active');
+  if(stepIdx===2){ document.getElementById('fc0').classList.replace('active','done'); showChainItem(1,'active'); }
+  if(stepIdx===3){ document.getElementById('fc1').classList.replace('active','done'); showChainItem(2,'active'); }
+  if(stepIdx===4){ document.getElementById('fc2').classList.replace('active','done'); showChainItem(3,'active'); }
+  if(stepIdx===5){ document.getElementById('fc3').classList.replace('active','done'); showChainItem(4,'active'); }
+  if(stepIdx===6){ document.getElementById('fc4').classList.replace('active','done'); showChainItem(5,'done'); }
+  if(stepIdx===7){
+    const r=document.getElementById('result');
+    r.classList.add('show');
+    setTimeout(()=>r.classList.add('pulse'),100);
+  }
+  if(stepIdx>=totalSteps) document.getElementById('nextBtn').textContent='完了';
+}
+
+function resetAll(){
+  stepIdx=0;
+  for(let i=1;i<=6;i++) document.getElementById('s'+i).classList.remove('show');
+  document.getElementById('result').classList.remove('show','pulse');
+  document.getElementById('nextBtn').textContent='ステップを表示';
+  buildChain();
+}
+
+function init(){
+  document.getElementById('problem').innerHTML='方程式 '+T('x^4 - x^3 - 3x^2 + x + 2 = 0')+' を解け。';
+
+  chainData.push({html:T('P(x) = x^4 - x^3 - 3x^2 + x + 2')});
+  chainData.push({html:T('(x-1)(x^3 - 3x - 2)')});
+  chainData.push({html:T('(x-1)(x+1)(x^2 - x - 2)')});
+  chainData.push({html:T('(x-1)(x+1)(x+1)(x-2)')});
+  chainData.push({html:T('(x-1)(x-2)(x+1)^2')});
+  chainData.push({html:T('x=1,\\;2,\\;-1')});
+  buildChain();
+
+  /* Step 1 */
+  document.getElementById('s1a').innerHTML=T('P(x) = x^4 - x^3 - 3x^2 + x + 2')+' とおく。';
+  document.getElementById('s1b').innerHTML='定数項 '+T('2')+' の約数 '+T('\\pm 1, \\pm 2')+' を試す。';
+  document.getElementById('s1c').innerHTML=T('P(1) = 1 - 1 - 3 + 1 + 2 = 0')+' '+T('\\checkmark')+' よって '+T('x-1')+' は因数。';
+
+  /* Step 2 */
+  document.getElementById('s2a').innerHTML=T('P(x) \\div (x-1)')+' を実行すると:';
+  document.getElementById('s2b').innerHTML=T('P(x) = (x-1)(x^3 - 3x - 2)');
+
+  /* Step 3 */
+  document.getElementById('s3a').innerHTML=T('Q(x) = x^3 - 3x - 2')+' とおく。';
+  document.getElementById('s3b').innerHTML='再び因数定理を適用: '+T('Q(-1) = -1 + 3 - 2 = 0')+' '+T('\\checkmark');
+  document.getElementById('s3c').innerHTML='よって '+T('Q(x)')+' は '+T('x+1')+' を因数にもつ。';
+
+  /* Step 4 */
+  document.getElementById('s4a').innerHTML=T('Q(x) \\div (x+1)')+' を実行すると:';
+  document.getElementById('s4b').innerHTML=T('Q(x) = (x+1)(x^2 - x - 2)');
+
+  /* Step 5 */
+  document.getElementById('s5a').innerHTML=T('x^2 - x - 2 = (x+1)(x-2)');
+
+  /* Step 6 */
+  document.getElementById('s6a').innerHTML=T('P(x) = (x-1)(x+1)(x+1)(x-2) = (x-1)(x-2)(x+1)^2');
+  document.getElementById('s6b').innerHTML=T('(x-1)(x-2)(x+1)^2 = 0');
+
+  document.getElementById('resultText').innerHTML='答: '+T('x = 1,\\; 2,\\; -1');
+}
+
+if(window.katex) init();
+else document.addEventListener('DOMContentLoaded',()=>{
+  if(window.katex) init();
+  else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+});
+</script>
+</body>
+</html>
