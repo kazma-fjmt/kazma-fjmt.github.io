@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>二項定理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .walkthrough { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:.75rem 1.25rem;margin:0 0 .75rem;min-height:9rem;overflow-x:auto; }
+  .step { padding:.75rem .25rem;border-bottom:1px dashed #eee; }
+  .step:last-child { border-bottom:none; }
+  .step.current { background:#f0f5ff;border-radius:8px;padding:.75rem;margin:.25rem -.5rem;animation:stepIn .3s ease-out; }
+  @keyframes stepIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .step.current.result-step { animation:stepIn .3s ease-out,pulse .9s ease-out .35s both; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(42,109,244,.45)} 70%{box-shadow:0 0 0 14px rgba(42,109,244,0)} 100%{box-shadow:0 0 0 0 rgba(42,109,244,0)} }
+  .step .label { color:var(--muted);font-size:.8rem;margin-bottom:.2rem; }
+  .step .formula-line { overflow-x:auto; }
+  .step .formula-line .katex { font-size:1.15rem; }
+  .step.current .formula-line .katex { font-size:1.28rem; }
+
+  /* Factor selection animation */
+  .factors-row { display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.5rem 0; }
+  .factor {
+    display:inline-flex;align-items:center;justify-content:center;
+    border:2px solid #d4dbeb;border-radius:8px;padding:.4rem .7rem;
+    font-size:1rem;font-weight:600;background:#fff;
+    transition:all .3s;
+  }
+  .factor .katex { font-size:1rem; }
+  .factor.pick-b { border-color:#e67e22;background:#fff3e0;color:#e67e22; }
+  .factor.pick-a { border-color:#d9534f;background:#fef0f0; }
+  .factor-label { font-size:.75rem;color:var(--muted);display:block;text-align:center;margin-top:.15rem; }
+
+  .tabs { display:flex;gap:.5rem;margin:.75rem 0 1rem;flex-wrap:wrap; }
+  .tab { flex:1 1 200px;appearance:none;background:#fff;border:1.5px solid #d4dbeb;color:var(--fg);border-radius:10px;padding:.85rem .75rem;font-size:.9rem;font-family:inherit;cursor:pointer;min-height:56px;user-select:none;transition:border-color .15s,background .15s;text-align:center; }
+  .tab.active { border-color:var(--accent);background:#eef4ff; }
+  .tab:active { transform:scale(.98); }
+  .tab .katex { font-size:1rem; }
+  .controls-row { display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:1rem 0 0; }
+  .btn { appearance:none;border:1px solid #d4dbeb;background:#fff;color:var(--accent);font-size:1rem;font-weight:600;padding:.85rem 1.2rem;border-radius:10px;cursor:pointer;min-height:48px;min-width:100px;font-family:inherit;user-select:none; }
+  .btn.primary { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .btn:disabled { opacity:.3;cursor:not-allowed; }
+  .btn:active:not(:disabled) { transform:scale(.97); }
+  .step-counter { color:var(--muted);font-size:.9rem;text-align:center;flex:1; }
+  .step-counter .katex { font-size:1rem;color:var(--fg);font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>二項定理</h1>
+  <p class="subtitle">組合せの考えで $(a+b)^n$ の展開式の係数を求めます。</p>
+
+  <h2>導出と公式</h2>
+  <p class="subtitle">「次へ」で1ステップずつ進みます。</p>
+
+  <div class="walkthrough" id="wk1"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev1">← 戻る</button>
+    <div class="step-counter">ステップ <span id="cur1"></span> / <span id="tot1"></span></div>
+    <button class="btn primary" id="next1">次へ →</button>
+  </div>
+
+  <h2>例題</h2>
+  <p class="subtitle">タップで切り替え、「次へ」で1ステップずつ進みます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-idx="0"></button>
+    <button class="tab" data-idx="1"></button>
+  </div>
+  <div class="walkthrough" id="wk2"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev2">← 戻る</button>
+    <div class="step-counter">ステップ <span id="cur2"></span> / <span id="tot2"></span></div>
+    <button class="btn primary" id="next2">次へ →</button>
+  </div>
+</main>
+<script>
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+
+  // Part 1: derivation
+  const part1=[
+    {title:"$(a+b)^4$ の因数積分解",
+     formula:"(a+b)^4=(a+b)(a+b)(a+b)(a+b)\\quad\\cdots\\text{4個の因数}"},
+    {title:"$a^3b$ の項はどこから来るか",
+     formula:"\\text{4個のうち }\\mathbf{1}\\text{個から }b\\text{ を、残り }\\mathbf{3}\\text{個から }a\\text{ を取り出す}"},
+    {title:"選び方の数 = 係数",
+     formula:"\\text{4個から1個を選ぶ組合せ数}={}_4C_1=4\\quad\\Rightarrow\\quad a^3b\\text{ の係数は }4"},
+    {title:"すべての項の係数",
+     formula:"a^4:{}_{4}C_0,\\quad a^3b:{}_{4}C_1,\\quad a^2b^2:{}_{4}C_2,\\quad ab^3:{}_{4}C_3,\\quad b^4:{}_{4}C_4"},
+    {title:"二項定理（一般形）",
+     formula:"(a+b)^n=\\sum_{r=0}^{n}{}_{n}C_r\\,a^{n-r}b^r",type:"result"},
+    {title:"一般項",
+     formula:"\\text{一般項}={}_{n}C_r\\,a^{n-r}b^r\\quad(r=0,1,\\dots,n)",type:"result"}
+  ];
+
+  // Part 2: examples
+  const CA="#d9534f", CB="#2a6df4";
+  const examples=[
+    {
+      label:"(2a+b)^5",
+      steps:[
+        {title:"展開する式",formula:"(2a+b)^5"},
+        {titleParts:[{tex:`\\textcolor{${CA}}{\\alpha}`}," と ",{tex:`\\textcolor{${CB}}{\\beta}`}," を決める"],
+          formula:`\\textcolor{${CA}}{\\alpha}=2a,\\quad\\textcolor{${CB}}{\\beta}=b,\\quad n=5`},
+        {title:"二項定理を適用",
+          formula:`(\\textcolor{${CA}}{2a}+\\textcolor{${CB}}{b})^5=\\sum_{r=0}^{5}{}_{5}C_r(\\textcolor{${CA}}{2a})^{5-r}\\textcolor{${CB}}{b}^r`},
+        {title:"各項を計算",
+          formula:"=\\binom{5}{0}(2a)^5+\\binom{5}{1}(2a)^4b+\\binom{5}{2}(2a)^3b^2+\\binom{5}{3}(2a)^2b^3+\\binom{5}{4}(2a)b^4+\\binom{5}{5}b^5"},
+        {title:"展開の完成",formula:"=32a^5+80a^4b+80a^3b^2+40a^2b^3+10ab^4+b^5",type:"result"}
+      ]
+    },
+    {
+      label:"(x-5y)^3",
+      steps:[
+        {title:"展開する式",formula:"(x-5y)^3"},
+        {titleParts:[{tex:`\\textcolor{${CA}}{\\alpha}`}," と ",{tex:`\\textcolor{${CB}}{\\beta}`}," を決める"],
+          formula:`\\textcolor{${CA}}{\\alpha}=x,\\quad\\textcolor{${CB}}{\\beta}=-5y,\\quad n=3`},
+        {title:"二項定理を適用",
+          formula:`(\\textcolor{${CA}}{x}+\\textcolor{${CB}}{(-5y)})^3=\\sum_{r=0}^{3}{}_{3}C_r\\,\\textcolor{${CA}}{x}^{3-r}\\,(\\textcolor{${CB}}{-5y})^r`},
+        {title:"各項を計算",
+          formula:"={}_{3}C_0x^3+{}_{3}C_1x^2(-5y)+{}_{3}C_2x(-5y)^2+{}_{3}C_3(-5y)^3"},
+        {title:"展開の完成",formula:"=x^3-15x^2y+75xy^2-125y^3",type:"result"}
+      ]
+    }
+  ];
+
+  let s1=0, s2=0, ex2=0;
+  const buildLabel=parts=>parts.map(p=>typeof p==='string'?p:T(p.tex)).join('');
+
+  function renderWK(steps,cur,wkId,curId,totId,prevId,nextId){
+    const root=document.getElementById(wkId);
+    let html='';
+    for(let i=0;i<=cur;i++){
+      const s=steps[i];
+      const isCur=i===cur;
+      const isRes=s.type==='result';
+      const label=s.titleParts?buildLabel(s.titleParts):s.title;
+      html+=`<div class="step${isCur?' current':''}${isCur&&isRes?' result-step':''}">
+        <div class="label">${label}</div>
+        <div class="formula-line">${T(s.formula)}</div>
+      </div>`;
+    }
+    root.innerHTML=html;
+    tex(String(cur+1),document.getElementById(curId));
+    tex(String(steps.length),document.getElementById(totId));
+    document.getElementById(prevId).disabled=cur===0;
+    document.getElementById(nextId).disabled=cur===steps.length-1;
+    const last=root.lastElementChild;
+    if(last) last.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+
+  function render1(){ renderWK(part1,s1,'wk1','cur1','tot1','prev1','next1'); }
+  function render2(){ renderWK(examples[ex2].steps,s2,'wk2','cur2','tot2','prev2','next2'); }
+
+  function selectEx(idx){ ex2=idx; s2=0; document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.idx)===idx)); render2(); }
+
+  function init(){
+    document.getElementById('prev1').addEventListener('click',()=>{if(s1>0){s1--;render1();}});
+    document.getElementById('next1').addEventListener('click',()=>{if(s1<part1.length-1){s1++;render1();}});
+    document.getElementById('prev2').addEventListener('click',()=>{if(s2>0){s2--;render2();}});
+    document.getElementById('next2').addEventListener('click',()=>{if(s2<examples[ex2].steps.length-1){s2++;render2();}});
+    document.querySelectorAll('.tab').forEach(tab=>{
+      const idx=parseInt(tab.dataset.idx);
+      tex(examples[idx].label,tab);
+      tab.addEventListener('click',()=>selectEx(idx));
+    });
+    render1(); render2();
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>

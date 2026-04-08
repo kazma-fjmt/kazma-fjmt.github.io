@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>パスカルの三角形の構造</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .walkthrough { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:.75rem 1.25rem;margin:0 0 .75rem;min-height:10rem;overflow-x:auto; }
+  .step { padding:.75rem .25rem;border-bottom:1px dashed #eee; }
+  .step:last-child { border-bottom:none; }
+  .step.current { background:#f0f5ff;border-radius:8px;padding:.75rem;margin:.25rem -.5rem;animation:stepIn .3s ease-out; }
+  @keyframes stepIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .step.current.result-step { animation:stepIn .3s ease-out,pulse .9s ease-out .35s both; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(42,109,244,.45)} 70%{box-shadow:0 0 0 14px rgba(42,109,244,0)} 100%{box-shadow:0 0 0 0 rgba(42,109,244,0)} }
+  .step .label { color:var(--muted);font-size:.8rem;margin-bottom:.2rem; }
+  .step .formula-line { overflow-x:auto; }
+  .step .formula-line .katex { font-size:1.2rem; }
+  .step.current .formula-line .katex { font-size:1.35rem; }
+
+  /* Pascal's triangle */
+  .pascal-wrap { overflow-x:auto;padding:.5rem 0; }
+  .pascal { display:flex;flex-direction:column;align-items:center;gap:.35rem; }
+  .pascal-row { display:flex;gap:.35rem;justify-content:center; }
+  .cell {
+    width:2.6rem;height:2.6rem;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;
+    font-weight:700;font-size:.95rem;
+    border:2px solid #d4dbeb;
+    background:#fff;
+    opacity:0;
+    animation:cellIn .4s ease-out forwards;
+  }
+  @keyframes cellIn {
+    from{opacity:0;transform:scale(.5);}
+    to{opacity:1;transform:scale(1);}
+  }
+  .cell.hi3 { background:#eef4ff;border-color:var(--accent);color:var(--accent); }  /* n=3 row */
+  .cell.hi4 { background:#fff3e0;border-color:#e67e22;color:#e67e22; }              /* n=4 row */
+  .cell.new { border-color:#28a745;background:#f0fff4;color:#28a745; }               /* sum result */
+
+  /* Sum annotation */
+  .sum-note { font-size:.8rem;color:var(--muted);text-align:center;margin-top:.5rem; }
+
+  .controls-row { display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:1rem 0 0; }
+  .btn { appearance:none;border:1px solid #d4dbeb;background:#fff;color:var(--accent);font-size:1rem;font-weight:600;padding:.85rem 1.2rem;border-radius:10px;cursor:pointer;min-height:48px;min-width:100px;font-family:inherit;user-select:none; }
+  .btn.primary { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .btn:disabled { opacity:.3;cursor:not-allowed; }
+  .btn:active:not(:disabled) { transform:scale(.97); }
+  .step-counter { color:var(--muted);font-size:.9rem;text-align:center;flex:1; }
+  .step-counter .katex { font-size:1rem;color:var(--fg);font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>パスカルの三角形の構造</h1>
+  <p class="subtitle">既知の展開式から、より高次の展開式の係数を求める方法を学びます。</p>
+
+  <h2>導出ステップ</h2>
+  <p class="subtitle">「次へ」で1ステップずつ進みます。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+<script>
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+  const C3="#2a6df4", C4="#e67e22";
+
+  // Pascal triangle rows 0..4
+  const ROWS=[[1],[1,1],[1,2,1],[1,3,3,1],[1,4,6,4,1]];
+
+  function makePascal(showUpTo, highlightRow, showNewRow){
+    let html='<div class="pascal-wrap"><div class="pascal">';
+    for(let r=0;r<=showUpTo;r++){
+      html+='<div class="pascal-row">';
+      for(let c=0;c<ROWS[r].length;c++){
+        let cls='cell';
+        if(r===3) cls+=' hi3';
+        if(r===4 && showNewRow) cls+=' hi4';
+        const delay=(r*0.08+c*0.05).toFixed(2);
+        html+=`<span class="${cls}" style="animation-delay:${delay}s">${ROWS[r][c]}</span>`;
+      }
+      html+='</div>';
+    }
+    html+='</div></div>';
+    return html;
+  }
+
+  const C_A="#d9534f", C_B="#2a6df4";
+
+  const steps=[
+    {
+      title:`出発点：既知の展開式`,
+      formula:`(a+b)^3=a^3+3a^2b+3ab^2+b^3`
+    },
+    {
+      title:`(a+b)^4 を (a+b)^3 を使って表す`,
+      formula:`(a+b)^4=(a+b)(a+b)^3=(a+b)(a^3+3a^2b+3ab^2+b^3)`
+    },
+    {
+      title:`分配法則で展開（a の部分）`,
+      formula:`\\begin{aligned}&\\phantom{{}={}}a\\cdot(a^3+3a^2b+3ab^2+b^3)\\\\&=a^4+3a^3b+3a^2b^2+ab^3\\end{aligned}`
+    },
+    {
+      title:`分配法則で展開（b の部分）`,
+      formula:`\\begin{aligned}&\\phantom{{}={}}b\\cdot(a^3+3a^2b+3ab^2+b^3)\\\\&=a^3b+3a^2b^2+3ab^3+b^4\\end{aligned}`
+    },
+    {
+      title:`2つを足して同類項をまとめる`,
+      formula:`(a+b)^4=a^4+4a^3b+6a^2b^2+4ab^3+b^4`
+    },
+    {
+      title:`係数の規則に注目`,
+      formula:`\\underbrace{\\quad1\\quad3\\quad3\\quad1\\quad}_{(a+b)^3}\\xrightarrow{\\text{隣どうし足す}}\\underbrace{1\\quad4\\quad6\\quad4\\quad1}_{(a+b)^4}`,
+      type:"special"
+    },
+    {
+      title:`パスカルの三角形（n=0〜4）`,
+      type:"pascal",
+      showRows:4
+    }
+  ];
+
+  let curStep=0;
+
+  function renderContent(s, isCur){
+    if(s.type==='pascal'){
+      return makePascal(s.showRows, 3, true)+
+        `<p class="sum-note">青：$(a+b)^3$ の係数 ／ 橙：$(a+b)^4$ の係数<br>各段の数は、上の2つの数の和</p>`;
+    }
+    if(s.type==='special'){
+      // Custom coefficients layout
+      return `<div class="formula-line">${T(s.formula)}</div>`;
+    }
+    return `<div class="formula-line">${T(s.formula)}</div>`;
+  }
+
+  function render(){
+    const root=document.getElementById('walkthrough');
+    let html='';
+    for(let i=0;i<=curStep;i++){
+      const s=steps[i];
+      const isCur=i===curStep;
+      const isRes=s.type==='result'||s.type==='pascal';
+      html+=`<div class="step${isCur?' current':''}${isCur&&isRes?' result-step':''}">
+        <div class="label">${s.title}</div>
+        ${renderContent(s,isCur)}
+      </div>`;
+    }
+    root.innerHTML=html;
+    tex(String(curStep+1),document.getElementById('step-cur'));
+    tex(String(steps.length),document.getElementById('step-tot'));
+    document.getElementById('prev').disabled=curStep===0;
+    document.getElementById('next').disabled=curStep===steps.length-1;
+    const last=root.lastElementChild;
+    if(last) last.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+
+  function init(){
+    document.getElementById('prev').addEventListener('click',()=>{if(curStep>0){curStep--;render();}});
+    document.getElementById('next').addEventListener('click',()=>{if(curStep<steps.length-1){curStep++;render();}});
+    render();
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>

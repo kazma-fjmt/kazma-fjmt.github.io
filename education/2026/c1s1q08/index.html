@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>パスカルの三角形</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  p { margin:.75rem 0; }
+
+  /* Controls */
+  .row-controls { display:flex;gap:.5rem;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap; }
+  .row-btn {
+    appearance:none;background:#fff;border:1.5px solid #d4dbeb;color:var(--fg);
+    border-radius:8px;padding:.6rem .9rem;font-size:.9rem;font-family:inherit;
+    cursor:pointer;user-select:none;min-height:44px;min-width:64px;text-align:center;
+    transition:border-color .15s,background .15s;
+  }
+  .row-btn.active { border-color:var(--accent);background:#eef4ff;color:var(--accent);font-weight:700; }
+  .row-btn:active { transform:scale(.97); }
+
+  /* Pascal triangle */
+  .pascal-wrap { overflow-x:auto;padding:.25rem 0 1rem; }
+  .pascal { display:flex;flex-direction:column;align-items:center;gap:.4rem; }
+  .prow { display:flex;gap:.4rem;justify-content:center;align-items:center; }
+  .nlabel { font-size:.75rem;color:var(--muted);min-width:2.4rem;text-align:right;padding-right:.5rem; }
+  .cell {
+    width:3rem;height:3rem;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;font-weight:700;font-size:1rem;
+    border:2px solid #d4dbeb;background:#fff;
+    transition:background .3s,border-color .3s,color .3s;
+  }
+  .cell.dim { opacity:.35;transition:opacity .3s; }
+  .cell.active { background:#eef4ff;border-color:var(--accent);color:var(--accent); }
+  .cell.new { background:#fff3e0;border-color:#e67e22;color:#e67e22;
+    animation:popIn .4s ease-out; }
+  @keyframes popIn { 0%{transform:scale(.4);opacity:0} 70%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+
+  /* Expansion formula */
+  .expand-box { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem 1.25rem;
+    overflow-x:auto;text-align:center;margin-top:1rem;
+    animation:fadeIn .4s ease-out; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+  .expand-box .katex { font-size:1.2rem; }
+
+  .legend { font-size:.82rem;color:var(--muted);margin-top:.75rem;text-align:center; }
+  .swatch { display:inline-block;width:.65rem;height:.65rem;border-radius:50%;margin-right:.3rem;vertical-align:middle; }
+</style>
+</head>
+<body>
+<main>
+  <h1>パスカルの三角形</h1>
+  <p class="subtitle">$(a+b)^n$ の展開式の係数を並べた数の三角形です。段をタップして展開式を確認しましょう。</p>
+
+  <h2>パスカルの三角形</h2>
+  <div class="row-controls" id="row-controls"></div>
+  <div class="pascal-wrap">
+    <div class="pascal" id="pascal"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--accent);"></span>選択中の段</span>
+    &emsp;
+    <span><span class="swatch" style="background:#e67e22;"></span>新たに足して得られる数</span>
+  </div>
+
+  <h2>展開式</h2>
+  <div id="expand-area"></div>
+</main>
+<script>
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+
+  // Pascal rows 0..6
+  function computeRows(maxN){
+    const rows=[[1]];
+    for(let n=1;n<=maxN;n++){
+      const prev=rows[n-1];
+      const row=[1];
+      for(let k=1;k<prev.length;k++) row.push(prev[k-1]+prev[k]);
+      row.push(1);
+      rows.push(row);
+    }
+    return rows;
+  }
+  const MAX_N=6;
+  const ROWS=computeRows(MAX_N);
+
+  // Expansion formulas for each n
+  function expansionTex(n){
+    if(n===0) return '(a+b)^0=1';
+    if(n===1) return '(a+b)^1=a+b';
+    if(n===2) return '(a+b)^2=a^2+2ab+b^2';
+    if(n===3) return '(a+b)^3=a^3+3a^2b+3ab^2+b^3';
+    if(n===4) return '(a+b)^4=a^4+4a^3b+6a^2b^2+4ab^3+b^4';
+    if(n===5) return '(a+b)^5=a^5+5a^4b+10a^3b^2+10a^2b^3+5ab^4+b^5';
+    if(n===6) return '(a+b)^6=a^6+6a^5b+15a^4b^2+20a^3b^3+15a^2b^4+6ab^5+b^6';
+    return '';
+  }
+
+  let activeN=4;
+
+  function renderPascal(){
+    const pascal=document.getElementById('pascal');
+    let html='';
+    for(let n=0;n<=MAX_N;n++){
+      const row=ROWS[n];
+      html+=`<div class="prow"><span class="nlabel">n=${n}</span>`;
+      for(let k=0;k<row.length;k++){
+        let cls='cell';
+        if(n===activeN) cls+=' active';
+        else if(n===activeN+1) cls+=' new';
+        else if(n>activeN+1) cls+=' dim';
+        html+=`<span class="${cls}">${row[k]}</span>`;
+      }
+      html+='</div>';
+    }
+    pascal.innerHTML=html;
+  }
+
+  function renderExpand(){
+    const area=document.getElementById('expand-area');
+    area.innerHTML=`<div class="expand-box"></div>`;
+    tex(expansionTex(activeN),area.querySelector('.expand-box'));
+  }
+
+  function setActive(n){
+    activeN=n;
+    document.querySelectorAll('.row-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.n)===n));
+    renderPascal();
+    renderExpand();
+  }
+
+  function init(){
+    // Row selector buttons
+    const ctrl=document.getElementById('row-controls');
+    for(let n=0;n<=MAX_N;n++){
+      const btn=document.createElement('button');
+      btn.className='row-btn'+(n===activeN?' active':'');
+      btn.dataset.n=n;
+      btn.textContent=`n=${n}`;
+      btn.addEventListener('click',()=>setActive(n));
+      ctrl.appendChild(btn);
+    }
+    renderPascal();
+    renderExpand();
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>
