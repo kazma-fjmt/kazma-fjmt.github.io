@@ -53,8 +53,8 @@
 
   <h2>例題を選んで確認</h2>
   <div class="tabs">
-    <button class="tab active" id="tab-a" onclick="switchEx('a')">x²+2x-1</button>
-    <button class="tab" id="tab-b" onclick="switchEx('b')">2x²-3x+2</button>
+    <button class="tab active" id="tab-a" onclick="switchEx('a')"></button>
+    <button class="tab" id="tab-b" onclick="switchEx('b')"></button>
   </div>
   <div class="walkthrough" id="walkthrough"></div>
   <div class="controls-row">
@@ -97,6 +97,8 @@
   }
 
   function init(){
+    document.getElementById('tab-a').innerHTML = T('x^2+2x-1');
+    document.getElementById('tab-b').innerHTML = T('2x^2-3x+2');
     tex('ax^2+bx+c=0 \\text{ の解を } \\alpha,\\beta \\text{ とすると：}', document.getElementById('setup-text'));
     tex('ax^2+bx+c = a(x-\\alpha)(x-\\beta)', document.getElementById('factor-formula'));
 

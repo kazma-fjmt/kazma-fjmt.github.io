@@ -54,7 +54,7 @@
 <body>
 <main>
   <h1>実数解の符号条件</h1>
-  <p class="subtitle">D, α+β, αβ の符号の組み合わせで解の符号が決まる</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>3つの符号パターン（タップで順に表示）</h2>
   <div class="cond-header">
@@ -64,17 +64,17 @@
   </div>
   <div class="cond-row row-pos" id="row1">
     <div class="rc-title" id="r1-title"></div>
-    <div class="rc-numline">─────●──●───<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;α&nbsp;&nbsp;β</div>
+    <div class="rc-numline">─────●──●───<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="nl1-0"></span>&nbsp;<span id="nl1-a"></span>&nbsp;&nbsp;<span id="nl1-b"></span></div>
     <div class="rc-conds" id="r1-conds"></div>
   </div>
   <div class="cond-row row-neg" id="row2">
     <div class="rc-title" id="r2-title"></div>
-    <div class="rc-numline">───●──●──────<br>&nbsp;&nbsp;&nbsp;&nbsp;α&nbsp;&nbsp;β&nbsp;&nbsp;0</div>
+    <div class="rc-numline">───●──●──────<br>&nbsp;&nbsp;&nbsp;&nbsp;<span id="nl2-a"></span>&nbsp;&nbsp;<span id="nl2-b"></span>&nbsp;&nbsp;<span id="nl2-0"></span></div>
     <div class="rc-conds" id="r2-conds"></div>
   </div>
   <div class="cond-row row-diff" id="row3">
     <div class="rc-title" id="r3-title"></div>
-    <div class="rc-numline">───●───────●─<br>&nbsp;&nbsp;&nbsp;&nbsp;α&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;β</div>
+    <div class="rc-numline">───●───────●─<br>&nbsp;&nbsp;&nbsp;&nbsp;<span id="nl3-a"></span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="nl3-0"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="nl3-b"></span></div>
     <div class="rc-conds" id="r3-conds"></div>
   </div>
   <div class="controls-row2">
@@ -124,6 +124,18 @@
   }
 
   function init(){
+    // Subtitle
+    document.getElementById('sub1').innerHTML = T('D') + '，' + T('\\alpha+\\beta') + '，' + T('\\alpha\\beta') + ' の符号の組み合わせで解の符号が決まる';
+    // Number-line labels
+    document.getElementById('nl1-0').innerHTML = T('0');
+    document.getElementById('nl1-a').innerHTML = T('\\alpha');
+    document.getElementById('nl1-b').innerHTML = T('\\beta');
+    document.getElementById('nl2-a').innerHTML = T('\\alpha');
+    document.getElementById('nl2-b').innerHTML = T('\\beta');
+    document.getElementById('nl2-0').innerHTML = T('0');
+    document.getElementById('nl3-a').innerHTML = T('\\alpha');
+    document.getElementById('nl3-0').innerHTML = T('0');
+    document.getElementById('nl3-b').innerHTML = T('\\beta');
     // Table cells
     document.getElementById('r1-title').innerHTML = T('\\alpha>0,\\;\\beta>0');
     document.getElementById('r1-conds').innerHTML = T('D\\geq0,\\;\\alpha+\\beta>0,\\;\\alpha\\beta>0');

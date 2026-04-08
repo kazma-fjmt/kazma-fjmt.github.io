@@ -42,7 +42,7 @@
 <body>
 <main>
   <h1>4次式の因数分解</h1>
-  <p class="subtitle">x⁴-4 を有理数・実数・複素数の各範囲で因数分解する</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>問題：<span id="prob"></span></h2>
   <div class="card">
@@ -96,6 +96,7 @@
   }
 
   function init(){
+    document.getElementById('sub1').innerHTML = T('x^4-4') + ' を有理数・実数・複素数の各範囲で因数分解する';
     tex('x^4-4', document.getElementById('prob'));
 
     allSteps={

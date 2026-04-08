@@ -53,8 +53,8 @@
 
   <h2>例題を選んで確認</h2>
   <div class="tabs">
-    <button class="tab active" id="tab-a" onclick="switchEx('a')">解：1, -2</button>
-    <button class="tab" id="tab-b" onclick="switchEx('b')">解：3+√2i, 3-√2i</button>
+    <button class="tab active" id="tab-a" onclick="switchEx('a')"></button>
+    <button class="tab" id="tab-b" onclick="switchEx('b')"></button>
   </div>
   <div class="walkthrough" id="walkthrough"></div>
   <div class="controls-row">
@@ -97,6 +97,8 @@
   }
 
   function init(){
+    document.getElementById('tab-a').innerHTML = '解：' + T('1,\\; -2');
+    document.getElementById('tab-b').innerHTML = '解：' + T('3+\\sqrt{2}\\,i,\\; 3-\\sqrt{2}\\,i');
     tex('\\alpha,\\beta \\text{ を解にもつ2次方程式（最高次の係数を1）は：}', document.getElementById('setup-text'));
     tex('x^2-(\\alpha+\\beta)x+\\alpha\\beta=0', document.getElementById('make-formula'));
 
