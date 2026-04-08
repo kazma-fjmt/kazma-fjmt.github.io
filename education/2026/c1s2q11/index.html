@@ -23,12 +23,12 @@
   .d-zero { background:#fff7e6;border:1.5px solid #f5c842; }
   .d-neg { background:#fde8e8;border:1.5px solid #f54e4e; }
   .d-item .d-label { font-weight:700;font-size:.95rem;margin-bottom:.3rem; }
-  /* Canvas */
   .canvas-wrap { display:flex;justify-content:center;margin:1rem 0; }
-  canvas { width:100%;max-width:500px;border-radius:10px;border:1px solid #e3e3e3;background:#fff; }
-  /* Case buttons */
+  #cv-box { position:relative;display:inline-block;width:100%;max-width:500px; }
+  canvas { display:block;width:100%;border-radius:10px;border:1px solid #e3e3e3;background:#fff; }
+  .cv-lbl { position:absolute;pointer-events:none;line-height:1; }
   .case-btns { display:flex;gap:.5rem;justify-content:center;margin:.75rem 0; }
-  .cbtn { flex:1;max-width:160px;padding:.7rem .5rem;border-radius:10px;border:2px solid #d4dbeb;background:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s; }
+  .cbtn { flex:1;max-width:160px;padding:.7rem .5rem;border-radius:10px;border:2px solid #d4dbeb;background:#fff;color:var(--accent);font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;transition:all .2s; }
   .cbtn.pos-active { background:#e8fdf0;border-color:#4fd47e;color:#1a9a4e; }
   .cbtn.zero-active { background:#fff7e6;border-color:#f5c842;color:#856404; }
   .cbtn.neg-active { background:#fde8e8;border-color:#f54e4e;color:#b01010; }
@@ -39,7 +39,7 @@
 <body>
 <main>
   <h1>判別式</h1>
-  <p class="subtitle">解の種類は判別式 D = b²-4ac で決まる</p>
+  <p class="subtitle" id="sub1"></p>
 
   <h2>判別式の定義と分類</h2>
   <div class="card">
@@ -62,12 +62,19 @@
 
   <h2>放物線のグラフで確認</h2>
   <div class="case-btns">
-    <button class="cbtn pos-active" id="btn-pos" onclick="setCase('pos')">D &gt; 0</button>
-    <button class="cbtn" id="btn-zero" onclick="setCase('zero')">D = 0</button>
-    <button class="cbtn" id="btn-neg" onclick="setCase('neg')">D &lt; 0</button>
+    <button class="cbtn pos-active" id="btn-pos" onclick="setCase('pos')"></button>
+    <button class="cbtn" id="btn-zero" onclick="setCase('zero')"></button>
+    <button class="cbtn" id="btn-neg" onclick="setCase('neg')"></button>
   </div>
   <div class="canvas-wrap">
-    <canvas id="cv" width="500" height="260"></canvas>
+    <div id="cv-box">
+      <canvas id="cv" width="500" height="260"></canvas>
+      <span class="cv-lbl" id="lbl-xax" style="color:#aaa"></span>
+      <span class="cv-lbl" id="lbl-yax" style="color:#aaa"></span>
+      <span class="cv-lbl" id="lbl-r1" style="color:#333;display:none"></span>
+      <span class="cv-lbl" id="lbl-r2" style="color:#333;display:none"></span>
+      <span class="cv-lbl" id="lbl-r12" style="color:#333;display:none"></span>
+    </div>
   </div>
   <div class="case-desc" id="case-desc"></div>
 </main>
@@ -75,30 +82,23 @@
   const T=l=>katex.renderToString(l,{throwOnError:false});
   const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
 
-  let currentCase='pos';
-  let animFrame=null, animT=0, fromC=1, toC=1;
+  let currentCase='pos', animFrame=null;
+  let lblR1, lblR2, lblR12;
 
-  // c parameter: pos=negative(crosses), zero=0(tangent), neg=positive(above)
   const cases={
-    pos:{ c:-1.5, color:'#2a6df4', label:'D > 0：2つの異なる実数解' },
-    zero:{ c:0,   color:'#f5c842', label:'D = 0：重解（x軸に接する）' },
-    neg:{ c:1.5,  color:'#d9534f', label:'D < 0：実数解なし（虚数解）' },
+    pos:{ c:-1.5, color:'#2a6df4', descHtml:'' },
+    zero:{ c:0,   color:'#f5c842', descHtml:'' },
+    neg:{ c:1.5,  color:'#d9534f', descHtml:'' },
   };
 
-  function drawParabola(c, color, progress){
+  function drawParabola(c, color){
     const cv=document.getElementById('cv');
     const ctx=cv.getContext('2d');
     const W=cv.width, H=cv.height;
     ctx.clearRect(0,0,W,H);
-    // axes
     ctx.strokeStyle='#ddd'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(20,H/2); ctx.lineTo(W-20,H/2); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(W/2,10); ctx.lineTo(W/2,H-10); ctx.stroke();
-    // axis labels
-    ctx.fillStyle='#aaa'; ctx.font='13px sans-serif';
-    ctx.fillText('x',W-15,H/2-5);
-    ctx.fillText('y',W/2+5,18);
-    // parabola: y = x² + c, scaled
     const scaleX=60, scaleY=55, ox=W/2, oy=H/2;
     ctx.strokeStyle=color; ctx.lineWidth=3;
     ctx.beginPath();
@@ -110,67 +110,95 @@
     }
     ctx.stroke();
 
-    // intersection markers
-    if(c < 0){
+    if(c<0){
       const xr=Math.sqrt(-c);
-      [xr,-xr].forEach(xi=>{
+      [[-xr,lblR1],[xr,lblR2]].forEach(([xi,el])=>{
         const px=ox+xi*scaleX;
-        ctx.beginPath(); ctx.arc(px,H/2,7,0,Math.PI*2);
+        ctx.beginPath(); ctx.arc(px,oy,7,0,Math.PI*2);
         ctx.fillStyle=color; ctx.fill();
-        ctx.fillStyle='#333'; ctx.font='bold 12px sans-serif';
-        ctx.fillText(xi>0?'x₂':'x₁',px-8,H/2+22);
+        el.style.left=(px/W*100).toFixed(1)+'%';
+        el.style.top=((oy+14)/H*100).toFixed(1)+'%';
+        el.style.transform='translateX(-50%)';
+        el.style.display='';
       });
+      lblR12.style.display='none';
     } else if(c===0){
-      ctx.beginPath(); ctx.arc(ox,H/2,7,0,Math.PI*2);
+      ctx.beginPath(); ctx.arc(ox,oy,7,0,Math.PI*2);
       ctx.fillStyle=color; ctx.fill();
-      ctx.fillStyle='#333'; ctx.font='bold 12px sans-serif';
-      ctx.fillText('x₁=x₂',ox-18,H/2+22);
+      lblR12.style.left=(ox/W*100).toFixed(1)+'%';
+      lblR12.style.top=((oy+14)/H*100).toFixed(1)+'%';
+      lblR12.style.transform='translateX(-50%)';
+      lblR12.style.display='';
+      lblR1.style.display='none'; lblR2.style.display='none';
     } else {
-      // show vertex above x-axis
       const py=oy-c*scaleY;
       ctx.beginPath(); ctx.arc(ox,py,5,0,Math.PI*2);
       ctx.fillStyle=color; ctx.fill();
       ctx.setLineDash([4,4]);
       ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(ox,py); ctx.lineTo(ox,H/2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox,py); ctx.lineTo(ox,oy); ctx.stroke();
       ctx.setLineDash([]);
+      lblR1.style.display='none'; lblR2.style.display='none'; lblR12.style.display='none';
     }
   }
 
   function animateTo(targetCase){
     if(animFrame) cancelAnimationFrame(animFrame);
-    const from=cases[currentCase].c;
-    const to=cases[targetCase].c;
-    const col=cases[targetCase].color;
-    const startTime=performance.now();
-    const dur=400;
+    const from=cases[currentCase].c, to=cases[targetCase].c, col=cases[targetCase].color;
+    const startTime=performance.now(), dur=400;
     function step(now){
       const t=Math.min((now-startTime)/dur,1);
       const ease=t<.5?2*t*t:(1-Math.pow(-2*t+2,2)/2);
-      const c=from+(to-from)*ease;
-      drawParabola(c,col,ease);
+      drawParabola(from+(to-from)*ease, col);
       if(t<1) animFrame=requestAnimationFrame(step);
-      else { currentCase=targetCase; drawParabola(to,col,1); }
+      else { currentCase=targetCase; drawParabola(to,col); }
     }
     animFrame=requestAnimationFrame(step);
   }
 
   function setCase(key){
     ['pos','zero','neg'].forEach(k=>{
-      const btn=document.getElementById('btn-'+k);
-      btn.className='cbtn'+( k===key ? ' '+k+'-active' : '');
+      document.getElementById('btn-'+k).className='cbtn'+(k===key?' '+k+'-active':'');
     });
-    document.getElementById('case-desc').innerHTML=T('\\text{'+cases[key].label+'}');
+    document.getElementById('case-desc').innerHTML=cases[key].descHtml;
     animateTo(key);
   }
 
   function init(){
+    lblR1=document.getElementById('lbl-r1');
+    lblR2=document.getElementById('lbl-r2');
+    lblR12=document.getElementById('lbl-r12');
+    lblR1.innerHTML=T('x_1');
+    lblR2.innerHTML=T('x_2');
+    lblR12.innerHTML=T('x_1=x_2');
+
+    const lx=document.getElementById('lbl-xax');
+    lx.innerHTML=T('x');
+    lx.style.right='2%';
+    lx.style.top='calc(50% - 14px)';
+
+    const ly=document.getElementById('lbl-yax');
+    ly.innerHTML=T('y');
+    ly.style.left='calc(50% + 5px)';
+    ly.style.top='3px';
+
+    document.getElementById('sub1').innerHTML='解の種類は判別式 '+T('D = b^2-4ac')+' で決まる';
+
     tex('D = b^2-4ac', document.getElementById('d-def'));
     tex('D > 0', document.getElementById('d-pos-label'));
     tex('D = 0', document.getElementById('d-zero-label'));
     tex('D < 0', document.getElementById('d-neg-label'));
-    drawParabola(cases.pos.c, cases.pos.color, 1);
-    document.getElementById('case-desc').innerHTML=T('\\text{'+cases.pos.label+'}');
+
+    document.getElementById('btn-pos').innerHTML=T('D > 0');
+    document.getElementById('btn-zero').innerHTML=T('D = 0');
+    document.getElementById('btn-neg').innerHTML=T('D < 0');
+
+    cases.pos.descHtml=T('D > 0')+'：2つの異なる実数解';
+    cases.zero.descHtml=T('D = 0')+'：重解（'+T('x')+'軸に接する）';
+    cases.neg.descHtml=T('D < 0')+'：実数解なし（虚数解）';
+
+    drawParabola(cases.pos.c, cases.pos.color);
+    document.getElementById('case-desc').innerHTML=cases.pos.descHtml;
   }
 
   if(window.katex) init();
