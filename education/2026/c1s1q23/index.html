@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>繁分数式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#333; --muted:#888; --accent:#2a6df4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7;-webkit-text-size-adjust:100%; }
+  main { max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 4rem; }
+  h1 { font-size:1.5rem;margin:0 0 .25rem; }
+  .subtitle { color:var(--muted);font-size:.9rem;margin:0 0 1.5rem; }
+  h2 { font-size:1.1rem;margin:2.25rem 0 .75rem;border-left:4px solid var(--accent);padding-left:.6rem; }
+  .methods-row { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem; }
+  @media(max-width:600px){ .methods-row{grid-template-columns:1fr;} }
+  .method-card { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:.85rem 1rem; }
+  .method-card .m-title { font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:.4rem; }
+  .method-card .m-desc { font-size:.9rem;color:#555; }
+  .tab-row { display:flex;gap:.5rem;margin-bottom:.75rem; }
+  .tab-btn { appearance:none;border:1px solid #d4dbeb;background:#fff;color:var(--accent);font-size:.9rem;font-weight:600;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:inherit; }
+  .tab-btn.active { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .walkthrough { background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:.75rem 1.25rem;margin:0 0 .75rem;min-height:9rem;overflow-x:auto; }
+  .step { padding:.75rem .25rem;border-bottom:1px dashed #eee; }
+  .step:last-child { border-bottom:none; }
+  .step.current { background:#f0f5ff;border-radius:8px;padding:.75rem;margin:.25rem -.5rem;animation:stepIn .3s ease-out; }
+  @keyframes stepIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .step.current.result-step { animation:stepIn .3s ease-out,pulse .9s ease-out .35s both; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(42,109,244,.45)} 70%{box-shadow:0 0 0 14px rgba(42,109,244,0)} 100%{box-shadow:0 0 0 0 rgba(42,109,244,0)} }
+  .step .label { color:var(--muted);font-size:.8rem;margin-bottom:.2rem; }
+  .step .formula-line { overflow-x:auto; }
+  .step .formula-line .katex { font-size:1.15rem; }
+  .step.current .formula-line .katex { font-size:1.28rem; }
+  .controls-row { display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:1rem 0 0; }
+  .btn { appearance:none;border:1px solid #d4dbeb;background:#fff;color:var(--accent);font-size:1rem;font-weight:600;padding:.85rem 1.2rem;border-radius:10px;cursor:pointer;min-height:48px;min-width:100px;font-family:inherit;user-select:none; }
+  .btn.primary { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .btn:disabled { opacity:.3;cursor:not-allowed; }
+  .btn:active:not(:disabled) { transform:scale(.97); }
+  .step-counter { color:var(--muted);font-size:.9rem;text-align:center;flex:1; }
+  .step-counter .katex { font-size:1rem;color:var(--fg);font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>繁分数式</h1>
+  <p class="subtitle">分子や分母に分数式を含む式（繁分数式）を簡単にします。</p>
+
+  <h2>2つの解法</h2>
+  <div class="methods-row">
+    <div class="method-card">
+      <div class="m-title">方法A: 除法に直す</div>
+      <div class="m-desc">全体を「(分子) ÷ (分母)」として、逆数を掛けて計算する</div>
+    </div>
+    <div class="method-card">
+      <div class="m-title">方法B: 最小公倍式を掛ける</div>
+      <div class="m-desc">分子・分母に含まれる全分数の公倍式を外側の分子・分母に掛けて分数をなくす</div>
+    </div>
+  </div>
+
+  <h2>例題</h2>
+  <div class="tab-row">
+    <button class="tab-btn active" id="tab0">方法A</button>
+    <button class="tab-btn" id="tab1">方法B</button>
+  </div>
+  <p class="subtitle" id="ex-desc"></p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+<script>
+  const CA="#d9534f", CB="#2a6df4", CG="#28a745", CP="#6f42c1";
+  const T=l=>katex.renderToString(l,{throwOnError:false});
+  const tex=(l,el)=>katex.render(l,el,{throwOnError:false});
+
+  // Example: P = (1 + 1/x) / (1 - 1/x²)  →  x/(x-1)
+  let EXAMPLES=[];
+
+  const DESCS=[
+    `方法A: 全体を除法として計算する`,
+    `方法B: 分子・分母に公倍式 x² を掛ける`,
+  ];
+
+  let tabIdx=0, cur=0;
+  function getSteps(){ return EXAMPLES[tabIdx]; }
+
+  function render(){
+    const steps=getSteps();
+    const root=document.getElementById('walkthrough');
+    document.getElementById('ex-desc').textContent=DESCS[tabIdx];
+    let html='';
+    for(let i=0;i<=cur;i++){
+      const s=steps[i];
+      const isCur=i===cur, isRes=s.type==='result';
+      html+=`<div class="step${isCur?' current':''}${isCur&&isRes?' result-step':''}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.formula)}</div>
+      </div>`;
+    }
+    root.innerHTML=html;
+    tex(String(cur+1),document.getElementById('step-cur'));
+    tex(String(steps.length),document.getElementById('step-tot'));
+    document.getElementById('prev').disabled=cur===0;
+    document.getElementById('next').disabled=cur===steps.length-1;
+    root.lastElementChild?.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+
+  function switchTab(idx){
+    tabIdx=idx; cur=0;
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+    render();
+  }
+
+  function init(){
+    EXAMPLES=[
+      // tab0: Method A (division)
+      [
+        {title:"繁分数式",
+         formula:`P = \\dfrac{1+\\dfrac{1}{x}}{1-\\dfrac{1}{x^2}}`},
+        {title:"全体を除法として書き直す",
+         formula:`P = \\left(1+\\frac{1}{x}\\right) \\div \\left(1-\\frac{1}{x^2}\\right)`},
+        {title:"各かっこを1つの分数式にまとめる",
+         formula:`= \\frac{\\textcolor{${CA}}{x+1}}{\\textcolor{${CA}}{x}} \\div \\frac{\\textcolor{${CB}}{x^2-1}}{\\textcolor{${CB}}{x^2}}`},
+        {title:"除法を逆数の乗法に直す",
+         formula:`= \\frac{\\textcolor{${CA}}{x+1}}{\\textcolor{${CA}}{x}} \\times \\frac{\\textcolor{${CB}}{x^2}}{\\textcolor{${CB}}{(x+1)(x-1)}}`},
+        {title:"約分",
+         formula:`= \\frac{(x+1)\\cdot x}{x\\cdot(x+1)(x-1)} = \\frac{x}{x-1}`,type:"result"},
+      ],
+      // tab1: Method B (multiply by LCM)
+      [
+        {title:"繁分数式",
+         formula:`P = \\dfrac{1+\\dfrac{1}{x}}{1-\\dfrac{1}{x^2}}`},
+        {title:`分子・分母に現れる分数の公倍式は ${T('x^2')}`,
+         formula:`x\\text{ と }x^2\\text{ の最小公倍式}= \\textcolor{${CG}}{x^2}`},
+        {title:`外側の分子・分母に ${T('\\textcolor{'+CG+'}{x^2}')} を掛ける`,
+         formula:`P = \\frac{\\left(1+\\dfrac{1}{x}\\right)\\times\\textcolor{${CG}}{x^2}}{\\left(1-\\dfrac{1}{x^2}\\right)\\times\\textcolor{${CG}}{x^2}}`},
+        {title:"展開",
+         formula:`= \\frac{x^2+x}{x^2-1}`},
+        {title:"約分",
+         formula:`= \\frac{x(x+1)}{(x+1)(x-1)} = \\frac{x}{x-1}`,type:"result"},
+      ],
+    ];
+    document.getElementById('tab0').addEventListener('click',()=>switchTab(0));
+    document.getElementById('tab1').addEventListener('click',()=>switchTab(1));
+    document.getElementById('prev').addEventListener('click',()=>{if(cur>0){cur--;render();}});
+    document.getElementById('next').addEventListener('click',()=>{const s=getSteps();if(cur<s.length-1){cur++;render();}});
+    render();
+  }
+
+  if(window.katex) init();
+  else document.addEventListener('DOMContentLoaded',()=>{
+    if(window.katex) init();
+    else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+  });
+</script>
+</body>
+</html>
