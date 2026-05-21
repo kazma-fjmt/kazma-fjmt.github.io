@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>1次方程式の表す図形</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  .formula .katex { font-size: 1.35rem; }
+
+  .canvas-container {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem;
+    margin: 1rem 0;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 1rem 0 0;
+    border-bottom: 2px solid #e3e3e3;
+  }
+  .tab {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: .75rem 1.25rem;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-family: inherit;
+    min-height: 48px;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab:active { transform: scale(.97); }
+
+  .transform-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+  .transform-step {
+    padding: .5rem 0;
+    border-bottom: 1px dashed #eee;
+  }
+  .transform-step:last-child { border-bottom: none; }
+
+  .slider-group {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: .5rem 0;
+    flex-wrap: wrap;
+  }
+  .slider-row label {
+    min-width: 2rem;
+    font-weight: 600;
+    text-align: right;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    height: 36px;
+  }
+  .slider-row .val {
+    min-width: 2.5rem;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .eq-display {
+    text-align: center;
+    margin: 1rem 0;
+    padding: .75rem;
+    background: #eef4ff;
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .eq-display .katex { font-size: 1.3rem; }
+
+  .note {
+    background: #fffbe6;
+    border: 1px solid #f0d060;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>1次方程式の表す図形</h1>
+  <p class="subtitle"><span id="f-subtitle"></span> の形が常に直線を表すことを理解します。</p>
+
+  <h2>一般形</h2>
+  <div class="formula" id="general-form"></div>
+  <p id="general-note"></p>
+
+  <h2>3つの例</h2>
+  <div class="tabs">
+    <button class="tab active" data-tab="0" id="tab0">(1)</button>
+    <button class="tab" data-tab="1" id="tab1">(2)</button>
+    <button class="tab" data-tab="2" id="tab2">(3)</button>
+  </div>
+
+  <div class="canvas-container">
+    <canvas id="plane" width="700" height="560"></canvas>
+  </div>
+
+  <div class="transform-box" id="transform-box"></div>
+
+  <h2>自由に調整</h2>
+  <p>スライダーで <span id="f-abc"></span> の値を変えて、直線がどう変化するか確認しましょう。</p>
+  <div class="slider-group">
+    <div class="slider-row">
+      <label><span id="lbl-a"></span> =</label>
+      <input type="range" id="slider-a" min="-5" max="5" step="0.5" value="3">
+      <span class="val" id="val-a">3</span>
+    </div>
+    <div class="slider-row">
+      <label><span id="lbl-b"></span> =</label>
+      <input type="range" id="slider-b" min="-5" max="5" step="0.5" value="-2">
+      <span class="val" id="val-b">-2</span>
+    </div>
+    <div class="slider-row">
+      <label><span id="lbl-c"></span> =</label>
+      <input type="range" id="slider-c" min="-10" max="10" step="0.5" value="4">
+      <span class="val" id="val-c">4</span>
+    </div>
+  </div>
+  <div class="eq-display" id="custom-eq"></div>
+
+  <div class="canvas-container">
+    <canvas id="plane2" width="700" height="560"></canvas>
+  </div>
+
+  <div class="note" id="custom-note"></div>
+</main>
+
+<script>
+  function tex(l, el, dm) { katex.render(l, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  const C_RED = "#d9534f";
+  const C_BLUE = "#2a6df4";
+  const C_GREEN = "#28a745";
+  const C_ORANGE = "#e67e22";
+
+  const examples = [
+    {
+      label: '(1)',
+      a: 3, b: -2, c: 4,
+      color: C_RED,
+      steps: [
+        { tex: `3x - 2y + 4 = 0` },
+        { tex: `-2y = -3x - 4` },
+        { tex: `y = \\frac{3}{2}x + 2` },
+        { tex: `\\text{傾き}\\; \\frac{3}{2},\\;\\; y\\text{切片}\\; 2 \\;\\;\\text{の直線}` }
+      ]
+    },
+    {
+      label: '(2)',
+      a: 0, b: 1, c: -1,
+      color: C_BLUE,
+      steps: [
+        { tex: `y - 1 = 0` },
+        { tex: `y = 1` },
+        { tex: `\\text{点}\\; (0,\\,1) \\;\\text{を通る水平な直線}` }
+      ]
+    },
+    {
+      label: '(3)',
+      a: 1, b: 0, c: 1,
+      color: C_GREEN,
+      steps: [
+        { tex: `x + 1 = 0` },
+        { tex: `x = -1` },
+        { tex: `\\text{点}\\; (-1,\\,0) \\;\\text{を通る垂直な直線}` }
+      ]
+    }
+  ];
+
+  let currentTab = 0;
+
+  // Canvas helpers
+  const gXmin = -6, gXmax = 6, gYmin = -5, gYmax = 7;
+
+  function setupCanvas(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  function toScreen(canvas, mx, my) {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    const sx = (mx - gXmin) / (gXmax - gXmin) * cw;
+    const sy = (1 - (my - gYmin) / (gYmax - gYmin)) * ch;
+    return [sx, sy];
+  }
+
+  function drawGrid(ctx, canvas) {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    for (let x = Math.ceil(gXmin); x <= Math.floor(gXmax); x++) {
+      const [sx] = toScreen(canvas, x, 0);
+      ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, ch); ctx.stroke();
+    }
+    for (let y = Math.ceil(gYmin); y <= Math.floor(gYmax); y++) {
+      const [, sy] = toScreen(canvas, 0, y);
+      ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(cw, sy); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1.5;
+    const [ox, oy] = toScreen(canvas, 0, 0);
+    ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(cw, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, ch); ctx.stroke();
+
+    ctx.fillStyle = '#999';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let x = Math.ceil(gXmin); x <= Math.floor(gXmax); x++) {
+      if (x === 0) continue;
+      const [sx] = toScreen(canvas, x, 0);
+      ctx.fillText(x, sx, oy + 4);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(gYmin); y <= Math.floor(gYmax); y++) {
+      if (y === 0) continue;
+      const [, sy] = toScreen(canvas, 0, y);
+      ctx.fillText(y, ox - 6, sy);
+    }
+    ctx.fillText('O', ox - 6, oy + 12);
+  }
+
+  function drawLineABC(ctx, canvas, a, b, c, color, lineWidth) {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth || 2.5;
+    ctx.beginPath();
+
+    if (Math.abs(b) > 1e-9) {
+      // y = (-a/b)x - c/b
+      const y1 = (-a * gXmin - c) / b;
+      const y2 = (-a * gXmax - c) / b;
+      const [sx1, sy1] = toScreen(canvas, gXmin, y1);
+      const [sx2, sy2] = toScreen(canvas, gXmax, y2);
+      ctx.moveTo(sx1, sy1);
+      ctx.lineTo(sx2, sy2);
+    } else if (Math.abs(a) > 1e-9) {
+      // x = -c/a (vertical)
+      const xv = -c / a;
+      const [sx1, sy1] = toScreen(canvas, xv, gYmin);
+      const [sx2, sy2] = toScreen(canvas, xv, gYmax);
+      ctx.moveTo(sx1, sy1);
+      ctx.lineTo(sx2, sy2);
+    }
+    ctx.stroke();
+  }
+
+  function drawSpecialPoint(ctx, canvas, x, y, color) {
+    const [sx, sy] = toScreen(canvas, x, y);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  /* --- Example tab view --- */
+  function drawExamplePlane() {
+    const canvas = document.getElementById('plane');
+    const ctx = setupCanvas(canvas);
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0, 0, cw, ch);
+    drawGrid(ctx, canvas);
+
+    // Draw dim other lines
+    examples.forEach((ex, i) => {
+      if (i !== currentTab) {
+        drawLineABC(ctx, canvas, ex.a, ex.b, ex.c, ex.color + '30', 1.5);
+      }
+    });
+
+    // Current line
+    const ex = examples[currentTab];
+    drawLineABC(ctx, canvas, ex.a, ex.b, ex.c, ex.color, 3);
+
+    // Special points
+    if (currentTab === 0) {
+      drawSpecialPoint(ctx, canvas, 0, 2, ex.color);
+      const [sx, sy] = toScreen(canvas, 0, 2);
+      ctx.fillStyle = ex.color;
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('(0, 2)', sx + 10, sy - 4);
+    } else if (currentTab === 1) {
+      drawSpecialPoint(ctx, canvas, 0, 1, ex.color);
+      const [sx, sy] = toScreen(canvas, 0, 1);
+      ctx.fillStyle = ex.color;
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('(0, 1)', sx + 10, sy - 4);
+    } else {
+      drawSpecialPoint(ctx, canvas, -1, 0, ex.color);
+      const [sx, sy] = toScreen(canvas, -1, 0);
+      ctx.fillStyle = ex.color;
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(-1, 0)', sx, sy - 12);
+    }
+  }
+
+  function renderTransform() {
+    const ex = examples[currentTab];
+    const box = document.getElementById('transform-box');
+    let html = '';
+    ex.steps.forEach((s, i) => {
+      const isLast = i === ex.steps.length - 1;
+      html += `<div class="transform-step" style="animation: fadeIn 0.3s ease ${i * 0.1}s forwards; opacity:0;">`;
+      if (isLast) {
+        html += `<div style="color:${ex.color}; font-weight:600;">${T(s.tex)}</div>`;
+      } else {
+        html += `<div>${i > 0 ? '→ ' : ''}${T(s.tex)}</div>`;
+      }
+      html += `</div>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function updateTabs() {
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', parseInt(t.dataset.tab) === currentTab);
+    });
+    drawExamplePlane();
+    renderTransform();
+  }
+
+  /* --- Custom slider view --- */
+  function drawCustomPlane() {
+    const a = parseFloat(document.getElementById('slider-a').value);
+    const b = parseFloat(document.getElementById('slider-b').value);
+    const c = parseFloat(document.getElementById('slider-c').value);
+
+    const canvas = document.getElementById('plane2');
+    const ctx = setupCanvas(canvas);
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0, 0, cw, ch);
+    drawGrid(ctx, canvas);
+
+    if (Math.abs(a) < 1e-9 && Math.abs(b) < 1e-9) {
+      // no line
+    } else {
+      drawLineABC(ctx, canvas, a, b, c, C_ORANGE, 3);
+    }
+
+    // Equation display
+    const fmt = (v) => {
+      const r = Math.round(v * 10) / 10;
+      return Number.isInteger(r) ? r.toString() : r.toFixed(1);
+    };
+
+    let eqStr = '';
+    const sa = fmt(a), sb = fmt(b), sc = fmt(c);
+
+    // Build nice equation string
+    let parts = [];
+    if (Math.abs(a) > 1e-9) {
+      if (a === 1) parts.push('x');
+      else if (a === -1) parts.push('-x');
+      else parts.push(sa + 'x');
+    }
+    if (Math.abs(b) > 1e-9) {
+      if (b > 0 && parts.length > 0) {
+        if (b === 1) parts.push('+ y');
+        else parts.push('+ ' + fmt(b) + 'y');
+      } else {
+        if (b === 1) parts.push('y');
+        else if (b === -1) parts.push('- y');
+        else parts.push(fmt(b) + 'y');
+      }
+    }
+    if (Math.abs(c) > 1e-9) {
+      if (c > 0 && parts.length > 0) parts.push('+ ' + fmt(c));
+      else parts.push(fmt(c));
+    }
+    if (parts.length === 0) parts.push('0');
+    eqStr = parts.join(' ') + ' = 0';
+
+    const eqEl = document.getElementById('custom-eq');
+    eqEl.innerHTML = T(eqStr);
+
+    // Note
+    const noteEl = document.getElementById('custom-note');
+    if (Math.abs(a) < 1e-9 && Math.abs(b) < 1e-9) {
+      noteEl.innerHTML = T('a = 0') + ' かつ ' + T('b = 0') + ' のとき、直線を表しません。';
+    } else if (Math.abs(b) < 1e-9) {
+      noteEl.innerHTML = T(`x = ${fmt(-c / a)}`) + '  — 垂直な直線です。';
+    } else if (Math.abs(a) < 1e-9) {
+      noteEl.innerHTML = T(`y = ${fmt(-c / b)}`) + '  — 水平な直線です。';
+    } else {
+      const slope = -a / b;
+      const intercept = -c / b;
+      noteEl.innerHTML = '傾き ' + T(fmt(slope)) + '、' + T('y') + '切片 ' + T(fmt(intercept)) + ' の直線です。';
+    }
+  }
+
+  function init() {
+    tex('ax + by + c = 0 \\quad (a \\neq 0 \\;\\text{または}\\; b \\neq 0)', document.getElementById('general-form'), true);
+    document.getElementById('general-note').innerHTML =
+      T('a, b, c') + ' が定数で、' + T('a \\neq 0') + ' または ' + T('b \\neq 0') + ' であるとき、この方程式は必ず<strong>直線</strong>を表します。';
+    tex('a', document.getElementById('lbl-a'));
+    tex('b', document.getElementById('lbl-b'));
+    tex('c', document.getElementById('lbl-c'));
+    document.getElementById('f-subtitle').innerHTML = T('ax + by + c = 0');
+    document.getElementById('f-abc').innerHTML = T('a, b, c');
+
+    document.getElementById('tab0').innerHTML = T('(1)\\; 3x-2y+4=0');
+    document.getElementById('tab1').innerHTML = T('(2)\\; y-1=0');
+    document.getElementById('tab2').innerHTML = T('(3)\\; x+1=0');
+
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        currentTab = parseInt(t.dataset.tab);
+        updateTabs();
+      });
+    });
+
+    ['slider-a', 'slider-b', 'slider-c'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', () => {
+        document.getElementById('val-' + id.split('-')[1]).textContent = el.value;
+        drawCustomPlane();
+      });
+    });
+
+    updateTabs();
+    drawCustomPlane();
+  }
+
+  window.addEventListener('resize', () => {
+    drawExamplePlane();
+    drawCustomPlane();
+  });
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const w = setInterval(() => {
+        if (window.katex) { clearInterval(w); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>

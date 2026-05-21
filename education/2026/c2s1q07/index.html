@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>外分点の定義</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745;
+    --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .tab-row {
+    display: flex; gap: 0; margin: 1rem 0 0;
+  }
+  .tab-btn {
+    flex: 1; height: 48px; border: 1.5px solid var(--accent);
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; transition: all .2s;
+    background: #fff; color: var(--accent);
+  }
+  .tab-btn:first-child { border-radius: 10px 0 0 10px; }
+  .tab-btn:last-child { border-radius: 0 10px 10px 0; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+
+  .nl-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem 1rem; margin: .5rem 0 1rem; overflow-x: auto;
+  }
+  canvas { display: block; margin: 0 auto; }
+
+  .info-card {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }
+  .info-card h3 {
+    font-size: 1rem; margin: 0 0 .5rem; color: var(--accent);
+  }
+
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0;
+  }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    border-radius: 10px; padding: .75rem 1rem; text-align: center;
+  }
+  .compare-card.internal { background: #e8f5e9; border: 1.5px solid var(--c-green); }
+  .compare-card.external { background: #fff3e0; border: 1.5px solid var(--c-orange); }
+  .compare-card .label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
+
+  .formula-box {
+    background: #eef4ff; border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; margin: 1rem 0; overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .example-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem; margin: 1rem 0;
+  }
+  .example-title {
+    font-size: .9rem; color: var(--c-orange); font-weight: 700; margin-bottom: .5rem;
+  }
+
+  .highlight { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>外分点の定義</h1>
+  <p class="subtitle">線分ABの延長上にある外分点の位置を理解しよう</p>
+
+  <h2>外分点とは</h2>
+  <p>点Pが線分ABの<span class="highlight">延長上</span>にあり、AP:PB = <span id="f-mn1"></span>（<span id="f-mneq"></span>）を満たすとき、Pは線分ABを <span id="f-mn2"></span> に<span class="highlight">外分する</span>といいます。</p>
+
+  <div class="compare-grid">
+    <div class="compare-card internal">
+      <div class="label" style="color:#28a745;">内分点</div>
+      <div id="cmpIn"></div>
+      <p style="font-size:.85rem; margin:.3rem 0 0;">ABの<strong>間</strong>にある</p>
+    </div>
+    <div class="compare-card external">
+      <div class="label" style="color:#e67e22;">外分点</div>
+      <div id="cmpEx"></div>
+      <p style="font-size:.85rem; margin:.3rem 0 0;">ABの<strong>外</strong>にある</p>
+    </div>
+  </div>
+
+  <h2>2つの場合</h2>
+  <p>タブを切り替えて、<span id="f-mgtn"></span> と <span id="f-mltn"></span> の場合を比較しましょう。</p>
+
+  <div class="tab-row">
+    <button class="tab-btn active" id="tabGt"><span id="tab-gt-label"></span> の場合</button>
+    <button class="tab-btn" id="tabLt"><span id="tab-lt-label"></span> の場合</button>
+  </div>
+
+  <div class="nl-wrap">
+    <canvas id="nlCanvas" width="720" height="180"></canvas>
+  </div>
+
+  <div class="info-card" id="caseInfo"></div>
+
+  <h2>例題</h2>
+  <div class="example-box">
+    <div class="example-title">例6</div>
+    <p>数直線上の2点 <span id="exAB"></span> について：</p>
+    <p>・点Pは線分ABを <span id="exP"></span> に外分する点</p>
+    <p>・点Qは線分ABを <span id="exQ"></span> に外分する点</p>
+    <div class="nl-wrap" style="margin-top:.75rem;">
+      <canvas id="exCanvas" width="720" height="160"></canvas>
+    </div>
+  </div>
+
+  <h2>ポイント</h2>
+  <div class="formula-box" id="keyPoint"></div>
+</main>
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+let caseMode='gt'; // 'gt' or 'lt'
+const A_VAL=2, B_VAL=6;
+
+function drawNL(){
+  const c=document.getElementById('nlCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(720,c.parentElement.clientWidth-20);
+  c.style.width=cw+'px'; c.style.height='180px';
+  c.width=cw*dpr; c.height=180*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,180);
+
+  const pad=60, y1=55, y2=130, w=cw-2*pad;
+
+  // Internal division (top)
+  const intP=(A_VAL+B_VAL)/2; // 1:1 for simplicity
+  const minV=Math.min(A_VAL,B_VAL)-2, maxV=Math.max(A_VAL,B_VAL)+4;
+  const toX=v=>pad+(v-minV)/(maxV-minV)*w;
+
+  // label
+  ctx.fillStyle='#28a745'; ctx.font='bold 13px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('内分（参考）',pad-5,y1-30);
+
+  // axis
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad-10,y1); ctx.lineTo(cw-pad+10,y1); ctx.stroke();
+
+  // segment
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(toX(A_VAL),y1); ctx.lineTo(toX(B_VAL),y1); ctx.stroke();
+
+  // internal P at midpoint
+  ctx.fillStyle='#28a745';
+  ctx.beginPath(); ctx.arc(toX(intP),y1,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#d9534f';
+  ctx.beginPath(); ctx.arc(toX(A_VAL),y1,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2a6df4';
+  ctx.beginPath(); ctx.arc(toX(B_VAL),y1,6,0,Math.PI*2); ctx.fill();
+
+  ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#d9534f'; ctx.fillText(`A(${A_VAL})`,toX(A_VAL),y1+20);
+  ctx.fillStyle='#2a6df4'; ctx.fillText(`B(${B_VAL})`,toX(B_VAL),y1+20);
+  ctx.fillStyle='#28a745'; ctx.fillText('P (内分)',toX(intP),y1-10);
+
+  // External division (bottom)
+  ctx.fillStyle='#e67e22'; ctx.font='bold 13px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(caseMode==='gt'?'外分（m > n）':'外分（m < n）',pad-5,y2-30);
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad-10,y2); ctx.lineTo(cw-pad+10,y2); ctx.stroke();
+
+  // AB segment
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(toX(A_VAL),y2); ctx.lineTo(toX(B_VAL),y2); ctx.stroke();
+
+  // external P
+  let extP;
+  if(caseMode==='gt'){
+    extP=B_VAL+2; // beyond B (3:1 external → beyond B)
+    // extended segment
+    ctx.setLineDash([4,4]); ctx.strokeStyle='#e67e22'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(toX(B_VAL),y2); ctx.lineTo(toX(extP),y2); ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
+    extP=A_VAL-2; // beyond A on the other side
+    ctx.setLineDash([4,4]); ctx.strokeStyle='#e67e22'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(toX(A_VAL),y2); ctx.lineTo(toX(extP),y2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // points
+  ctx.fillStyle='#d9534f';
+  ctx.beginPath(); ctx.arc(toX(A_VAL),y2,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2a6df4';
+  ctx.beginPath(); ctx.arc(toX(B_VAL),y2,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e67e22';
+  ctx.beginPath(); ctx.arc(toX(extP),y2,6,0,Math.PI*2); ctx.fill();
+
+  ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#d9534f'; ctx.fillText(`A(${A_VAL})`,toX(A_VAL),y2+20);
+  ctx.fillStyle='#2a6df4'; ctx.fillText(`B(${B_VAL})`,toX(B_VAL),y2+20);
+  ctx.fillStyle='#e67e22';
+  const extLabel=caseMode==='gt'?'P (Bの先)':'P (Aの先)';
+  ctx.fillText(extLabel,toX(extP),y2-10);
+
+  // arrow showing direction
+  ctx.fillStyle='#e67e22'; ctx.font='12px sans-serif';
+  if(caseMode==='gt'){
+    ctx.fillText('→ Bの延長上',toX(extP)+40,y2-10);
+  } else {
+    ctx.fillText('← Aの延長上',toX(extP)-40,y2-10);
+  }
+}
+
+function drawExample(){
+  const c=document.getElementById('exCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(720,c.parentElement.clientWidth-20);
+  c.style.width=cw+'px'; c.style.height='160px';
+  c.width=cw*dpr; c.height=160*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,160);
+
+  // A(2), B(6), P divides 3:2 externally → beyond B
+  // AP:PB=3:2 → P = (-2*2+3*6)/(3-2) = 14
+  // Q divides 2:3 externally → beyond A
+  // AQ:QB=2:3 → Q = (-3*2+2*6)/(2-3) = 6/-1 = -6 ... let me recalc
+  // Q = (-nA + mB)/(m-n) with m=2, n=3 → (-3*2+2*6)/(2-3) = (-6+12)/(-1) = -6
+  // Hmm that's far. Let me use A=2, B=6
+  // P: m=3,n=2 → (-2*2+3*6)/(3-2)=14
+  // Q: m=2,n=3 → (-3*2+2*6)/(2-3)=(-6+12)/(-1)=-6
+  const pVal=14, qVal=-6;
+  const minV=-8, maxV=16;
+  const pad=50, y=80, w=cw-2*pad;
+  const toX=v=>pad+(v-minV)/(maxV-minV)*w;
+
+  // axis
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad-10,y); ctx.lineTo(cw-pad+10,y); ctx.stroke();
+
+  // ticks
+  for(let v=-6;v<=14;v+=2){
+    const xx=toX(v);
+    ctx.beginPath(); ctx.moveTo(xx,y-4); ctx.lineTo(xx,y+4); ctx.stroke();
+    ctx.fillStyle='#bbb'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(v,xx,y+18);
+  }
+
+  // AB segment
+  ctx.strokeStyle='#333'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(toX(2),y); ctx.lineTo(toX(6),y); ctx.stroke();
+
+  // extended to P
+  ctx.setLineDash([4,4]); ctx.strokeStyle='#e67e22'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(toX(6),y); ctx.lineTo(toX(14),y); ctx.stroke();
+  // extended to Q
+  ctx.strokeStyle='#7b61ff';
+  ctx.beginPath(); ctx.moveTo(toX(2),y); ctx.lineTo(toX(-6),y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // dots
+  function dot(x,col,label,above){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(toX(x),y,6,0,Math.PI*2); ctx.fill();
+    ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,toX(x),above?y-14:y+34);
+  }
+  dot(2,'#d9534f',`A(${A_VAL})`,false);
+  dot(6,'#2a6df4',`B(${B_VAL})`,false);
+  dot(14,'#e67e22','P(14)',true);
+  dot(-6,'#7b61ff','Q(−6)',true);
+
+  // ratio labels
+  ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#e67e22';
+  ctx.fillText('3:2 外分',toX(10),y-30);
+  ctx.fillStyle='#7b61ff';
+  ctx.fillText('2:3 外分',toX(-2),y-30);
+}
+
+function updateCaseInfo(){
+  const info=document.getElementById('caseInfo');
+  if(caseMode==='gt'){
+    info.innerHTML=`<h3>${T('m > n')} のとき</h3>
+    <p>Pは<strong>Bの先</strong>（ABの延長上）にあります。</p>
+    <p>Aから遠い方向に、Bを超えた位置にPが来ます。</p>
+    <p>例：AP:PB = 3:1 なら、AからPまでの距離はPBの3倍。Pは線分ABの外側（B側）にあります。</p>`;
+  } else {
+    info.innerHTML=`<h3>${T('m < n')} のとき</h3>
+    <p>Pは<strong>Aの先</strong>（ABの延長上の反対側）にあります。</p>
+    <p>Bから遠い方向に、Aを超えた位置にPが来ます。</p>
+    <p>例：AP:PB = 1:3 なら、BからPまでの距離はAPの3倍。Pは線分ABの外側（A側）にあります。</p>`;
+  }
+}
+
+function init(){
+  // body text KaTeX
+  document.getElementById('f-mn1').innerHTML=T('m:n');
+  document.getElementById('f-mneq').innerHTML=T('m \\neq n');
+  document.getElementById('f-mn2').innerHTML=T('m:n');
+  document.getElementById('f-mgtn').innerHTML=T('m > n');
+  document.getElementById('f-mltn').innerHTML=T('m < n');
+  document.getElementById('tab-gt-label').innerHTML=T('m > n');
+  document.getElementById('tab-lt-label').innerHTML=T('m < n');
+
+  // compare cards
+  tex('\\mathrm{A} \\underbrace{\\cdots \\mathrm{P} \\cdots} \\mathrm{B}',document.getElementById('cmpIn'),true);
+  tex('\\mathrm{A} \\cdots \\mathrm{B} \\cdots \\mathrm{P}',document.getElementById('cmpEx'),true);
+
+  // tabs
+  document.getElementById('tabGt').addEventListener('click',()=>{
+    caseMode='gt';
+    document.getElementById('tabGt').classList.add('active');
+    document.getElementById('tabLt').classList.remove('active');
+    drawNL(); updateCaseInfo();
+  });
+  document.getElementById('tabLt').addEventListener('click',()=>{
+    caseMode='lt';
+    document.getElementById('tabLt').classList.add('active');
+    document.getElementById('tabGt').classList.remove('active');
+    drawNL(); updateCaseInfo();
+  });
+
+  // example
+  document.getElementById('exAB').innerHTML=T(`\\mathrm{A}(${A_VAL}),\\,\\mathrm{B}(${B_VAL})`);
+  document.getElementById('exP').innerHTML=T('3:2');
+  document.getElementById('exQ').innerHTML=T('2:3');
+
+  // key point
+  tex('m > n \\Rightarrow \\text{Bの先}\\quad,\\quad m < n \\Rightarrow \\text{Aの先}',document.getElementById('keyPoint'),true);
+
+  drawNL();
+  drawExample();
+  updateCaseInfo();
+  window.addEventListener('resize',()=>{drawNL();drawExample();});
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

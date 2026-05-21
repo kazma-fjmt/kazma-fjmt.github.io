@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>円の不等式の表す領域</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    margin: 1rem 0;
+  }
+  @media (max-width: 600px) {
+    .concept-grid { grid-template-columns: 1fr; }
+  }
+  .concept-card {
+    background: #eef4ff;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    text-align: center;
+  }
+
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    margin: 1rem 0 .5rem;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: .5rem 1.25rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .svg-container {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .5rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .svg-container svg {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+  }
+
+  .point-info {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    margin: .75rem 0;
+    text-align: center;
+    font-size: .95rem;
+    min-height: 3rem;
+    transition: background .3s, border-color .3s;
+  }
+  .point-info.inside { background: #e8f5e9; border-color: var(--c-green); }
+  .point-info.outside { background: #fce4ec; border-color: var(--c-red); }
+  .point-info.on-boundary { background: #e3f2fd; border-color: var(--c-blue); }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+  }
+  .step {
+    display: none;
+    animation: fadeIn .4s ease;
+  }
+  .step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-indicator {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    margin-bottom: .5rem;
+  }
+
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    gap: .75rem;
+    margin-top: 1rem;
+  }
+  .controls-row button {
+    padding: .5rem 1.5rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .controls-row button:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+  .controls-row button.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: .75rem 0;
+    font-size: .9rem;
+  }
+  .slider-row label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .slider-row input[type="range"] {
+    width: 100px;
+    accent-color: var(--accent);
+  }
+  .slider-row .val {
+    min-width: 2em;
+    text-align: center;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .note {
+    background: #fffde7;
+    border-left: 4px solid var(--c-orange);
+    border-radius: 0 10px 10px 0;
+    padding: .75rem 1rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+
+  @keyframes circleGrow {
+    from { r: 0; }
+  }
+  @keyframes regionFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>円の不等式の表す領域</h1>
+  <p class="subtitle">円の不等式が表す領域（内部・外部）を視覚的に理解しよう</p>
+
+  <h2>基本の考え方</h2>
+  <p>円 <span id="circle-eq"></span> に対して、不等式は次の領域を表します。</p>
+
+  <div class="concept-grid">
+    <div class="concept-card" id="concept-int"></div>
+    <div class="concept-card" id="concept-ext"></div>
+  </div>
+
+  <div class="note" id="note-dist"></div>
+
+  <h2>例2</h2>
+  <div class="formula-box" id="example-eq"></div>
+  <p id="example-desc"></p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="0">内部（&lt; 10）</button>
+    <button class="tab-btn" data-tab="1">外部（&gt; 10）</button>
+  </div>
+
+  <div class="svg-container" id="graph-container">
+    <svg id="coord-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="point-info" id="point-info">テスト点をドラッグして動かしてみよう</div>
+
+  <div class="walkthrough" id="walkthrough">
+    <div class="step-indicator" id="step-indicator"></div>
+    <div id="steps-container"></div>
+    <div class="controls-row">
+      <button id="btn-prev" disabled>前へ</button>
+      <button id="btn-next" class="primary">次へ</button>
+    </div>
+  </div>
+
+  <h2>自由に探索</h2>
+  <p>スライダーで円の中心と半径を変えて、領域を確認しましょう。</p>
+
+  <div class="slider-row">
+    <label>中心 <span id="lbl-a"></span>: <input type="range" id="sl-a" min="-4" max="4" step="1" value="-3"><span class="val" id="val-a">-3</span></label>
+    <label>中心 <span id="lbl-b"></span>: <input type="range" id="sl-b" min="-4" max="4" step="1" value="4"><span class="val" id="val-b">4</span></label>
+    <label>半径 <span id="lbl-r"></span>: <input type="range" id="sl-r" min="1" max="5" step="0.5" value="3.16"><span class="val" id="val-r">3.2</span></label>
+  </div>
+
+  <div class="tabs" id="explore-tabs">
+    <button class="tab-btn active" data-etab="interior">内部</button>
+    <button class="tab-btn" data-etab="exterior">外部</button>
+  </div>
+
+  <div class="svg-container" id="explore-container">
+    <svg id="explore-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="point-info" id="explore-info">テスト点をドラッグして動かしてみよう</div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+
+function init(){
+  // Static KaTeX
+  document.getElementById('circle-eq').innerHTML = T('(x-a)^2 + (y-b)^2 = r^2');
+  document.getElementById('concept-int').innerHTML = T('(x-a)^2+(y-b)^2 < r^2') + '<br><span style="font-size:.85rem">円の<b>内部</b></span>';
+  document.getElementById('concept-ext').innerHTML = T('(x-a)^2+(y-b)^2 > r^2') + '<br><span style="font-size:.85rem">円の<b>外部</b></span>';
+  document.getElementById('lbl-a').innerHTML = T('a');
+  document.getElementById('lbl-b').innerHTML = T('b');
+  document.getElementById('lbl-r').innerHTML = T('r');
+  document.getElementById('note-dist').innerHTML = '点 P' + T('(x,y)') + ' と中心 C' + T('(a,b)') + ' の距離 CP に注目すると：<br>' +
+    T('\\mathrm{CP} < r') + ' → 内部、&ensp;' + T('\\mathrm{CP} = r') + ' → 円周上、&ensp;' + T('\\mathrm{CP} > r') + ' → 外部';
+  document.getElementById('example-eq').innerHTML = T('(x+3)^2 + (y-4)^2 = 10');
+  document.getElementById('example-desc').innerHTML = '中心 ' + T('\\mathrm{C}(-3, 4)') + '、半径 ' + T('\\sqrt{10}') + ' の円について考えます。';
+
+  // --- Example section ---
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var W = 500, H = 500, margin = 40;
+  // Range for example: center (-3,4), radius ~3.16
+  var xMin = -8, xMax = 4, yMin = -1, yMax = 9;
+
+  function toSvgX(x){ return margin + (x - xMin)/(xMax - xMin)*(W - 2*margin); }
+  function toSvgY(y){ return H - margin - (y - yMin)/(yMax - yMin)*(H - 2*margin); }
+  function fromSvgX(sx){ return xMin + (sx - margin)/(W - 2*margin)*(xMax - xMin); }
+  function fromSvgY(sy){ return yMax - (sy - margin)/(H - 2*margin)*(yMax - yMin); }
+
+  function createEl(tag, attrs){
+    var el = document.createElementNS(SVG_NS, tag);
+    for(var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function drawGrid(svg, xMin, xMax, yMin, yMax, toX, toY){
+    for(var x = Math.ceil(xMin); x <= Math.floor(xMax); x++){
+      svg.appendChild(createEl('line',{x1:toX(x),y1:margin,x2:toX(x),y2:H-margin,stroke:'#e0e0e0','stroke-width':1}));
+    }
+    for(var y = Math.ceil(yMin); y <= Math.floor(yMax); y++){
+      svg.appendChild(createEl('line',{x1:margin,y1:toY(y),x2:W-margin,y2:toY(y),stroke:'#e0e0e0','stroke-width':1}));
+    }
+    // Axes
+    if(xMin <= 0 && xMax >= 0){
+      svg.appendChild(createEl('line',{x1:toX(0),y1:margin,x2:toX(0),y2:H-margin,stroke:'#333','stroke-width':2}));
+    }
+    if(yMin <= 0 && yMax >= 0){
+      svg.appendChild(createEl('line',{x1:margin,y1:toY(0),x2:W-margin,y2:toY(0),stroke:'#333','stroke-width':2}));
+    }
+    // Arrowheads
+    var ax = W - margin;
+    if(yMin <= 0 && yMax >= 0){
+      svg.appendChild(createEl('polygon',{points:(ax-6)+','+(toY(0)-4)+' '+ax+','+toY(0)+' '+(ax-6)+','+(toY(0)+4),fill:'#333'}));
+      var xlbl = document.createElementNS(SVG_NS,'foreignObject');
+      xlbl.setAttribute('x', Math.min(ax+2, W-26));
+      xlbl.setAttribute('y', toY(0)-12);
+      xlbl.setAttribute('width', '24');
+      xlbl.setAttribute('height', '24');
+      xlbl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('x')+'</div>';
+      svg.appendChild(xlbl);
+    }
+    if(xMin <= 0 && xMax >= 0){
+      svg.appendChild(createEl('polygon',{points:(toX(0)-4)+','+(margin+6)+' '+toX(0)+','+margin+' '+(toX(0)+4)+','+(margin+6),fill:'#333'}));
+      var ylbl = document.createElementNS(SVG_NS,'foreignObject');
+      ylbl.setAttribute('x', toX(0)+6);
+      ylbl.setAttribute('y', Math.max(margin-18, 2));
+      ylbl.setAttribute('width', '24');
+      ylbl.setAttribute('height', '24');
+      ylbl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('y')+'</div>';
+      svg.appendChild(ylbl);
+    }
+    // Tick labels
+    for(var x = Math.ceil(xMin); x <= Math.floor(xMax); x++){
+      if(x===0) continue;
+      var tyy = (yMin <= 0 && yMax >= 0) ? toY(0)+18 : H-margin+18;
+      var t = createEl('text',{x:toX(x),y:tyy,'text-anchor':'middle','font-size':'11',fill:'#888'});
+      t.textContent = x; svg.appendChild(t);
+    }
+    for(var y = Math.ceil(yMin); y <= Math.floor(yMax); y++){
+      if(y===0) continue;
+      var txx = (xMin <= 0 && xMax >= 0) ? toX(0)-12 : margin-5;
+      var t = createEl('text',{x:txx,y:toY(y)+4,'text-anchor':'end','font-size':'11',fill:'#888'});
+      t.textContent = y; svg.appendChild(t);
+    }
+    if(xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0){
+      var o = createEl('text',{x:toX(0)-8,y:toY(0)+16,'font-size':'11',fill:'#888'});
+      o.textContent = 'O'; svg.appendChild(o);
+    }
+  }
+
+  // Example state
+  var exTab = 0; // 0 = interior, 1 = exterior
+  var exStep = 0;
+  var exTestX = -1, exTestY = 3;
+  var ca = -3, cb = 4, cr2 = 10, cr = Math.sqrt(10);
+
+  var exTabs = [
+    {
+      steps: [
+        '円 ' + T('(x+3)^2+(y-4)^2=10') + ' の中心は ' + T('\\mathrm{C}(-3,4)') + '、半径は ' + T('r=\\sqrt{10}') + ' です。',
+        '不等式 ' + T('(x+3)^2+(y-4)^2 < 10') + ' は、中心Cからの距離が ' + T('\\sqrt{10}') + ' <b>未満</b>の点の集合です。',
+        'つまり、円の<b>内部</b>が領域です。<br>厳密不等式 ' + T('(<)') + ' なので、境界（円周）は<b>含みません</b>（破線）。'
+      ]
+    },
+    {
+      steps: [
+        '円 ' + T('(x+3)^2+(y-4)^2=10') + ' の中心は ' + T('\\mathrm{C}(-3,4)') + '、半径は ' + T('r=\\sqrt{10}') + ' です。',
+        '不等式 ' + T('(x+3)^2+(y-4)^2 > 10') + ' は、中心Cからの距離が ' + T('\\sqrt{10}') + ' <b>より大きい</b>点の集合です。',
+        'つまり、円の<b>外部</b>が領域です。<br>厳密不等式 ' + T('(>)') + ' なので、境界（円周）は<b>含みません</b>（破線）。'
+      ]
+    }
+  ];
+
+  var exSvg = document.getElementById('coord-svg');
+
+  function drawExample(){
+    exSvg.innerHTML = '';
+    drawGrid(exSvg, xMin, xMax, yMin, yMax, toSvgX, toSvgY);
+
+    var defs = createEl('defs',{});
+    var clip = createEl('clipPath',{id:'exClip'});
+    clip.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin}));
+    defs.appendChild(clip);
+    exSvg.appendChild(defs);
+
+    var g = createEl('g',{'clip-path':'url(#exClip)'});
+
+    // Region
+    var cx = toSvgX(ca), cy = toSvgY(cb);
+    var rPx = cr / (xMax - xMin) * (W - 2*margin);
+
+    if(exTab === 0){
+      // Interior: filled circle
+      var region = createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'rgba(42,109,244,0.18)',stroke:'none',opacity:'0'});
+      region.style.transition = 'opacity .8s ease';
+      g.appendChild(region);
+      g._region = region;
+    } else {
+      // Exterior: full rect minus circle
+      var mask = createEl('mask',{id:'exMask'});
+      mask.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'white'}));
+      mask.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'black'}));
+      defs.appendChild(mask);
+      var region = createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'rgba(42,109,244,0.18)',mask:'url(#exMask)',opacity:'0'});
+      region.style.transition = 'opacity .8s ease';
+      g.appendChild(region);
+      g._region = region;
+    }
+
+    // Circle boundary (dashed for strict)
+    var circle = createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'none',stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':'8,5'});
+    g.appendChild(circle);
+
+    // Center label
+    var cLbl = createEl('text',{x:cx+8,y:cy-8,'font-size':'13',fill:'var(--c-blue)','font-weight':'bold'});
+    cLbl.textContent = 'C(-3,4)';
+    g.appendChild(cLbl);
+
+    // Center dot
+    g.appendChild(createEl('circle',{cx:cx,cy:cy,r:4,fill:'var(--c-blue)'}));
+
+    // Test point
+    var inside = isInsideExample(exTestX, exTestY);
+    var color = inside === 0 ? 'var(--c-blue)' : inside < 0 ? 'var(--c-green)' : 'var(--c-red)';
+    if(exTab === 0) color = inside < 0 ? 'var(--c-green)' : inside === 0 ? 'var(--c-blue)' : 'var(--c-red)';
+    else color = inside > 0 ? 'var(--c-green)' : inside === 0 ? 'var(--c-blue)' : 'var(--c-red)';
+
+    var tpC = createEl('circle',{cx:toSvgX(exTestX),cy:toSvgY(exTestY),r:12,fill:color,opacity:.85,stroke:'#fff','stroke-width':2});
+    g.appendChild(tpC);
+    var tpL = createEl('text',{x:toSvgX(exTestX),y:toSvgY(exTestY)-16,'text-anchor':'middle','font-size':'12',fill:color,'font-weight':'bold',id:'ex-tp-label'});
+    tpL.textContent = 'P('+exTestX.toFixed(1)+', '+exTestY.toFixed(1)+')';
+    g.appendChild(tpL);
+    g._tpC = tpC;
+
+    // Distance line
+    var dline = createEl('line',{x1:cx,y1:cy,x2:toSvgX(exTestX),y2:toSvgY(exTestY),stroke:color,'stroke-width':1.5,'stroke-dasharray':'4,3',opacity:'.6'});
+    g.appendChild(dline);
+    g._dline = dline;
+
+    exSvg.appendChild(g);
+    exSvg._g = g;
+
+    // Show region on last step
+    if(exStep >= exTabs[exTab].steps.length - 1){
+      setTimeout(function(){ g._region.setAttribute('opacity','1'); }, 50);
+    }
+
+    updateExInfo();
+    setupExDrag();
+  }
+
+  // -1 = inside, 0 = on, 1 = outside
+  function isInsideExample(x, y){
+    var d2 = (x - ca)*(x - ca) + (y - cb)*(y - cb);
+    if(Math.abs(d2 - cr2) < 0.3) return 0;
+    return d2 < cr2 ? -1 : 1;
+  }
+
+  function updateExInfo(){
+    var d2 = (exTestX - ca)*(exTestX - ca) + (exTestY - cb)*(exTestY - cb);
+    var d = Math.sqrt(d2);
+    var info = document.getElementById('point-info');
+    var pos = isInsideExample(exTestX, exTestY);
+
+    var label;
+    if(exTab === 0){
+      var ok = pos < 0;
+      label = ok ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内（内部）</span>' :
+               pos === 0 ? '<span style="color:var(--c-blue);font-weight:bold">円周上（境界）</span>' :
+               '<span style="color:var(--c-red);font-weight:bold">✗ 領域外（外部）</span>';
+      info.className = 'point-info ' + (ok ? 'inside' : pos === 0 ? 'on-boundary' : 'outside');
+    } else {
+      var ok = pos > 0;
+      label = ok ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内（外部）</span>' :
+               pos === 0 ? '<span style="color:var(--c-blue);font-weight:bold">円周上（境界）</span>' :
+               '<span style="color:var(--c-red);font-weight:bold">✗ 領域外（内部）</span>';
+      info.className = 'point-info ' + (ok ? 'inside' : pos === 0 ? 'on-boundary' : 'outside');
+    }
+
+    info.innerHTML = 'P(' + exTestX.toFixed(1) + ', ' + exTestY.toFixed(1) + ')　' +
+      T('\\mathrm{CP} = ' + d.toFixed(2)) + '、' + T('r = \\sqrt{10} \\approx 3.16') + '<br>' + label;
+  }
+
+  function setupExDrag(){
+    var dragging = false;
+    function getPos(e){
+      var rect = exSvg.getBoundingClientRect();
+      var scale = W / rect.width;
+      var cx = e.touches ? e.touches[0].clientX : e.clientX;
+      var cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (cx - rect.left)*scale, y: (cy - rect.top)*scale };
+    }
+    function start(e){
+      var p = getPos(e);
+      if(Math.hypot(p.x - toSvgX(exTestX), p.y - toSvgY(exTestY)) < 30){ dragging = true; e.preventDefault(); }
+    }
+    function move(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var p = getPos(e);
+      exTestX = Math.round(fromSvgX(p.x)*2)/2;
+      exTestY = Math.round(fromSvgY(p.y)*2)/2;
+      exTestX = Math.max(xMin, Math.min(xMax, exTestX));
+      exTestY = Math.max(yMin, Math.min(yMax, exTestY));
+      drawExample();
+    }
+    function end(){ dragging = false; }
+    exSvg.addEventListener('mousedown',start);
+    exSvg.addEventListener('mousemove',move);
+    exSvg.addEventListener('mouseup',end);
+    exSvg.addEventListener('mouseleave',end);
+    exSvg.addEventListener('touchstart',start,{passive:false});
+    exSvg.addEventListener('touchmove',move,{passive:false});
+    exSvg.addEventListener('touchend',end);
+  }
+
+  function renderExSteps(){
+    var tab = exTabs[exTab];
+    var c = document.getElementById('steps-container');
+    c.innerHTML = '';
+    tab.steps.forEach(function(s,i){
+      var d = document.createElement('div');
+      d.className = 'step' + (i === exStep ? ' active' : '');
+      d.innerHTML = s;
+      c.appendChild(d);
+    });
+    document.getElementById('step-indicator').textContent = 'ステップ ' + (exStep+1) + ' / ' + tab.steps.length;
+    document.getElementById('btn-prev').disabled = exStep === 0;
+    document.getElementById('btn-next').disabled = exStep === tab.steps.length - 1;
+
+    if(exSvg._g && exSvg._g._region){
+      if(exStep >= tab.steps.length - 1){
+        exSvg._g._region.setAttribute('opacity','1');
+      } else {
+        exSvg._g._region.setAttribute('opacity','0');
+      }
+    }
+  }
+
+  // Tab buttons
+  document.querySelectorAll('.tabs:not(#explore-tabs) .tab-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.tabs:not(#explore-tabs) .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      exTab = parseInt(btn.getAttribute('data-tab'));
+      exStep = 0;
+      drawExample();
+      renderExSteps();
+    });
+  });
+
+  document.getElementById('btn-prev').addEventListener('click',function(){
+    if(exStep > 0){ exStep--; renderExSteps(); }
+  });
+  document.getElementById('btn-next').addEventListener('click',function(){
+    var tab = exTabs[exTab];
+    if(exStep < tab.steps.length - 1){
+      exStep++;
+      renderExSteps();
+    }
+  });
+
+  drawExample();
+  renderExSteps();
+
+  // --- Explore section ---
+  var eSvg = document.getElementById('explore-svg');
+  var eA = -3, eB = 4, eR = 3.16;
+  var eMode = 'interior';
+  var eTX = 0, eTY = 0;
+  var exMinX = -9, exMaxX = 9, exMinY = -5, exMaxY = 9;
+
+  function eToX(x){ return margin + (x - exMinX)/(exMaxX - exMinX)*(W-2*margin); }
+  function eToY(y){ return H - margin - (y - exMinY)/(exMaxY - exMinY)*(H-2*margin); }
+  function eFromX(sx){ return exMinX + (sx - margin)/(W-2*margin)*(exMaxX - exMinX); }
+  function eFromY(sy){ return exMaxY - (sy - margin)/(H-2*margin)*(exMaxY - exMinY); }
+
+  function drawExplore(){
+    eSvg.innerHTML = '';
+    drawGrid(eSvg, exMinX, exMaxX, exMinY, exMaxY, eToX, eToY);
+
+    var defs = createEl('defs',{});
+    var clip = createEl('clipPath',{id:'eClip'});
+    clip.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin}));
+    defs.appendChild(clip);
+    eSvg.appendChild(defs);
+
+    var g = createEl('g',{'clip-path':'url(#eClip)'});
+
+    var cx = eToX(eA), cy = eToY(eB);
+    var rPx = eR / (exMaxX - exMinX) * (W - 2*margin);
+
+    if(eMode === 'interior'){
+      var reg = createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'rgba(42,109,244,0.18)',stroke:'none'});
+      g.appendChild(reg);
+    } else {
+      var mask = createEl('mask',{id:'eMask'});
+      mask.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'white'}));
+      mask.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'black'}));
+      defs.appendChild(mask);
+      g.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'rgba(42,109,244,0.18)',mask:'url(#eMask)'}));
+    }
+
+    // Circle
+    g.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'none',stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':'8,5'}));
+    // Center
+    g.appendChild(createEl('circle',{cx:cx,cy:cy,r:4,fill:'var(--c-blue)'}));
+    var cL = createEl('text',{x:cx+8,y:cy-8,'font-size':'12',fill:'var(--c-blue)','font-weight':'bold'});
+    cL.textContent = 'C('+eA+','+eB+')';
+    g.appendChild(cL);
+
+    // Test point
+    var d2 = (eTX - eA)*(eTX - eA) + (eTY - eB)*(eTY - eB);
+    var r2 = eR * eR;
+    var pos = d2 < r2 - 0.1 ? -1 : d2 > r2 + 0.1 ? 1 : 0;
+    var inRegion = eMode === 'interior' ? pos < 0 : pos > 0;
+    var tColor = inRegion ? 'var(--c-green)' : pos === 0 ? 'var(--c-blue)' : 'var(--c-red)';
+
+    g.appendChild(createEl('line',{x1:cx,y1:cy,x2:eToX(eTX),y2:eToY(eTY),stroke:tColor,'stroke-width':1.5,'stroke-dasharray':'4,3',opacity:'.5'}));
+    g.appendChild(createEl('circle',{cx:eToX(eTX),cy:eToY(eTY),r:12,fill:tColor,opacity:.85,stroke:'#fff','stroke-width':2}));
+    var tpL = createEl('text',{x:eToX(eTX),y:eToY(eTY)-16,'text-anchor':'middle','font-size':'12',fill:tColor,'font-weight':'bold'});
+    tpL.textContent = 'P('+eTX.toFixed(1)+','+eTY.toFixed(1)+')';
+    g.appendChild(tpL);
+
+    eSvg.appendChild(g);
+
+    // Info
+    var d = Math.sqrt(d2);
+    var eInfo = document.getElementById('explore-info');
+    var statusText;
+    if(pos < 0) statusText = eMode === 'interior' ? '✓ 内部（領域内）' : '✗ 内部（領域外）';
+    else if(pos === 0) statusText = '円周上（境界）';
+    else statusText = eMode === 'exterior' ? '✓ 外部（領域内）' : '✗ 外部（領域外）';
+    var ok = inRegion;
+    eInfo.innerHTML = 'P('+eTX.toFixed(1)+', '+eTY.toFixed(1)+')　CP = '+d.toFixed(2)+'、r = '+eR.toFixed(2)+'<br>'+
+      '<span style="color:'+(ok?'var(--c-green)':'var(--c-red)')+';font-weight:bold">'+statusText+'</span>';
+    eInfo.className = 'point-info ' + (ok ? 'inside' : pos === 0 ? 'on-boundary' : 'outside');
+
+    setupExploreDrag();
+  }
+
+  function setupExploreDrag(){
+    var dragging = false;
+    function getPos(e){
+      var rect = eSvg.getBoundingClientRect();
+      var scale = W / rect.width;
+      var cx = e.touches ? e.touches[0].clientX : e.clientX;
+      var cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (cx - rect.left)*scale, y: (cy - rect.top)*scale };
+    }
+    function start(e){
+      var p = getPos(e);
+      if(Math.hypot(p.x - eToX(eTX), p.y - eToY(eTY)) < 30){ dragging = true; e.preventDefault(); }
+    }
+    function move(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var p = getPos(e);
+      eTX = Math.round(eFromX(p.x)*2)/2;
+      eTY = Math.round(eFromY(p.y)*2)/2;
+      eTX = Math.max(exMinX, Math.min(exMaxX, eTX));
+      eTY = Math.max(exMinY, Math.min(exMaxY, eTY));
+      drawExplore();
+    }
+    function end(){ dragging = false; }
+    eSvg.addEventListener('mousedown',start);
+    eSvg.addEventListener('mousemove',move);
+    eSvg.addEventListener('mouseup',end);
+    eSvg.addEventListener('mouseleave',end);
+    eSvg.addEventListener('touchstart',start,{passive:false});
+    eSvg.addEventListener('touchmove',move,{passive:false});
+    eSvg.addEventListener('touchend',end);
+  }
+
+  // Sliders
+  ['sl-a','sl-b','sl-r'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){
+      eA = parseFloat(document.getElementById('sl-a').value);
+      eB = parseFloat(document.getElementById('sl-b').value);
+      eR = parseFloat(document.getElementById('sl-r').value);
+      document.getElementById('val-a').textContent = eA;
+      document.getElementById('val-b').textContent = eB;
+      document.getElementById('val-r').textContent = eR.toFixed(1);
+      drawExplore();
+    });
+  });
+
+  // Explore tabs
+  document.querySelectorAll('#explore-tabs .tab-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('#explore-tabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      eMode = btn.getAttribute('data-etab');
+      drawExplore();
+    });
+  });
+
+  drawExplore();
+}
+</script>
+</body>
+</html>

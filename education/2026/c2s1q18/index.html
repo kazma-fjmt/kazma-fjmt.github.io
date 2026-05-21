@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>平行・垂直な直線の方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.25rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .tabs {
+    display: flex; gap: 0; margin: 1.5rem 0 0;
+  }
+  .tab-btn {
+    flex: 1; padding: .75rem; border: 2px solid #e3e3e3;
+    background: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer; text-align: center; border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: all .2s;
+  }
+  .tab-btn:first-child { border-right: none; }
+  .tab-btn.active-para { background: #fef2f2; border-color: var(--c-red); color: var(--c-red); }
+  .tab-btn.active-perp { background: #eef4ff; border-color: var(--c-blue); color: var(--c-blue); }
+
+  .tab-content {
+    border: 2px solid #e3e3e3; border-top: none;
+    border-radius: 0 0 10px 10px; padding: 1rem 1.25rem;
+    display: none; background: #fff;
+  }
+  .tab-content.active { display: block; }
+  .tab-content.border-para { border-color: var(--c-red); background: #fffafa; }
+  .tab-content.border-perp { border-color: var(--c-blue); background: #f8faff; }
+
+  .derivation {
+    margin: .75rem 0;
+  }
+  .deriv-step {
+    padding: .6rem .25rem; border-bottom: 1px dashed #eee;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .deriv-step:last-child { border-bottom: none; }
+  .deriv-step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: .5rem 1.2rem;
+    font-size: .9rem; cursor: pointer; margin: .4rem .2rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .step-btn:active { transform: scale(.97); }
+  .step-btn:disabled { background: #ccc; }
+
+  .problem-box {
+    background: #f0f5ff; border: 2px solid var(--accent); border-radius: 12px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }
+  .problem-box .label { font-weight: 700; color: var(--accent); margin-bottom: .5rem; }
+
+  .answer-box {
+    background: #e8f5e9; border: 2px solid var(--c-green); border-radius: 10px;
+    padding: .75rem 1rem; text-align: center; margin: .75rem 0;
+  }
+  .answer-box .katex { font-size: 1.25rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>平行・垂直な直線の方程式</h1>
+  <p class="subtitle">例題2：点を通る平行線・垂直線を求める</p>
+
+  <div class="problem-box">
+    <div class="label">例題2</div>
+    <p id="problem-text"></p>
+  </div>
+
+  <h2>座標平面</h2>
+  <div class="svg-container">
+    <svg id="graph" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active-para" id="tab-para" onclick="switchTab('para')">平行線の解法</button>
+    <button class="tab-btn" id="tab-perp" onclick="switchTab('perp')">垂直線の解法</button>
+  </div>
+
+  <div class="tab-content active border-para" id="content-para">
+    <h2 style="margin-top:.5rem;">平行な直線</h2>
+    <p id="para-desc"></p>
+    <div class="derivation" id="deriv-para"></div>
+    <div style="text-align:center;">
+      <button class="step-btn" id="btn-prev-para" disabled onclick="stepPara(-1)">← 戻る</button>
+      <button class="step-btn" id="btn-next-para" onclick="stepPara(1)">次のステップ →</button>
+    </div>
+    <div class="answer-box" id="answer-para" style="display:none;"></div>
+  </div>
+
+  <div class="tab-content border-perp" id="content-perp">
+    <h2 style="margin-top:.5rem;">垂直な直線</h2>
+    <p id="perp-desc"></p>
+    <div class="derivation" id="deriv-perp"></div>
+    <div style="text-align:center;">
+      <button class="step-btn" id="btn-prev-perp" disabled onclick="stepPerp(-1)">← 戻る</button>
+      <button class="step-btn" id="btn-next-perp" onclick="stepPerp(1)">次のステップ →</button>
+    </div>
+    <div class="answer-box" id="answer-perp" style="display:none;"></div>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+let activeTab = 'para';
+let paraStep = -1, perpStep = -1;
+let paraSteps = [], perpSteps = [];
+
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('tab-para').className = 'tab-btn'+(tab==='para'?' active-para':'');
+  document.getElementById('tab-perp').className = 'tab-btn'+(tab==='perp'?' active-perp':'');
+  document.getElementById('content-para').className = 'tab-content'+(tab==='para'?' active border-para':'');
+  document.getElementById('content-perp').className = 'tab-content'+(tab==='perp'?' active border-perp':'');
+  drawGraph();
+}
+
+function stepPara(dir){
+  const next = paraStep+dir;
+  if(next<0||next>=paraSteps.length) return;
+  paraStep = next;
+  paraSteps.forEach((el,i)=>{
+    if(i<=paraStep) el.classList.add('visible');
+    else el.classList.remove('visible');
+  });
+  document.getElementById('btn-prev-para').disabled = paraStep<=0;
+  document.getElementById('btn-next-para').disabled = paraStep>=paraSteps.length-1;
+  if(paraStep>=paraSteps.length-1) document.getElementById('answer-para').style.display='block';
+}
+
+function stepPerp(dir){
+  const next = perpStep+dir;
+  if(next<0||next>=perpSteps.length) return;
+  perpStep = next;
+  perpSteps.forEach((el,i)=>{
+    if(i<=perpStep) el.classList.add('visible');
+    else el.classList.remove('visible');
+  });
+  document.getElementById('btn-prev-perp').disabled = perpStep<=0;
+  document.getElementById('btn-next-perp').disabled = perpStep>=perpSteps.length-1;
+  if(perpStep>=perpSteps.length-1) document.getElementById('answer-perp').style.display='block';
+}
+
+function drawGraph(){
+  const W=500,H=500,sc=40;
+  // center at (3,3) in data coords → pixel offset
+  const ox=100, oy=380;
+  function tx(x){return ox+x*sc;}
+  function ty(y){return oy-y*sc;}
+
+  let html='';
+  // grid
+  for(let i=-2;i<=10;i++){
+    html+='<line x1="'+tx(i)+'" y1="0" x2="'+tx(i)+'" y2="'+H+'" stroke="#eee" stroke-width="1"/>';
+    html+='<line x1="0" y1="'+ty(i)+'" x2="'+W+'" y2="'+ty(i)+'" stroke="#eee" stroke-width="1"/>';
+  }
+  // axes
+  html+='<line x1="0" y1="'+ty(0)+'" x2="'+W+'" y2="'+ty(0)+'" stroke="#999" stroke-width="1.5"/>';
+  html+='<line x1="'+tx(0)+'" y1="0" x2="'+tx(0)+'" y2="'+H+'" stroke="#999" stroke-width="1.5"/>';
+  for(let i=-1;i<=9;i++){
+    if(i===0)continue;
+    html+='<text x="'+tx(i)+'" y="'+(ty(0)+16)+'" text-anchor="middle" font-size="11" fill="#999">'+i+'</text>';
+    if(i>0&&i<=9) html+='<text x="'+(tx(0)-10)+'" y="'+(ty(i)+4)+'" text-anchor="end" font-size="11" fill="#999">'+i+'</text>';
+  }
+  html+='<foreignObject x="'+(Math.min(W-8,W-26))+'" y="'+(ty(0)-22)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('x')+'</div></foreignObject>';
+  html+='<foreignObject x="'+(tx(0)+6)+'" y="'+Math.max(2,2)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('y')+'</div></foreignObject>';
+  html+='<text x="'+(tx(0)-10)+'" y="'+(ty(0)+16)+'" font-size="11" fill="#999">O</text>';
+
+  // original line l: 3x+2y-9=0 → y = (-3/2)x + 9/2
+  function drawLine(slope, yint, color, label, dash){
+    const pts=[];
+    for(let sx=-3;sx<=12;sx+=0.1){
+      const sy=slope*sx+yint;
+      if(sy>=-2&&sy<=10) pts.push([tx(sx),ty(sy)]);
+    }
+    if(pts.length>1){
+      let d='M'+pts[0][0]+','+pts[0][1];
+      for(let i=1;i<pts.length;i++) d+=' L'+pts[i][0]+','+pts[i][1];
+      html+='<path d="'+d+'" stroke="'+color+'" stroke-width="2.5" fill="none"'+(dash?' stroke-dasharray="8,4"':'')+'/>';
+    }
+  }
+
+  // l: y = -3/2 x + 9/2
+  drawLine(-1.5, 4.5, '#666', 'l', false);
+  html+='<text x="'+(tx(5)+8)+'" y="'+(ty(-1.5*5+4.5)-8)+'" font-size="14" font-weight="600" fill="#666">l</text>';
+
+  if(activeTab==='para'){
+    // parallel: y = -3/2 x + 1/2   (3x+2y-1=0)
+    drawLine(-1.5, 0.5, 'var(--c-red)', '', true);
+    html+='<foreignObject x="'+(tx(3)+8)+'" y="'+(ty(-1.5*3+0.5)-24)+'" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:600;white-space:nowrap">'+T('3x+2y-1=0')+'</div></foreignObject>';
+  } else {
+    // perpendicular: y = 2/3 x + 8/3   (2x-3y+8=0)
+    drawLine(2/3, 8/3, 'var(--c-blue)', '', true);
+    html+='<foreignObject x="'+(tx(5)+8)+'" y="'+(ty(2/3*5+8/3)-24)+'" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600;white-space:nowrap">'+T('2x-3y+8=0')+'</div></foreignObject>';
+
+    // right angle indicator at intersection
+    // intersection of -3/2 x + 9/2 and 2/3 x + 8/3
+    // -3/2 x + 9/2 = 2/3 x + 8/3
+    // -9x/6 + 27/6 = 4x/6 + 16/6 → -13x = -11 → x=11/13
+    const ix=11/13, iy=-1.5*ix+4.5;
+    const sz=0.35;
+    const d1=Math.sqrt(1+2.25), d2=Math.sqrt(1+4/9);
+    const dx1=1/d1, dy1=-1.5/d1;
+    const dx2=1/d2, dy2=(2/3)/d2;
+    html+='<path d="M'+tx(ix+dx1*sz)+','+ty(iy+dy1*sz)+' L'+tx(ix+(dx1+dx2)*sz)+','+ty(iy+(dy1+dy2)*sz)+' L'+tx(ix+dx2*sz)+','+ty(iy+dy2*sz)+'" fill="none" stroke="var(--c-green)" stroke-width="2"/>';
+  }
+
+  // point (-1, 2)
+  const px=tx(-1), py=ty(2);
+  html+='<circle cx="'+px+'" cy="'+py+'" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>';
+  html+='<text x="'+(px-12)+'" y="'+(py-12)+'" font-size="14" font-weight="600" fill="var(--c-orange)">(-1, 2)</text>';
+
+  document.getElementById('graph').innerHTML = html;
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  document.getElementById('problem-text').innerHTML =
+    '直線 '+T('l: 3x+2y-9=0')+' に対して、点 '+T('(-1,\\,2)')+' を通り、'+
+    '<br>(1) '+T('l')+' に平行な直線　(2) '+T('l')+' に垂直な直線　の方程式を求めよ。';
+
+  // Parallel derivation
+  document.getElementById('para-desc').innerHTML =
+    T('l')+' に平行な直線は、'+T('l')+' と同じ傾きをもちます。';
+
+  const paraContainer = document.getElementById('deriv-para');
+  const paraData = [
+    T('l: 3x+2y-9=0')+' を変形すると '+T('y = -\\dfrac{3}{2}x + \\dfrac{9}{2}'),
+    '傾きは '+T('m = -\\dfrac{3}{2}'),
+    '平行条件：傾きが等しい → 求める直線の傾きも '+T('-\\dfrac{3}{2}'),
+    '点 '+T('(-1,\\,2)')+' を通るので：'+T('y - 2 = -\\dfrac{3}{2}(x - (-1))'),
+    T('y - 2 = -\\dfrac{3}{2}(x + 1)'),
+    '両辺を2倍して整理：'+T('2y - 4 = -3(x+1) = -3x - 3'),
+    T('3x + 2y - 1 = 0')
+  ];
+  paraData.forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'deriv-step';
+    div.innerHTML = s;
+    paraContainer.appendChild(div);
+    paraSteps.push(div);
+  });
+  tex('3x + 2y - 1 = 0', document.getElementById('answer-para'), true);
+
+  // Perpendicular derivation
+  document.getElementById('perp-desc').innerHTML =
+    T('l')+' に垂直な直線は、'+T("mm' = -1")+' を満たす傾きをもちます。';
+
+  const perpContainer = document.getElementById('deriv-perp');
+  const perpData = [
+    T('l')+' の傾きは '+T('m = -\\dfrac{3}{2}'),
+    '垂直条件：'+T("mm' = -1")+' より '+T("-\\dfrac{3}{2} \\cdot m' = -1"),
+    T("m' = \\dfrac{2}{3}"),
+    '点 '+T('(-1,\\,2)')+' を通るので：'+T('y - 2 = \\dfrac{2}{3}(x - (-1))'),
+    T('y - 2 = \\dfrac{2}{3}(x + 1)'),
+    '両辺を3倍して整理：'+T('3y - 6 = 2(x+1) = 2x + 2'),
+    T('2x - 3y + 8 = 0')
+  ];
+  perpData.forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'deriv-step';
+    div.innerHTML = s;
+    perpContainer.appendChild(div);
+    perpSteps.push(div);
+  });
+  tex('2x - 3y + 8 = 0', document.getElementById('answer-perp'), true);
+
+  drawGraph();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>軌跡の定義と求め方</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>軌跡の定義と求め方</h1>
+  <p class="subtitle">条件を満たす点の集合（軌跡）の求め方を学びましょう。</p>
+
+  <h2>軌跡とは</h2>
+  <p>与えられた条件を満たす点全体の集合を、その条件に対する<strong>軌跡</strong>（locus）といいます。</p>
+  <p>軌跡を求めるには次の2つを示す必要があります。</p>
+  <div class="note" id="note-proof"></div>
+
+  <h2>例題：2点から等距離にある点の軌跡</h2>
+  <p>2点 <span id="f-A"></span> と <span id="f-B"></span> から等距離にある点 P の軌跡を求めよ。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>等距離を確かめよう</h2>
+  <p>直線上の点 P をドラッグして、AP と BP が常に等しいことを確かめましょう。</p>
+  <p class="drag-hint">点 P をタップ＆ドラッグで移動できます</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600,ox=300,oy=300,scale=50;
+const GRID_MIN=-5,GRID_MAX=7;
+
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+/* Draggable point P on line 2x - y - 3 = 0, parameterized by t: P(t, 2t-3) */
+let pt = 2; // parameter t
+
+function init(){
+  /* Note box */
+  document.getElementById('note-proof').innerHTML =
+    '<strong>(1)</strong> 条件を満たす点が図形 F 上にあることを示す<br>' +
+    '<strong>(2)</strong> 逆に、図形 F 上の任意の点が条件を満たすことを示す<br>' +
+    'この2つを合わせて「軌跡は F である」といえます。';
+
+  document.getElementById('f-A').innerHTML = T('\\mathrm{A}(0,\\,2)');
+  document.getElementById('f-B').innerHTML = T('\\mathrm{B}(4,\\,0)');
+
+  tex('\\text{軌跡は直線}\\quad 2x - y - 3 = 0', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  drawGraph();
+  setupDrag();
+}
+
+/* Walkthrough */
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 条件の設定', formula: '\\mathrm{P}(x,y)\\text{ とおく。条件：}\\mathrm{AP} = \\mathrm{BP}\\;\\Leftrightarrow\\;\\mathrm{AP}^2 = \\mathrm{BP}^2' },
+    { label: 'Step 2: 距離の2乗を展開', formula: 'x^2 + (y-2)^2 = (x-4)^2 + y^2' },
+    { label: 'Step 3: 左辺を展開', formula: 'x^2 + y^2 - 4y + 4 = x^2 - 8x + 16 + y^2' },
+    { label: 'Step 4: 整理', formula: '8x - 4y - 12 = 0 \\;\\Longrightarrow\\; 2x - y - 3 = 0' },
+    { label: 'Step 5: 逆の確認', formula: '\\text{直線 }2x-y-3=0\\text{ 上の点を }\\mathrm{P}(t,\\,2t-3)\\text{ とおく}' },
+    { label: 'Step 6: AP² と BP² を計算', formula: '\\mathrm{AP}^2 = t^2+(2t-5)^2 = 5t^2-20t+25,\\quad \\mathrm{BP}^2 = (t-4)^2+(2t-3)^2 = 5t^2-20t+25' },
+    { label: 'Step 7: 結論', formula: '\\mathrm{AP}^2 = \\mathrm{BP}^2\\;\\text{より }\\mathrm{AP} = \\mathrm{BP}\\;\\checkmark\\quad\\therefore\\;\\text{軌跡は直線 }2x - y - 3 = 0' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* SVG Graph */
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Grid */
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    const xi=px(i), yi=py(i);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX)}" x2="${xi}" y2="${py(GRID_MIN)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+    s+=`<line x1="${px(GRID_MIN)}" y1="${yi}" x2="${px(GRID_MAX)}" y2="${yi}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+
+  /* Axis labels */
+  s+=`<foreignObject x="${Math.min(px(GRID_MAX)+2,W-26)}" y="${oy-20}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="${Math.max(py(GRID_MAX)-18,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  /* Tick labels */
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    if(i===0) continue;
+    s+=`<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+    s+=`<text x="${ox-10}" y="${py(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+  }
+
+  /* Line 2x - y - 3 = 0  =>  y = 2x - 3 */
+  const lx1 = GRID_MIN, ly1 = 2*lx1 - 3;
+  const lx2 = GRID_MAX, ly2 = 2*lx2 - 3;
+  s+=`<line x1="${px(lx1)}" y1="${py(ly1)}" x2="${px(lx2)}" y2="${py(ly2)}" stroke="var(--c-green)" stroke-width="2.5" opacity="0.8"/>`;
+  s+=`<foreignObject x="${px(4.5)-10}" y="${py(2*4.5-3)-30}" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-green);font-weight:600;white-space:nowrap">${T('2x - y - 3 = 0')}</div></foreignObject>`;
+
+  /* Perpendicular bisector label: midpoint of AB */
+  const midX = 2, midY = 1;
+
+  /* Points A and B */
+  const Ax=0,Ay=2, Bx=4,By=0;
+  s+=`<circle cx="${px(Ax)}" cy="${py(Ay)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Ax)-18}" y="${py(Ay)-10}" font-size="14" font-weight="700" fill="var(--c-red)">A(0, 2)</text>`;
+  s+=`<circle cx="${px(Bx)}" cy="${py(By)}" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Bx)+12}" y="${py(By)+5}" font-size="14" font-weight="700" fill="var(--c-blue)">B(4, 0)</text>`;
+
+  /* Point P on line */
+  const Px = pt, Py = 2*pt - 3;
+  const apDist = Math.sqrt((Px-Ax)**2 + (Py-Ay)**2);
+  const bpDist = Math.sqrt((Px-Bx)**2 + (Py-By)**2);
+
+  /* Distance lines AP, BP */
+  s+=`<line x1="${px(Ax)}" y1="${py(Ay)}" x2="${px(Px)}" y2="${py(Py)}" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="6 3" opacity="0.7"/>`;
+  s+=`<line x1="${px(Bx)}" y1="${py(By)}" x2="${px(Px)}" y2="${py(Py)}" stroke="var(--c-blue)" stroke-width="2" stroke-dasharray="6 3" opacity="0.7"/>`;
+
+  /* AP label */
+  const apMx = (px(Ax)+px(Px))/2, apMy = (py(Ay)+py(Py))/2;
+  s+=`<text x="${apMx-30}" y="${apMy-5}" font-size="12" font-weight="600" fill="var(--c-red)">AP = ${apDist.toFixed(2)}</text>`;
+
+  /* BP label */
+  const bpMx = (px(Bx)+px(Px))/2, bpMy = (py(By)+py(Py))/2;
+  s+=`<text x="${bpMx+8}" y="${bpMy-5}" font-size="12" font-weight="600" fill="var(--c-blue)">BP = ${bpDist.toFixed(2)}</text>`;
+
+  /* Point P */
+  s+=`<circle cx="${px(Px)}" cy="${py(Py)}" r="10" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5" style="cursor:grab">`;
+  s+=`<animate attributeName="r" values="10;13;10" dur="2s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${px(Px)+14}" y="${py(Py)-10}" font-size="14" font-weight="700" fill="var(--c-purple)">P(${Px.toFixed(1)}, ${Py.toFixed(1)})</text>`;
+
+  svg.innerHTML = s;
+
+  /* Live calc */
+  const lcEl = document.getElementById('live-calc');
+  lcEl.innerHTML =
+    T(`\\mathrm{AP} = ${apDist.toFixed(4)},\\quad \\mathrm{BP} = ${bpDist.toFixed(4)}`) + '<br>' +
+    T(`\\mathrm{AP} - \\mathrm{BP} = ${(apDist - bpDist).toFixed(6)}`);
+}
+
+/* Drag */
+function setupDrag(){
+  const svg = document.getElementById('graph');
+  const wrap = document.getElementById('svg-wrap');
+  let dragging = false;
+
+  function toMath(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const svgX = (cx - rect.left) / rect.width * W;
+    const svgY = (cy - rect.top) / rect.height * H;
+    return { x: (svgX - ox)/scale, y: (oy - svgY)/scale };
+  }
+
+  function startDrag(cx, cy){
+    const m = toMath(cx, cy);
+    const Px = pt, Py = 2*pt - 3;
+    const d = Math.sqrt((m.x - Px)**2 + (m.y - Py)**2);
+    if(d < 1) dragging = true;
+  }
+
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    const m = toMath(cx, cy);
+    /* Project onto line: closest t such that P(t, 2t-3) is near mouse */
+    /* Minimize (m.x - t)^2 + (m.y - (2t-3))^2 */
+    /* d/dt = -2(m.x - t) - 4(m.y - 2t + 3) = 0 => 2t + 8t = 2*m.x + 4*m.y + 12 - 4*3? */
+    /* Let's just use: t = (m.x + 2*(m.y + 3)) / 5 */
+    pt = (m.x + 2*(m.y + 3)) / 5;
+    pt = Math.max(GRID_MIN + 0.5, Math.min(GRID_MAX - 0.5, pt));
+    drawGraph();
+  }
+
+  function endDrag(){ dragging = false; }
+
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

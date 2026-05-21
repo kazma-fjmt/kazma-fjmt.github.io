@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>領域から不等式を読み取る</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .75rem;
+    margin: 1rem 0;
+  }
+  .concept-card {
+    background: #eef4ff;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+  }
+
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    margin: 1rem 0 .5rem;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: .5rem 1.25rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .svg-container {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .5rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .svg-container svg {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+  }
+
+  .point-info {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    margin: .75rem 0;
+    text-align: center;
+    font-size: .95rem;
+    min-height: 3rem;
+    transition: background .3s, border-color .3s;
+  }
+  .point-info.inside { background: #e8f5e9; border-color: var(--c-green); }
+  .point-info.outside { background: #fce4ec; border-color: var(--c-red); }
+  .point-info.on-boundary { background: #e3f2fd; border-color: var(--c-blue); }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+  }
+  .step {
+    display: none;
+    animation: fadeIn .4s ease;
+  }
+  .step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-indicator {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    margin-bottom: .5rem;
+  }
+
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    gap: .75rem;
+    margin-top: 1rem;
+  }
+  .controls-row button {
+    padding: .5rem 1.5rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .controls-row button:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+  .controls-row button.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .note {
+    background: #fffde7;
+    border-left: 4px solid var(--c-orange);
+    border-radius: 0 10px 10px 0;
+    padding: .75rem 1rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+
+  .answer-box {
+    background: #e8f5e9;
+    border: 2px solid var(--c-green);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: .75rem 0;
+    text-align: center;
+    font-size: 1.1rem;
+    display: none;
+    animation: fadeIn .5s ease;
+  }
+  .answer-box.show { display: block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>領域から不等式を読み取る</h1>
+  <p class="subtitle">塗られた領域を見て、対応する不等式を書けるようになろう</p>
+
+  <h2>読み取りの手順</h2>
+  <div class="concept-card" id="method-card" style="margin:1rem 0;background:#eef4ff;border:1.5px solid var(--accent);border-radius:10px;padding:.75rem 1rem;"></div>
+
+  <div class="note" id="note-boundary"></div>
+
+  <h2>例題</h2>
+  <p>次の領域を表す不等式を求めよ。</p>
+
+  <div class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="0">問題 1</button>
+    <button class="tab-btn" data-tab="1">問題 2</button>
+    <button class="tab-btn" data-tab="2">問題 3</button>
+  </div>
+
+  <div class="svg-container" id="graph-container">
+    <svg id="coord-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="point-info" id="point-info">テスト点をドラッグして、領域内か確認しよう</div>
+
+  <div class="walkthrough" id="walkthrough">
+    <div class="step-indicator" id="step-indicator"></div>
+    <div id="steps-container"></div>
+    <div class="controls-row">
+      <button id="btn-prev" disabled>前へ</button>
+      <button id="btn-next" class="primary">次へ</button>
+    </div>
+  </div>
+
+  <div class="answer-box" id="answer-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+
+function init(){
+  document.getElementById('method-card').innerHTML =
+    '<b>手順</b><br>' +
+    '1. 境界の図形（円・直線）の方程式を確認する<br>' +
+    '2. 領域が内部か外部か（上側か下側か）を判定する<br>' +
+    '3. 境界線が実線（含む：' + T('\\le, \\ge') + '）か破線（含まない：' + T('<, >') + '）かを確認する<br>' +
+    '4. 不等式を書く';
+
+  document.getElementById('note-boundary').innerHTML =
+    '<b>ポイント：</b>境界が<b>実線</b>なら等号を含む（' + T('\\le') + ' や ' + T('\\ge') + '）、<b>破線</b>なら等号を含まない（' + T('<') + ' や ' + T('>') + '）。';
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var W = 500, H = 500, margin = 40;
+  var xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+
+  function toX(x){ return margin + (x - xMin)/(xMax - xMin)*(W-2*margin); }
+  function toY(y){ return H - margin - (y - yMin)/(yMax - yMin)*(H-2*margin); }
+  function fromX(sx){ return xMin + (sx - margin)/(W-2*margin)*(xMax - xMin); }
+  function fromY(sy){ return yMax - (sy - margin)/(H-2*margin)*(yMax - yMin); }
+
+  function createEl(tag, attrs){
+    var el = document.createElementNS(SVG_NS, tag);
+    for(var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function drawGrid(svg){
+    for(var x = xMin; x <= xMax; x++){
+      svg.appendChild(createEl('line',{x1:toX(x),y1:margin,x2:toX(x),y2:H-margin,stroke:'#e0e0e0','stroke-width':1}));
+    }
+    for(var y = yMin; y <= yMax; y++){
+      svg.appendChild(createEl('line',{x1:margin,y1:toY(y),x2:W-margin,y2:toY(y),stroke:'#e0e0e0','stroke-width':1}));
+    }
+    svg.appendChild(createEl('line',{x1:margin,y1:toY(0),x2:W-margin,y2:toY(0),stroke:'#333','stroke-width':2}));
+    svg.appendChild(createEl('line',{x1:toX(0),y1:margin,x2:toX(0),y2:H-margin,stroke:'#333','stroke-width':2}));
+    // Arrows
+    var ax = W - margin;
+    svg.appendChild(createEl('polygon',{points:(ax-6)+','+(toY(0)-4)+' '+ax+','+toY(0)+' '+(ax-6)+','+(toY(0)+4),fill:'#333'}));
+    svg.appendChild(createEl('polygon',{points:(toX(0)-4)+','+(margin+6)+' '+toX(0)+','+margin+' '+(toX(0)+4)+','+(margin+6),fill:'#333'}));
+    var xl = document.createElementNS(SVG_NS,'foreignObject');
+    xl.setAttribute('x', Math.min(ax+2, W-26));
+    xl.setAttribute('y', toY(0)-12);
+    xl.setAttribute('width', '24');
+    xl.setAttribute('height', '24');
+    xl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('x')+'</div>';
+    svg.appendChild(xl);
+    var yl = document.createElementNS(SVG_NS,'foreignObject');
+    yl.setAttribute('x', toX(0)+6);
+    yl.setAttribute('y', Math.max(margin-18, 2));
+    yl.setAttribute('width', '24');
+    yl.setAttribute('height', '24');
+    yl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('y')+'</div>';
+    svg.appendChild(yl);
+    for(var x = xMin; x <= xMax; x++){
+      if(x===0) continue;
+      var t = createEl('text',{x:toX(x),y:toY(0)+18,'text-anchor':'middle','font-size':'11',fill:'#888'});
+      t.textContent = x; svg.appendChild(t);
+    }
+    for(var y = yMin; y <= yMax; y++){
+      if(y===0) continue;
+      var t = createEl('text',{x:toX(0)-12,y:toY(y)+4,'text-anchor':'end','font-size':'11',fill:'#888'});
+      t.textContent = y; svg.appendChild(t);
+    }
+    var o = createEl('text',{x:toX(0)-8,y:toY(0)+16,'font-size':'11',fill:'#888'}); o.textContent='O'; svg.appendChild(o);
+  }
+
+  // Tab definitions
+  var problems = [
+    {
+      title: '問題 1：円の内部（境界含む）',
+      answer: 'x^2 + y^2 \\le 4',
+      answerText: '答え',
+      // circle x²+y²=4, center (0,0), r=2, interior, boundary included (solid)
+      ca: 0, cb: 0, r: 2, r2: 4,
+      boundaryStyle: 'solid', // solid = included
+      regionType: 'interior',
+      testFn: function(x,y){ return x*x + y*y <= 4.01; },
+      steps: [
+        '塗られた領域を観察します。原点を中心とする円の<b>内部</b>が塗られています。',
+        '円の方程式を確認します。中心 ' + T('(0,0)') + '、半径 ' + T('2') + ' なので：<br>' + T('x^2 + y^2 = 4'),
+        '境界線は<b>実線</b>です。境界を<b>含む</b>ことを意味します。',
+        '内部かつ境界含む → 不等式は ' + T('\\le') + ' を使います。'
+      ]
+    },
+    {
+      title: '問題 2：円の外部（境界含まない）',
+      answer: '(x-2)^2 + (y+1)^2 > 1',
+      answerText: '答え',
+      ca: 2, cb: -1, r: 1, r2: 1,
+      boundaryStyle: 'dashed',
+      regionType: 'exterior',
+      testFn: function(x,y){ return (x-2)*(x-2) + (y+1)*(y+1) > 1.01; },
+      steps: [
+        '塗られた領域を観察します。ある円の<b>外部</b>が塗られています。',
+        '円の中心と半径を読み取ります。中心 ' + T('(2, -1)') + '、半径 ' + T('1') + ' なので：<br>' + T('(x-2)^2 + (y+1)^2 = 1'),
+        '境界線は<b>破線</b>です。境界を<b>含まない</b>ことを意味します。',
+        '外部かつ境界含まない → 不等式は ' + T('>') + ' を使います。'
+      ]
+    },
+    {
+      title: '問題 3：環状領域（2つの円の間）',
+      answer: '1 < x^2 + y^2 < 4',
+      answerText: '答え',
+      // annulus: 1 < x²+y² < 4
+      ca: 0, cb: 0, r: 2, r2: 4, rInner: 1, r2Inner: 1,
+      boundaryStyle: 'dashed',
+      regionType: 'annulus',
+      testFn: function(x,y){ var d2=x*x+y*y; return d2 > 1.01 && d2 < 3.99; },
+      steps: [
+        '塗られた領域を観察します。原点中心の<b>2つの円の間</b>（環状領域）が塗られています。',
+        '外側の円：半径 ' + T('2') + ' → ' + T('x^2+y^2=4') + '<br>内側の円：半径 ' + T('1') + ' → ' + T('x^2+y^2=1'),
+        '両方の境界線が<b>破線</b>なので、どちらの境界も<b>含みません</b>。',
+        '内側の円の外部 かつ 外側の円の内部なので、連立不等式で表せます。<br>これを1つにまとめると：'
+      ]
+    }
+  ];
+
+  var currentTab = 0, currentStep = 0;
+  var testPX = 1, testPY = 0.5;
+  var svg = document.getElementById('coord-svg');
+
+  function drawScene(){
+    svg.innerHTML = '';
+    drawGrid(svg);
+
+    var defs = createEl('defs',{});
+    var clip = createEl('clipPath',{id:'gClip'});
+    clip.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin}));
+    defs.appendChild(clip);
+    svg.appendChild(defs);
+
+    var g = createEl('g',{'clip-path':'url(#gClip)'});
+    var p = problems[currentTab];
+    var cx = toX(p.ca), cy = toY(p.cb);
+    var rPx = p.r / (xMax - xMin) * (W - 2*margin);
+    var dash = p.boundaryStyle === 'dashed' ? '8,5' : 'none';
+
+    // Draw region
+    if(p.regionType === 'interior'){
+      var reg = createEl('circle',{cx:cx,cy:cy,r:0,fill:'rgba(42,109,244,0.18)',stroke:'none'});
+      g.appendChild(reg);
+      // Animate
+      setTimeout(function(){
+        reg.setAttribute('r', rPx);
+        reg.style.transition = 'r .6s ease';
+      }, 100);
+      // Use CSS animation since SVG transition on r may not work
+      reg.setAttribute('r', rPx);
+      reg.style.opacity = '0';
+      reg.style.transition = 'opacity .6s ease';
+      setTimeout(function(){ reg.style.opacity = '1'; }, 100);
+    } else if(p.regionType === 'exterior'){
+      var mask = createEl('mask',{id:'regMask'});
+      mask.appendChild(createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'white'}));
+      mask.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'black'}));
+      defs.appendChild(mask);
+      var reg = createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'rgba(42,109,244,0.18)',mask:'url(#regMask)'});
+      reg.style.opacity = '0';
+      reg.style.transition = 'opacity .6s ease';
+      g.appendChild(reg);
+      setTimeout(function(){ reg.style.opacity = '1'; }, 100);
+    } else if(p.regionType === 'annulus'){
+      var rInPx = p.rInner / (xMax - xMin) * (W - 2*margin);
+      // Annulus: outer circle minus inner circle
+      var mask = createEl('mask',{id:'annMask'});
+      mask.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'white'}));
+      mask.appendChild(createEl('circle',{cx:cx,cy:cy,r:rInPx,fill:'black'}));
+      defs.appendChild(mask);
+      var reg = createEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin,fill:'rgba(42,109,244,0.18)',mask:'url(#annMask)'});
+      reg.style.opacity = '0';
+      reg.style.transition = 'opacity .6s ease';
+      g.appendChild(reg);
+      setTimeout(function(){ reg.style.opacity = '1'; }, 100);
+    }
+
+    // Draw boundary circle(s)
+    if(p.regionType === 'annulus'){
+      var rInPx = p.rInner / (xMax - xMin) * (W - 2*margin);
+      g.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'none',stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':dash}));
+      g.appendChild(createEl('circle',{cx:cx,cy:cy,r:rInPx,fill:'none',stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':dash}));
+      // Labels
+      var lbl1 = document.createElementNS(SVG_NS,'foreignObject');
+      lbl1.setAttribute('x', cx+rPx+5);
+      lbl1.setAttribute('y', cy-20);
+      lbl1.setAttribute('width', '60');
+      lbl1.setAttribute('height', '24');
+      lbl1.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-blue);font-weight:bold;white-space:nowrap">'+T('r=2')+'</div>';
+      g.appendChild(lbl1);
+      var lbl2 = document.createElementNS(SVG_NS,'foreignObject');
+      lbl2.setAttribute('x', cx+rInPx+5);
+      lbl2.setAttribute('y', cy+2);
+      lbl2.setAttribute('width', '60');
+      lbl2.setAttribute('height', '24');
+      lbl2.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-blue);font-weight:bold;white-space:nowrap">'+T('r=1')+'</div>';
+      g.appendChild(lbl2);
+    } else {
+      g.appendChild(createEl('circle',{cx:cx,cy:cy,r:rPx,fill:'none',stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':dash}));
+    }
+
+    // Center dot
+    g.appendChild(createEl('circle',{cx:cx,cy:cy,r:4,fill:'var(--c-blue)'}));
+    if(p.ca !== 0 || p.cb !== 0){
+      var cLbl = createEl('text',{x:cx+8,y:cy-8,'font-size':'12',fill:'var(--c-blue)','font-weight':'bold'});
+      cLbl.textContent = 'C('+p.ca+','+p.cb+')';
+      g.appendChild(cLbl);
+    }
+
+    // Test point
+    var inside = p.testFn(testPX, testPY);
+    var tColor = inside ? 'var(--c-green)' : 'var(--c-red)';
+
+    // Distance line
+    g.appendChild(createEl('line',{x1:cx,y1:cy,x2:toX(testPX),y2:toY(testPY),stroke:tColor,'stroke-width':1.5,'stroke-dasharray':'4,3',opacity:'.5'}));
+    g.appendChild(createEl('circle',{cx:toX(testPX),cy:toY(testPY),r:12,fill:tColor,opacity:.85,stroke:'#fff','stroke-width':2}));
+    var tpL = createEl('text',{x:toX(testPX),y:toY(testPY)-16,'text-anchor':'middle','font-size':'12',fill:tColor,'font-weight':'bold',id:'tp-label'});
+    tpL.textContent = 'P('+testPX.toFixed(1)+','+testPY.toFixed(1)+')';
+    g.appendChild(tpL);
+
+    svg.appendChild(g);
+    updateInfo();
+    setupDrag();
+  }
+
+  function updateInfo(){
+    var p = problems[currentTab];
+    var d2;
+    if(p.regionType === 'annulus'){
+      d2 = testPX*testPX + testPY*testPY;
+    } else {
+      d2 = (testPX-p.ca)*(testPX-p.ca) + (testPY-p.cb)*(testPY-p.cb);
+    }
+    var d = Math.sqrt(d2);
+    var inside = p.testFn(testPX, testPY);
+    var info = document.getElementById('point-info');
+
+    var detail;
+    if(p.regionType === 'annulus'){
+      detail = T('x^2+y^2 = '+d2.toFixed(2));
+      detail += '<br>' + (inside ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内（' + T('1 < '+d2.toFixed(2)+' < 4') + '）</span>' :
+        '<span style="color:var(--c-red);font-weight:bold">✗ 領域外</span>');
+    } else {
+      var eq = p.regionType === 'interior' ? '\\le' : '>';
+      if(p.boundaryStyle === 'solid' && p.regionType === 'interior') eq = '\\le';
+      detail = 'CP = ' + d.toFixed(2) + '、r = ' + p.r;
+      detail += '<br>' + (inside ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内</span>' :
+        '<span style="color:var(--c-red);font-weight:bold">✗ 領域外</span>');
+    }
+    info.innerHTML = 'P('+testPX.toFixed(1)+', '+testPY.toFixed(1)+')　' + detail;
+    info.className = 'point-info ' + (inside ? 'inside' : 'outside');
+  }
+
+  function setupDrag(){
+    var dragging = false;
+    function getPos(e){
+      var rect = svg.getBoundingClientRect();
+      var scale = W / rect.width;
+      var cx = e.touches ? e.touches[0].clientX : e.clientX;
+      var cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x:(cx-rect.left)*scale, y:(cy-rect.top)*scale };
+    }
+    function start(e){
+      var pos = getPos(e);
+      if(Math.hypot(pos.x - toX(testPX), pos.y - toY(testPY)) < 30){ dragging = true; e.preventDefault(); }
+    }
+    function move(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var pos = getPos(e);
+      testPX = Math.round(fromX(pos.x)*2)/2;
+      testPY = Math.round(fromY(pos.y)*2)/2;
+      testPX = Math.max(xMin, Math.min(xMax, testPX));
+      testPY = Math.max(yMin, Math.min(yMax, testPY));
+      drawScene();
+    }
+    function end(){ dragging = false; }
+    svg.addEventListener('mousedown',start);
+    svg.addEventListener('mousemove',move);
+    svg.addEventListener('mouseup',end);
+    svg.addEventListener('mouseleave',end);
+    svg.addEventListener('touchstart',start,{passive:false});
+    svg.addEventListener('touchmove',move,{passive:false});
+    svg.addEventListener('touchend',end);
+  }
+
+  function renderSteps(){
+    var p = problems[currentTab];
+    var c = document.getElementById('steps-container');
+    c.innerHTML = '';
+    p.steps.forEach(function(s,i){
+      var d = document.createElement('div');
+      d.className = 'step' + (i === currentStep ? ' active' : '');
+      d.innerHTML = s;
+      c.appendChild(d);
+    });
+    document.getElementById('step-indicator').textContent = 'ステップ ' + (currentStep+1) + ' / ' + p.steps.length;
+    document.getElementById('btn-prev').disabled = currentStep === 0;
+    document.getElementById('btn-next').disabled = currentStep === p.steps.length - 1;
+
+    var ab = document.getElementById('answer-box');
+    if(currentStep === p.steps.length - 1){
+      ab.innerHTML = '<b>' + p.answerText + '：</b>' + T(p.answer);
+      ab.classList.add('show');
+    } else {
+      ab.classList.remove('show');
+    }
+  }
+
+  // Tabs
+  document.querySelectorAll('#main-tabs .tab-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('#main-tabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentTab = parseInt(btn.getAttribute('data-tab'));
+      currentStep = 0;
+      testPX = 1; testPY = 0.5;
+      drawScene();
+      renderSteps();
+    });
+  });
+
+  document.getElementById('btn-prev').addEventListener('click',function(){
+    if(currentStep > 0){ currentStep--; renderSteps(); }
+  });
+  document.getElementById('btn-next').addEventListener('click',function(){
+    var p = problems[currentTab];
+    if(currentStep < p.steps.length - 1){ currentStep++; renderSteps(); }
+  });
+
+  drawScene();
+  renderSteps();
+}
+</script>
+</body>
+</html>

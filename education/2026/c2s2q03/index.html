@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>直径の両端から円の方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-center: #e67e22;
+    --c-circle: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+    position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center;
+    overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.15rem; }
+  .step.current .formula-line .katex { font-size: 1.3rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>直径の両端から円の方程式</h1>
+  <p class="subtitle">直径の両端が与えられたとき、円の方程式を導きます。</p>
+
+  <h2>考え方</h2>
+  <p>直径の両端 A、B が与えられたとき：</p>
+  <div class="formula-box" id="formula-center"></div>
+  <div class="formula-box" id="formula-radius"></div>
+
+  <h2>例題</h2>
+  <p>A(&minus;1, &minus;2)、B(7, 4) を直径の両端とする円の方程式を求める。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>点 A と点 B をドラッグして直径の両端を動かしてみましょう。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="plane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="note" id="note"></div>
+</main>
+
+<script>
+  function tex(latex, el, dm) { katex.render(latex, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  /* state */
+  let ptAx = -1, ptAy = -2, ptBx = 7, ptBy = 4;
+  const GRID_MIN = -8, GRID_MAX = 10;
+  const SVG_SIZE = 600, PAD = 40;
+  const usable = SVG_SIZE - 2 * PAD;
+
+  function toSvgX(v) { return PAD + (v - GRID_MIN) / (GRID_MAX - GRID_MIN) * usable; }
+  function toSvgY(v) { return PAD + (GRID_MAX - v) / (GRID_MAX - GRID_MIN) * usable; }
+  function toMathX(sx) { let v = (sx - PAD) / usable * (GRID_MAX - GRID_MIN) + GRID_MIN; return Math.round(v); }
+  function toMathY(sy) { let v = GRID_MAX - (sy - PAD) / usable * (GRID_MAX - GRID_MIN); return Math.round(v); }
+
+  function getCenter() { return [(ptAx + ptBx) / 2, (ptAy + ptBy) / 2]; }
+  function getRadius() {
+    const dx = ptBx - ptAx, dy = ptBy - ptAy;
+    return Math.sqrt(dx * dx + dy * dy) / 2;
+  }
+
+  /* animation angle for decorative rotating point */
+  let animAngle = 0;
+  let animFrame = null;
+
+  function animLoop() {
+    animAngle += 0.015;
+    if (animAngle > 2 * Math.PI) animAngle -= 2 * Math.PI;
+    drawSVG();
+    animFrame = requestAnimationFrame(animLoop);
+  }
+
+  function drawSVG() {
+    const svg = document.getElementById('plane');
+    let s = '';
+    const [cx, cy] = getCenter();
+    const r = getRadius();
+
+    /* grid */
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      const x = toSvgX(i), y = toSvgY(i);
+      s += `<line x1="${x}" y1="${PAD}" x2="${x}" y2="${SVG_SIZE-PAD}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+      s += `<line x1="${PAD}" y1="${y}" x2="${SVG_SIZE-PAD}" y2="${y}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+    }
+
+    /* axis labels */
+    s += `<foreignObject x="${SVG_SIZE-PAD-2}" y="${toSvgY(0)-10}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('x')}</div></foreignObject>`;
+    s += `<foreignObject x="${toSvgX(0)-12}" y="${PAD-28}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('y')}</div></foreignObject>`;
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      if (i === 0) continue;
+      s += `<text x="${toSvgX(i)}" y="${toSvgY(0)+18}" text-anchor="middle" font-size="10" fill="#aaa">${i}</text>`;
+      s += `<text x="${toSvgX(0)-8}" y="${toSvgY(i)+4}" text-anchor="end" font-size="10" fill="#aaa">${i}</text>`;
+    }
+    s += `<text x="${toSvgX(0)-8}" y="${toSvgY(0)+18}" text-anchor="end" font-size="10" fill="#aaa">O</text>`;
+
+    const scx = toSvgX(cx), scy = toSvgY(cy);
+    const sr = r / (GRID_MAX - GRID_MIN) * usable;
+    const sax = toSvgX(ptAx), say = toSvgY(ptAy);
+    const sbx = toSvgX(ptBx), sby = toSvgY(ptBy);
+
+    /* circle */
+    if (r > 0.01) {
+      s += `<circle cx="${scx}" cy="${scy}" r="${sr}" fill="rgba(92,184,92,0.08)" stroke="var(--c-circle)" stroke-width="2.5"/>`;
+    }
+
+    /* diameter line */
+    s += `<line x1="${sax}" y1="${say}" x2="${sbx}" y2="${sby}" stroke="var(--muted)" stroke-width="2" stroke-dasharray="8 4"/>`;
+
+    /* radius lines from center */
+    s += `<line x1="${scx}" y1="${scy}" x2="${sax}" y2="${say}" stroke="var(--c-a)" stroke-width="1.5" opacity=".5"/>`;
+    s += `<line x1="${scx}" y1="${scy}" x2="${sbx}" y2="${sby}" stroke="var(--c-b)" stroke-width="1.5" opacity=".5"/>`;
+
+    /* animated point on circle */
+    if (r > 0.01) {
+      const ppx = cx + r * Math.cos(animAngle);
+      const ppy = cy + r * Math.sin(animAngle);
+      const sppx = toSvgX(ppx), sppy = toSvgY(ppy);
+      s += `<circle cx="${sppx}" cy="${sppy}" r="4" fill="var(--c-circle)" opacity=".7"/>`;
+    }
+
+    /* center C */
+    s += `<circle cx="${scx}" cy="${scy}" r="6" fill="var(--c-center)" stroke="#fff" stroke-width="2"/>`;
+    const cxFmt = Number.isInteger(cx) ? cx : cx.toFixed(1);
+    const cyFmt = Number.isInteger(cy) ? cy : cy.toFixed(1);
+    s += `<text x="${scx+10}" y="${scy-10}" font-size="13" font-weight="700" fill="var(--c-center)">C(${cxFmt}, ${cyFmt})</text>`;
+
+    /* point A */
+    s += `<circle cx="${sax}" cy="${say}" r="8" fill="var(--c-a)" stroke="#fff" stroke-width="2" style="cursor:grab"/>`;
+    s += `<text x="${sax-14}" y="${say+22}" text-anchor="end" font-size="14" font-weight="700" fill="var(--c-a)">A(${ptAx}, ${ptAy})</text>`;
+
+    /* point B */
+    s += `<circle cx="${sbx}" cy="${sby}" r="8" fill="var(--c-b)" stroke="#fff" stroke-width="2" style="cursor:grab"/>`;
+    s += `<text x="${sbx+12}" y="${sby-12}" font-size="14" font-weight="700" fill="var(--c-b)">B(${ptBx}, ${ptBy})</text>`;
+
+    svg.innerHTML = s;
+    updateCalc();
+  }
+
+  function frac(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
+
+  function updateCalc() {
+    const el = document.getElementById('live-calc');
+    const [cx, cy] = getCenter();
+    const r = getRadius();
+    const r2 = r * r;
+    const cxSign = cx >= 0 ? `- ${frac(cx)}` : `+ ${frac(Math.abs(cx))}`;
+    const cySign = cy >= 0 ? `- ${frac(cy)}` : `+ ${frac(Math.abs(cy))}`;
+    const r2fmt = Number.isInteger(r2) ? String(r2) : r2.toFixed(2);
+    const rfmt = Number.isInteger(r) ? String(r) : r.toFixed(2);
+
+    el.innerHTML =
+      T(`\\text{中心 }\\mathrm{C}\\left(${frac(cx)},\\;${frac(cy)}\\right),\\quad r = ${rfmt}`) +
+      "<br>" +
+      T(`(x ${cxSign})^2 + (y ${cySign})^2 = ${r2fmt}`);
+  }
+
+  /* drag */
+  let dragging = null;
+  function ptrDown(e) {
+    const svg = document.getElementById('plane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const sx = (clientX - rect.left) * scale;
+    const sy = (clientY - rect.top) * scale;
+    const dA = Math.sqrt((sx - toSvgX(ptAx))**2 + (sy - toSvgY(ptAy))**2);
+    const dB = Math.sqrt((sx - toSvgX(ptBx))**2 + (sy - toSvgY(ptBy))**2);
+    if (dA < 30 && dA <= dB) { dragging = 'A'; e.preventDefault(); }
+    else if (dB < 30) { dragging = 'B'; e.preventDefault(); }
+  }
+  function ptrMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const svg = document.getElementById('plane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const sx = (clientX - rect.left) * scale;
+    const sy = (clientY - rect.top) * scale;
+    const mx = Math.max(GRID_MIN + 1, Math.min(GRID_MAX - 1, toMathX(sx)));
+    const my = Math.max(GRID_MIN + 1, Math.min(GRID_MAX - 1, toMathY(sy)));
+    if (dragging === 'A') { ptAx = mx; ptAy = my; }
+    else { ptBx = mx; ptBy = my; }
+  }
+  function ptrUp() { dragging = null; }
+
+  /* walkthrough */
+  const steps = [
+    { title: "問題の確認", tex: "\\mathrm{A}(-1,\\,-2),\\;\\mathrm{B}(7,\\,4) \\text{ を直径の両端とする円}" },
+    { title: "中心を求める（中点）", tex: "\\mathrm{C} = \\left(\\frac{-1+7}{2},\\;\\frac{-2+4}{2}\\right)" },
+    { title: "中心の計算", tex: "= \\left(\\frac{6}{2},\\;\\frac{2}{2}\\right) = (3,\\;1)" },
+    { title: "直径の長さ", tex: "\\mathrm{AB} = \\sqrt{(7-(-1))^2 + (4-(-2))^2} = \\sqrt{64+36} = \\sqrt{100} = 10" },
+    { title: "半径を求める", tex: "r = \\frac{\\mathrm{AB}}{2} = \\frac{10}{2} = 5" },
+    { title: "円の方程式", tex: "\\boxed{(x-3)^2 + (y-1)^2 = 25}" }
+  ];
+  let curStep = 0;
+
+  function renderWalk() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const st = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}">
+        <div class="label">${st.title}</div>
+        <div class="formula-line">${T(st.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    tex("\\text{中心 }\\mathrm{C} = \\left(\\frac{x_1+x_2}{2},\\;\\frac{y_1+y_2}{2}\\right)", document.getElementById('formula-center'), true);
+    tex("r = \\frac{\\mathrm{AB}}{2} = \\frac{1}{2}\\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}", document.getElementById('formula-radius'), true);
+
+    document.getElementById('note').innerHTML =
+      "直径の両端がわかれば、中心は<strong>中点</strong>、半径は<strong>直径の半分</strong>として求められます。" +
+      "2点 A、B をドラッグして、中心と円がどう変わるか確認しましょう。";
+
+    drawSVG();
+    animLoop();
+
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalk(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < steps.length - 1) { curStep++; renderWalk(); }
+    });
+    renderWalk();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

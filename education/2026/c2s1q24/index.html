@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>点と直線の距離</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.35rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.1rem; }
+  .step.current .formula-line .katex { font-size: 1.25rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.2rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>点と直線の距離</h1>
+  <p class="subtitle">点から直線に下ろした垂線の長さ（距離）の公式を導出し、視覚的に理解しましょう。</p>
+
+  <h2>公式</h2>
+  <p>点 <span id="label-p"></span> と直線 <span id="label-l"></span> の距離 <span id="label-d"></span> は：</p>
+  <div class="formula-box" id="formula-main"></div>
+
+  <h2>公式の導出</h2>
+  <div class="walkthrough" id="wt-deriv"></div>
+  <div class="controls-row">
+    <button class="btn" id="wd-prev" disabled>← 前へ</button>
+    <span class="step-counter" id="wd-counter"></span>
+    <button class="btn primary" id="wd-next">次へ →</button>
+  </div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>点 P をドラッグして動かし、距離が自動で変化する様子を確認しましょう。</p>
+  <p class="drag-hint">点 P をタップ＆ドラッグで移動できます</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題13</h2>
+  <p>点 <span id="ex-p"></span> と直線 <span id="ex-l"></span> の距離を求めよ。</p>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="wt-ex"></div>
+  <div class="controls-row">
+    <button class="btn" id="we-prev" disabled>← 前へ</button>
+    <span class="step-counter" id="we-counter"></span>
+    <button class="btn primary" id="we-next">次へ →</button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+// Draggable point state
+let dragPx = -2, dragPy = -1;
+
+function init(){
+  tex('\\mathrm{P}(x_1,\\,y_1)', document.getElementById('label-p'));
+  tex('l: ax+by+c=0', document.getElementById('label-l'));
+  tex('d', document.getElementById('label-d'));
+  tex('d = \\dfrac{|ax_1 + by_1 + c|}{\\sqrt{a^2 + b^2}}', document.getElementById('formula-main'), true);
+
+  tex('\\mathrm{P}(-2,\\,-1)', document.getElementById('ex-p'));
+  tex('4x+3y+1=0', document.getElementById('ex-l'));
+
+  initDerivation();
+  initExample();
+  drawGraph();
+  setupDrag();
+}
+
+/* ── Derivation walkthrough ── */
+function initDerivation(){
+  const steps = [
+    { label: 'Step 1: 設定', formula: '\\text{直線}\\;l: ax+by+c=0,\\;\\text{点}\\;\\mathrm{P}(x_1,y_1)\\;\\text{から}\\;l\\;\\text{に垂線 PH を下ろす}' },
+    { label: 'Step 2: 垂線の足 H の座標', formula: '\\mathrm{H}(x_2,\\,y_2)\\;\\text{は直線}\\;l\\;\\text{上にあり、}\\mathrm{PH}\\perp l' },
+    { label: 'Step 3: 垂直条件から k を導入', formula: '\\frac{x_2 - x_1}{a} = \\frac{y_2 - y_1}{b} = k \\quad\\text{（ある定数 k）}' },
+    { label: 'Step 4: H の座標を k で表す', formula: 'x_2 = x_1 + ak,\\quad y_2 = y_1 + bk' },
+    { label: 'Step 5: H は l 上にある', formula: 'a(x_1+ak) + b(y_1+bk) + c = 0' },
+    { label: 'Step 6: k について解く', formula: 'ax_1 + a^2k + by_1 + b^2k + c = 0 \\;\\Rightarrow\\; k = -\\frac{ax_1+by_1+c}{a^2+b^2}' },
+    { label: 'Step 7: PH の長さを計算', formula: '\\mathrm{PH}^2 = (x_2-x_1)^2 + (y_2-y_1)^2 = (ak)^2 + (bk)^2 = (a^2+b^2)k^2' },
+    { label: 'Step 8: k を代入', formula: '\\mathrm{PH} = \\sqrt{(a^2+b^2)} \\cdot |k| = \\sqrt{a^2+b^2} \\cdot \\frac{|ax_1+by_1+c|}{a^2+b^2}' },
+    { label: 'Step 9: 距離の公式', formula: 'd = \\mathrm{PH} = \\dfrac{|ax_1 + by_1 + c|}{\\sqrt{a^2 + b^2}}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-deriv');
+  const counter = document.getElementById('wd-counter');
+  const prevBtn = document.getElementById('wd-prev');
+  const nextBtn = document.getElementById('wd-next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* ── Example walkthrough ── */
+function initExample(){
+  const steps = [
+    { label: 'Step 1: 公式を適用', formula: 'd = \\dfrac{|ax_1 + by_1 + c|}{\\sqrt{a^2 + b^2}}' },
+    { label: 'Step 2: 値を代入', formula: 'a=4,\\;b=3,\\;c=1,\\;x_1=-2,\\;y_1=-1' },
+    { label: 'Step 3: 分子を計算', formula: '|4 \\cdot (-2) + 3 \\cdot (-1) + 1| = |-8 - 3 + 1| = |-10| = 10' },
+    { label: 'Step 4: 分母を計算', formula: '\\sqrt{4^2 + 3^2} = \\sqrt{16 + 9} = \\sqrt{25} = 5' },
+    { label: 'Step 5: 答え', formula: 'd = \\dfrac{10}{5} = 2' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-ex');
+  const counter = document.getElementById('we-counter');
+  const prevBtn = document.getElementById('we-prev');
+  const nextBtn = document.getElementById('we-next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* ── Interactive graph with draggable point ── */
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 500, ox = 320, oy = 280, scale = 45;
+
+  function px(x){ return ox + x*scale; }
+  function py(y){ return oy - y*scale; }
+
+  // Line: 4x + 3y + 1 = 0 => y = -(4x+1)/3
+  const a=4, b=3, c=1;
+  const lineY = x => -(a*x+c)/b;
+
+  // Foot of perpendicular from P to line
+  const denom = a*a + b*b; // 25
+  const k = -(a*dragPx + b*dragPy + c)/denom;
+  const hx = dragPx + a*k;
+  const hy = dragPy + b*k;
+  const dist = Math.abs(a*dragPx + b*dragPy + c) / Math.sqrt(denom);
+
+  let html = '';
+
+  // Grid
+  for(let i=-7;i<=5;i++) html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee"/>`;
+  for(let j=-4;j<=4;j++) html += `<line x1="10" y1="${py(j)}" x2="${W-10}" y2="${py(j)}" stroke="#eee"/>`;
+
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${Math.min(W-15-12,W-26)}" y="${oy-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(py(4)-2,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+  for(let i=-7;i<=5;i++){ if(i===0)continue; html += `<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="10" fill="#bbb">${i}</text>`; }
+  for(let j=-4;j<=4;j++){ if(j===0)continue; html += `<text x="${ox-10}" y="${py(j)+4}" text-anchor="end" font-size="10" fill="#bbb">${j}</text>`; }
+
+  // Line l
+  html += `<line x1="${px(-6)}" y1="${py(lineY(-6))}" x2="${px(5)}" y2="${py(lineY(5))}" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  html += `<foreignObject x="${px(-6)+5}" y="${py(lineY(-6))-26}" width="200" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;font-weight:600;color:var(--c-blue)">${T('\\mathrm{l}\\text{: }4x+3y+1=0')}</div></foreignObject>`;
+
+  // Perpendicular PH
+  html += `<line x1="${px(dragPx)}" y1="${py(dragPy)}" x2="${px(hx)}" y2="${py(hy)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6,4"/>`;
+
+  // Right angle mark at H
+  const len = 0.3;
+  const dx = (dragPx - hx), dy = (dragPy - hy);
+  const d2 = Math.sqrt(dx*dx + dy*dy) || 1;
+  const ux = dx/d2, uy = dy/d2;
+  // perpendicular direction along the line
+  const vx = -uy, vy = ux;
+  if(d2 > 0.1) {
+    const rax = hx + ux*len, ray = hy + uy*len;
+    const rbx = hx + vx*len, rby = hy + vy*len;
+    const rcx = rax + vx*len, rcy = ray + vy*len;
+    html += `<polyline points="${px(rax)},${py(ray)} ${px(rcx)},${py(rcy)} ${px(rbx)},${py(rby)}" fill="none" stroke="var(--c-orange)" stroke-width="1.5"/>`;
+  }
+
+  // Distance label on the perpendicular
+  const mx = (dragPx+hx)/2, my = (dragPy+hy)/2;
+  html += `<foreignObject x="${px(mx)+10}" y="${py(my)-24}" width="150" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:var(--c-orange)">${T('d = '+dist.toFixed(2))}</div></foreignObject>`;
+
+  // Foot H
+  html += `<circle cx="${px(hx)}" cy="${py(hy)}" r="5" fill="var(--c-green)" stroke="#fff" stroke-width="2"/>`;
+  html += `<text x="${px(hx)+10}" y="${py(hy)+18}" font-size="12" font-weight="600" fill="var(--c-green)">H</text>`;
+
+  // Point P (draggable)
+  html += `<circle cx="${px(dragPx)}" cy="${py(dragPy)}" r="10" fill="var(--c-red)" stroke="#fff" stroke-width="2" style="cursor:grab" id="dot-p">`;
+  html += `<animate attributeName="r" values="10;13;10" dur="3s" repeatCount="indefinite"/></circle>`;
+  html += `<text x="${px(dragPx)+14}" y="${py(dragPy)-12}" font-size="14" font-weight="700" fill="var(--c-red)">P(${dragPx.toFixed(1)}, ${dragPy.toFixed(1)})</text>`;
+
+  svg.innerHTML = html;
+
+  // Live calc
+  const fmt = v => Math.abs(v-Math.round(v))<0.05 ? Math.round(v).toString() : v.toFixed(2);
+  document.getElementById('live-calc').innerHTML =
+    T(`\\mathrm{P}(${fmt(dragPx)},\\;${fmt(dragPy)}),\\quad l:\\;4x+3y+1=0`) + '<br>' +
+    T(`d = \\frac{|4 \\cdot (${fmt(dragPx)}) + 3 \\cdot (${fmt(dragPy)}) + 1|}{\\sqrt{4^2+3^2}}`) + '<br>' +
+    T(`= \\frac{|${fmt(4*dragPx + 3*dragPy + 1)}|}{5} = ${fmt(dist)}`);
+}
+
+function setupDrag(){
+  const svg = document.getElementById('graph');
+  const wrap = document.getElementById('svg-wrap');
+  const W = 600, H = 500, ox = 320, oy = 280, scale = 45;
+
+  function toMath(clientX, clientY){
+    const rect = svg.getBoundingClientRect();
+    const svgX = (clientX - rect.left) / rect.width * W;
+    const svgY = (clientY - rect.top) / rect.height * H;
+    return {
+      x: Math.round(((svgX - ox) / scale) * 2) / 2,
+      y: Math.round(((oy - svgY) / scale) * 2) / 2
+    };
+  }
+
+  let dragging = false;
+
+  function startDrag(cx, cy){
+    const m = toMath(cx, cy);
+    const dx = m.x - dragPx, dy = m.y - dragPy;
+    if(dx*dx + dy*dy < 2) dragging = true;
+  }
+
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    const m = toMath(cx, cy);
+    dragPx = Math.max(-6, Math.min(4, m.x));
+    dragPy = Math.max(-4, Math.min(4, m.y));
+    drawGraph();
+  }
+
+  function endDrag(){ dragging = false; }
+
+  // Mouse
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  // Touch
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+</script>
+</body>
+</html>

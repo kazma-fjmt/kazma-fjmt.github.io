@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>連立方程式と交点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: .75rem; margin: .5rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .6rem 1rem;
+    flex-wrap: wrap;
+  }
+  .slider-row label { font-weight: 600; min-width: 80px; font-size: .95rem; }
+  .slider-row input[type=range] { flex: 1; min-height: 44px; min-width: 120px; }
+  .slider-row .val { min-width: 50px; text-align: right; font-weight: 600; color: var(--accent); font-size: .95rem; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .case-badge {
+    display: inline-block; padding: .25rem .75rem; border-radius: 6px;
+    font-weight: 700; font-size: .95rem; margin: .5rem 0;
+  }
+  .case-badge.intersect { background: #e8f5e9; color: var(--c-green); }
+  .case-badge.parallel { background: #fff3e0; color: var(--c-orange); }
+  .case-badge.same { background: #e3f2fd; color: var(--c-blue); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { r: 7; } 50% { r: 11; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>連立方程式と交点</h1>
+  <p class="subtitle">連立方程式の解と2直線の交点の幾何学的な対応を理解しましょう。</p>
+
+  <h2>連立方程式と交点の関係</h2>
+  <div class="formula-box" id="formula-main"></div>
+  <p>2つの1次方程式の連立方程式を解くことは、幾何学的には2直線の交点を求めることと同じです。</p>
+
+  <div class="note" id="note-cases"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>スライダーで2直線のパラメータを変えて、交点の変化を観察しましょう。</p>
+
+  <div class="slider-row">
+    <label id="sl-a1"><span id="lbl-a1"></span> =</label>
+    <input type="range" id="s-a1" min="-3" max="3" step="0.1" value="1">
+    <span class="val" id="v-a1">1.0</span>
+  </div>
+  <div class="slider-row">
+    <label id="sl-b1"><span id="lbl-b1"></span> =</label>
+    <input type="range" id="s-b1" min="-3" max="3" step="0.1" value="1">
+    <span class="val" id="v-b1">1.0</span>
+  </div>
+  <div class="slider-row">
+    <label id="sl-c1"><span id="lbl-c1"></span> =</label>
+    <input type="range" id="s-c1" min="-6" max="6" step="0.1" value="-4">
+    <span class="val" id="v-c1">-4.0</span>
+  </div>
+
+  <div class="slider-row">
+    <label id="sl-a2"><span id="lbl-a2"></span> =</label>
+    <input type="range" id="s-a2" min="-3" max="3" step="0.1" value="2">
+    <span class="val" id="v-a2">2.0</span>
+  </div>
+  <div class="slider-row">
+    <label id="sl-b2"><span id="lbl-b2"></span> =</label>
+    <input type="range" id="s-b2" min="-3" max="3" step="0.1" value="-1">
+    <span class="val" id="v-b2">-1.0</span>
+  </div>
+  <div class="slider-row">
+    <label id="sl-c2"><span id="lbl-c2"></span> =</label>
+    <input type="range" id="s-c2" min="-6" max="6" step="0.1" value="1">
+    <span class="val" id="v-c2">1.0</span>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  tex('\\begin{cases} a_1 x + b_1 y + c_1 = 0 \\\\ a_2 x + b_2 y + c_2 = 0 \\end{cases}', document.getElementById('formula-main'), true);
+
+  document.getElementById('note-cases').innerHTML =
+    '<strong>3つの場合：</strong><br>' +
+    '① <strong>1つの交点</strong>：2直線が1点で交わる（' + T('a_1 b_2 - a_2 b_1 \\neq 0') + '）<br>' +
+    '② <strong>解なし</strong>：2直線が平行（交わらない）<br>' +
+    '③ <strong>無数の解</strong>：2直線が一致';
+
+  document.getElementById('lbl-a1').innerHTML = T('a_1');
+  document.getElementById('lbl-b1').innerHTML = T('b_1');
+  document.getElementById('lbl-c1').innerHTML = T('c_1');
+  document.getElementById('lbl-a2').innerHTML = T('a_2');
+  document.getElementById('lbl-b2').innerHTML = T('b_2');
+  document.getElementById('lbl-c2').innerHTML = T('c_2');
+
+  const ids = ['a1','b1','c1','a2','b2','c2'];
+  ids.forEach(id => {
+    document.getElementById('s-'+id).addEventListener('input', update);
+  });
+  update();
+}
+
+function update(){
+  const a1 = parseFloat(document.getElementById('s-a1').value);
+  const b1 = parseFloat(document.getElementById('s-b1').value);
+  const c1 = parseFloat(document.getElementById('s-c1').value);
+  const a2 = parseFloat(document.getElementById('s-a2').value);
+  const b2 = parseFloat(document.getElementById('s-b2').value);
+  const c2 = parseFloat(document.getElementById('s-c2').value);
+
+  document.getElementById('v-a1').textContent = a1.toFixed(1);
+  document.getElementById('v-b1').textContent = b1.toFixed(1);
+  document.getElementById('v-c1').textContent = c1.toFixed(1);
+  document.getElementById('v-a2').textContent = a2.toFixed(1);
+  document.getElementById('v-b2').textContent = b2.toFixed(1);
+  document.getElementById('v-c2').textContent = c2.toFixed(1);
+
+  drawGraph(a1,b1,c1,a2,b2,c2);
+}
+
+function drawGraph(a1,b1,c1,a2,b2,c2){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 500;
+  const ox = 300, oy = 260;
+  const scale = 35;
+
+  function px(x){ return ox + x * scale; }
+  function py(y){ return oy - y * scale; }
+
+  let html = '';
+
+  // Grid
+  for(let i = -8; i <= 8; i++){
+    html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee" stroke-width="1"/>`;
+  }
+  for(let j = -6; j <= 6; j++){
+    html += `<line x1="10" y1="${py(j)}" x2="${W-10}" y2="${py(j)}" stroke="#eee" stroke-width="1"/>`;
+  }
+
+  // Axes
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${Math.min(W-15, W-26)}" y="${oy-24}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(8, 2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  for(let i = -8; i <= 8; i++){
+    if(i===0) continue;
+    html += `<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="10" fill="#bbb">${i}</text>`;
+  }
+  for(let j = -6; j <= 6; j++){
+    if(j===0) continue;
+    html += `<text x="${ox-10}" y="${py(j)+4}" text-anchor="end" font-size="10" fill="#bbb">${j}</text>`;
+  }
+
+  // Draw lines by clipping to viewport
+  function linePoints(a, b, c) {
+    // ax + by + c = 0
+    const pts = [];
+    const xmin = -9, xmax = 9, ymin = -7, ymax = 7;
+    if (Math.abs(b) > 1e-9) {
+      // y = -(ax+c)/b
+      for (let x = xmin; x <= xmax; x += 0.5) {
+        pts.push([x, -(a*x+c)/b]);
+      }
+    } else if (Math.abs(a) > 1e-9) {
+      // vertical: x = -c/a
+      const xv = -c/a;
+      pts.push([xv, ymin], [xv, ymax]);
+    }
+    return pts;
+  }
+
+  function drawLine(a, b, c, color, label) {
+    if (Math.abs(a) < 1e-9 && Math.abs(b) < 1e-9) return '';
+    let s = '';
+    if (Math.abs(b) > 1e-9) {
+      const x1 = -9, x2 = 9;
+      const y1 = -(a*x1+c)/b, y2 = -(a*x2+c)/b;
+      s += `<line x1="${px(x1)}" y1="${py(y1)}" x2="${px(x2)}" y2="${py(y2)}" stroke="${color}" stroke-width="2.5"/>`;
+      const lx = 5, ly = -(a*lx+c)/b;
+      s += `<text x="${px(lx)+5}" y="${py(ly)-8}" font-size="13" font-weight="600" fill="${color}">${label}</text>`;
+    } else {
+      const xv = -c/a;
+      s += `<line x1="${px(xv)}" y1="${py(-7)}" x2="${px(xv)}" y2="${py(7)}" stroke="${color}" stroke-width="2.5"/>`;
+      s += `<text x="${px(xv)+8}" y="${py(5)}" font-size="13" font-weight="600" fill="${color}">${label}</text>`;
+    }
+    return s;
+  }
+
+  html += drawLine(a1, b1, c1, 'var(--c-red)', 'l₁');
+  html += drawLine(a2, b2, c2, 'var(--c-blue)', 'l₂');
+
+  // Solve system
+  const det = a1*b2 - a2*b1;
+  const lc = document.getElementById('live-calc');
+  const eps = 1e-9;
+
+  function fmt(v){ return Math.abs(v - Math.round(v)) < 0.05 ? Math.round(v).toString() : v.toFixed(2); }
+  function fmtCoef(a, v, first) {
+    const av = Math.abs(a);
+    const sign = a < 0 ? '-' : (first ? '' : '+');
+    const coef = Math.abs(av - 1) < 1e-9 ? '' : fmt(av);
+    return `${sign}${coef}${v}`;
+  }
+
+  function eqStr(a, b, c, name) {
+    let parts = [];
+    if (Math.abs(a) > eps) parts.push({ c: a, v: 'x', first: parts.length === 0 });
+    if (Math.abs(b) > eps) parts.push({ c: b, v: 'y', first: parts.length === 0 });
+    let s = name + ':\\;';
+    parts.forEach((p, i) => {
+      const sign = p.c < 0 ? '-' : (i === 0 ? '' : '+');
+      const ac = Math.abs(p.c);
+      const coef = Math.abs(ac - 1) < eps ? '' : fmt(ac);
+      s += sign + coef + p.v;
+    });
+    if (Math.abs(c) > eps) {
+      s += (c > 0 ? '+' : '-') + fmt(Math.abs(c));
+    }
+    s += '=0';
+    return s;
+  }
+
+  if (Math.abs(det) > eps) {
+    // Unique solution
+    const ix = (b1*c2 - b2*c1) / det;
+    const iy = (a2*c1 - a1*c2) / det;
+
+    html += `<circle cx="${px(ix)}" cy="${py(iy)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2">`;
+    html += `<animate attributeName="r" values="7;11;7" dur="2s" repeatCount="indefinite"/></circle>`;
+    html += `<text x="${px(ix)+12}" y="${py(iy)-10}" font-size="14" font-weight="700" fill="var(--c-green)">(${fmt(ix)}, ${fmt(iy)})</text>`;
+
+    lc.innerHTML =
+      '<span class="case-badge intersect">1つの交点（唯一の解）</span><br>' +
+      T(eqStr(a1,b1,c1,'l_1') + ',\\quad ' + eqStr(a2,b2,c2,'l_2')) + '<br>' +
+      T(`\\text{行列式}\\; D = a_1 b_2 - a_2 b_1 = ${fmt(det)} \\neq 0`) + '<br>' +
+      T(`\\text{交点}\\;\\left(${fmt(ix)},\\;${fmt(iy)}\\right)`);
+  } else {
+    // Parallel or coincident
+    // Check: a1*c2 == a2*c1 and b1*c2 == b2*c1 for coincident
+    const crossAC = Math.abs(a1*c2 - a2*c1);
+    const crossBC = Math.abs(b1*c2 - b2*c1);
+    if (crossAC < eps && crossBC < eps) {
+      lc.innerHTML =
+        '<span class="case-badge same">2直線が一致（無数の解）</span><br>' +
+        T(eqStr(a1,b1,c1,'l_1') + ',\\quad ' + eqStr(a2,b2,c2,'l_2')) + '<br>' +
+        T('D = a_1 b_2 - a_2 b_1 = 0') + '<br>' +
+        '2直線は完全に重なっています。連立方程式は無数の解を持ちます。';
+    } else {
+      lc.innerHTML =
+        '<span class="case-badge parallel">2直線が平行（解なし）</span><br>' +
+        T(eqStr(a1,b1,c1,'l_1') + ',\\quad ' + eqStr(a2,b2,c2,'l_2')) + '<br>' +
+        T('D = a_1 b_2 - a_2 b_1 = 0') + '<br>' +
+        '2直線は平行で交わりません。連立方程式は解を持ちません。';
+    }
+  }
+
+  svg.innerHTML = html;
+}
+</script>
+</body>
+</html>

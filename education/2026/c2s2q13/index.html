@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>円の外部の点からの接線</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-a: #d9534f; --c-b: #2a6df4; --c-circle: #5cb85c;
+    --c-tan1: #e67e22; --c-tan2: #8e44ad;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: .5rem 0;
+    font-size: .85rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; }
+  .legend-swatch { width: 16px; height: 4px; border-radius: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { r: 6; } 50% { r: 9; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>円の外部の点からの接線</h1>
+  <p class="subtitle">外部の点から円に引いた接線の方程式を求める方法を学びましょう。</p>
+
+  <h2>接線の公式（復習）</h2>
+  <p>円 <span id="f-circle"></span> 上の点 <span id="f-tangent-pt"></span> における接線の方程式は</p>
+  <div class="formula-box" id="formula-tangent"></div>
+
+  <h2>外部の点からの接線の考え方</h2>
+  <p>円の外部の点から接線を引くとき、接点の座標を <span id="f-contact"></span> とおいて、接線が外部の点を通る条件と接点が円上にある条件を連立して解きます。</p>
+
+  <div class="note" id="note-method"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>外部の点（赤い点）をドラッグして動かすと、接線が自動で変化します。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="plane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-circle)"></div>円</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-tan1)"></div>接線1</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-tan2)"></div>接線2</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-a);height:8px;width:8px;border-radius:50%"></div>外部の点</div>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>解法の手順（例題）</h2>
+  <p>点 <span id="f-ex-pt"></span> から円 <span id="f-ex-circle"></span> に引いた接線を求めます。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+  function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+  function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+  /* State */
+  let extX = 7, extY = 1;
+  const R = 5; // radius of circle x²+y²=25
+  const R2 = R * R;
+  const GRID_MIN = -8, GRID_MAX = 10;
+  const SVG_SIZE = 600, PAD = 40;
+  const usable = SVG_SIZE - 2 * PAD;
+
+  function toSX(v){ return PAD + (v - GRID_MIN) / (GRID_MAX - GRID_MIN) * usable; }
+  function toSY(v){ return PAD + (GRID_MAX - v) / (GRID_MAX - GRID_MIN) * usable; }
+  function toMX(sx){ return (sx - PAD) / usable * (GRID_MAX - GRID_MIN) + GRID_MIN; }
+  function toMY(sy){ return GRID_MAX - (sy - PAD) / usable * (GRID_MAX - GRID_MIN); }
+
+  /* Compute tangent lines from (ex, ey) to x²+y²=R² */
+  function computeTangents(ex, ey) {
+    // Contact point (x1, y1) on circle: x1²+y1²=R²
+    // Tangent line: x1*x + y1*y = R²
+    // Passes through (ex, ey): x1*ex + y1*ey = R²
+    // So y1 = (R² - x1*ex) / ey ... if ey ≠ 0
+    // Substitute into x1² + y1² = R²
+
+    const d2 = ex * ex + ey * ey;
+    if (d2 <= R2) return []; // point not outside circle
+
+    const results = [];
+
+    if (Math.abs(ey) < 1e-9) {
+      // Horizontal tangent case: x1*ex = R², so x1 = R²/ex
+      const x1 = R2 / ex;
+      const y1sq = R2 - x1 * x1;
+      if (y1sq < -1e-9) return [];
+      const y1a = Math.sqrt(Math.max(0, y1sq));
+      results.push({ x1: x1, y1: y1a });
+      if (y1a > 1e-9) results.push({ x1: x1, y1: -y1a });
+    } else {
+      // y1 = (R² - x1*ex) / ey
+      // x1² + ((R² - x1*ex)/ey)² = R²
+      // x1²*ey² + (R² - x1*ex)² = R²*ey²
+      // x1²*ey² + R⁴ - 2*R²*x1*ex + x1²*ex² = R²*ey²
+      // x1²*(ey² + ex²) - 2*R²*ex*x1 + R⁴ - R²*ey² = 0
+      const A = ey * ey + ex * ex;
+      const B = -2 * R2 * ex;
+      const C = R2 * R2 - R2 * ey * ey;
+      const disc = B * B - 4 * A * C;
+      if (disc < -1e-9) return [];
+      const sqrtD = Math.sqrt(Math.max(0, disc));
+      const x1a = (-B + sqrtD) / (2 * A);
+      const x1b = (-B - sqrtD) / (2 * A);
+      const y1a = (R2 - x1a * ex) / ey;
+      const y1b = (R2 - x1b * ex) / ey;
+      results.push({ x1: x1a, y1: y1a });
+      if (Math.abs(x1a - x1b) > 1e-9 || Math.abs(y1a - y1b) > 1e-9) {
+        results.push({ x1: x1b, y1: y1b });
+      }
+    }
+    return results;
+  }
+
+  /* Animation for contact points */
+  let animT = 0;
+  let animFrame = null;
+
+  function drawSVG() {
+    const svg = document.getElementById('plane');
+    let s = '';
+
+    /* Grid */
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      const x = toSX(i), y = toSY(i);
+      s += `<line x1="${x}" y1="${PAD}" x2="${x}" y2="${SVG_SIZE-PAD}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+      s += `<line x1="${PAD}" y1="${y}" x2="${SVG_SIZE-PAD}" y2="${y}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+    }
+    s += `<foreignObject x="${SVG_SIZE-PAD}" y="${toSY(0)-9}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('x')}</div></foreignObject>`;
+    s += `<foreignObject x="${toSX(0)-12}" y="${Math.max(PAD-30,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('y')}</div></foreignObject>`;
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      if (i === 0) continue;
+      s += `<text x="${toSX(i)}" y="${toSY(0)+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+      s += `<text x="${toSX(0)-10}" y="${toSY(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+    }
+    s += `<text x="${toSX(0)-10}" y="${toSY(0)+18}" text-anchor="end" font-size="11" fill="#aaa">O</text>`;
+
+    /* Circle x²+y²=25 */
+    const scx = toSX(0), scy = toSY(0);
+    const sr = R / (GRID_MAX - GRID_MIN) * usable;
+    s += `<circle cx="${scx}" cy="${scy}" r="${sr}" fill="rgba(92,184,92,0.08)" stroke="var(--c-circle)" stroke-width="2.5"/>`;
+
+    /* Tangent lines and contact points */
+    const tangents = computeTangents(extX, extY);
+    const colors = ['var(--c-tan1)', 'var(--c-tan2)'];
+
+    tangents.forEach((t, idx) => {
+      const color = colors[idx] || colors[0];
+      // Draw tangent line: x1*x + y1*y = R²
+      // As y = (R² - x1*x) / y1 (if y1 ≠ 0) or x = R²/x1
+      let lx1, ly1, lx2, ly2;
+      if (Math.abs(t.y1) < 1e-9) {
+        // Vertical line x = R²/x1
+        const lx = R2 / t.x1;
+        lx1 = lx; ly1 = GRID_MIN;
+        lx2 = lx; ly2 = GRID_MAX;
+      } else {
+        lx1 = GRID_MIN;
+        ly1 = (R2 - t.x1 * lx1) / t.y1;
+        lx2 = GRID_MAX;
+        ly2 = (R2 - t.x1 * lx2) / t.y1;
+      }
+      s += `<line x1="${toSX(lx1)}" y1="${toSY(ly1)}" x2="${toSX(lx2)}" y2="${toSY(ly2)}" stroke="${color}" stroke-width="2.5" stroke-opacity="0.8"/>`;
+
+      /* Radius to contact point (perpendicular) */
+      s += `<line x1="${scx}" y1="${scy}" x2="${toSX(t.x1)}" y2="${toSY(t.y1)}" stroke="#ccc" stroke-width="1.5" stroke-dasharray="5 3"/>`;
+
+      /* Right angle mark */
+      const cpx = toSX(t.x1), cpy = toSY(t.y1);
+      const dx = toSX(extX) - cpx, dy = toSY(extY) - cpy;
+      const dLen = Math.sqrt(dx*dx + dy*dy);
+      const rx = scx - cpx, ry = scy - cpy;
+      const rLen = Math.sqrt(rx*rx + ry*ry);
+      if (dLen > 1 && rLen > 1) {
+        const sz = 12;
+        const ux = dx/dLen*sz, uy = dy/dLen*sz;
+        const vx = rx/rLen*sz, vy = ry/rLen*sz;
+        s += `<polyline points="${cpx+ux},${cpy+uy} ${cpx+ux+vx},${cpy+uy+vy} ${cpx+vx},${cpy+vy}" fill="none" stroke="${color}" stroke-width="1.5"/>`;
+      }
+
+      /* Contact point - pulsing */
+      const pulseR = 5 + 2 * Math.sin(animT * 2 + idx * Math.PI);
+      s += `<circle cx="${cpx}" cy="${cpy}" r="${pulseR}" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+
+      /* Label */
+      const lbl = `(${Math.round(t.x1*10)/10}, ${Math.round(t.y1*10)/10})`;
+      const offsetX = t.x1 >= extX ? -10 : 10;
+      const anchor = t.x1 >= extX ? 'end' : 'start';
+      s += `<text x="${cpx+offsetX}" y="${cpy - 14}" font-size="12" font-weight="600" fill="${color}" text-anchor="${anchor}">${lbl}</text>`;
+    });
+
+    /* External point */
+    const sex = toSX(extX), sey = toSY(extY);
+    s += `<circle cx="${sex}" cy="${sey}" r="8" fill="var(--c-a)" stroke="#fff" stroke-width="2" style="cursor:grab"/>`;
+    s += `<text x="${sex+14}" y="${sey-12}" font-size="13" font-weight="700" fill="var(--c-a)">(${Math.round(extX*10)/10}, ${Math.round(extY*10)/10})</text>`;
+
+    svg.innerHTML = s;
+    updateCalc(tangents);
+  }
+
+  function updateCalc(tangents) {
+    const el = document.getElementById('live-calc');
+    if (!tangents) tangents = computeTangents(extX, extY);
+    if (tangents.length === 0) {
+      el.innerHTML = '<span style="color:var(--muted)">点が円の外部にあるときのみ接線が存在します</span>';
+      return;
+    }
+    let html = '';
+    tangents.forEach((t, i) => {
+      const a = Math.round(t.x1 * 100) / 100;
+      const b = Math.round(t.y1 * 100) / 100;
+      // Line: a*x + b*y = R²
+      const color = i === 0 ? 'var(--c-tan1)' : 'var(--c-tan2)';
+      let lineStr;
+      // Format nicely
+      const aStr = Math.abs(a) < 0.01 ? '' : (Math.abs(a-1) < 0.01 ? 'x' : (Math.abs(a+1) < 0.01 ? '-x' : `${a}x`));
+      const bAbs = Math.abs(b);
+      const bStr = bAbs < 0.01 ? '' : (Math.abs(bAbs-1) < 0.01 ? 'y' : `${bAbs}y`);
+      const bSign = b >= 0 ? '+' : '-';
+
+      if (aStr === '' && bStr !== '') lineStr = `${b > 0 ? '' : '-'}${bStr} = ${R2}`;
+      else if (bStr === '' && aStr !== '') lineStr = `${aStr} = ${R2}`;
+      else lineStr = `${aStr} ${bSign} ${bStr} = ${R2}`;
+
+      html += `<div style="margin:${i>0?'.5rem 0 0':'0'}"><span style="color:${color};font-weight:600">接線${i+1}：</span>${T(lineStr)}</div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  /* Animation */
+  function animate() {
+    animT += 0.02;
+    drawSVG();
+    animFrame = requestAnimationFrame(animate);
+  }
+
+  /* Drag */
+  let dragging = false;
+  function ptrDown(e) {
+    const svg = document.getElementById('plane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    const sx = (cx - rect.left) * scale, sy = (cy - rect.top) * scale;
+    const sex = toSX(extX), sey = toSY(extY);
+    if (Math.sqrt((sx-sex)**2 + (sy-sey)**2) < 35) {
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+  function ptrMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const svg = document.getElementById('plane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    const sx = (cx - rect.left) * scale, sy = (cy - rect.top) * scale;
+    const mx = toMX(sx), my = toMY(sy);
+    // Snap to 0.5 grid
+    const snappedX = Math.round(mx * 2) / 2;
+    const snappedY = Math.round(my * 2) / 2;
+    // Ensure outside circle
+    if (snappedX*snappedX + snappedY*snappedY > R2 + 0.1) {
+      extX = Math.max(GRID_MIN+1, Math.min(GRID_MAX-1, snappedX));
+      extY = Math.max(GRID_MIN+1, Math.min(GRID_MAX-1, snappedY));
+    }
+  }
+  function ptrUp() { dragging = false; }
+
+  /* Walkthrough */
+  const steps = [
+    { title: "設定", tex: "\\text{円 } x^2+y^2=25 \\text{ の外部の点 }(7,1)\\text{ から接線を引く}" },
+    { title: "接点を設定", tex: "\\text{接点を }(x_1, y_1) \\text{ とおく。接線の方程式は } x_1 x + y_1 y = 25" },
+    { title: "外部の点を通る条件", tex: "\\text{接線が }(7,1)\\text{ を通るので：} 7x_1 + y_1 = 25 \\quad \\cdots (1)" },
+    { title: "y₁をx₁で表す", tex: "(1)\\text{ より } y_1 = -7x_1 + 25 \\quad \\cdots (2)" },
+    { title: "円上の条件", tex: "\\text{接点は円上にあるので：} x_1^2 + y_1^2 = 25 \\quad \\cdots (3)" },
+    { title: "(2)を(3)に代入", tex: "x_1^2 + (-7x_1+25)^2 = 25" },
+    { title: "展開・整理", tex: "x_1^2 + 49x_1^2 - 350x_1 + 625 = 25 \\\\[4pt] 50x_1^2 - 350x_1 + 600 = 0 \\\\[4pt] x_1^2 - 7x_1 + 12 = 0" },
+    { title: "因数分解", tex: "(x_1 - 3)(x_1 - 4) = 0 \\quad \\Rightarrow \\quad x_1 = 3,\\; 4" },
+    { title: "接点の座標", tex: "x_1=3 \\Rightarrow y_1=4 \\quad \\text{接点 }(3,4) \\\\[4pt] x_1=4 \\Rightarrow y_1=-3 \\quad \\text{接点 }(4,-3)" },
+    { title: "接線の方程式", tex: "\\boxed{3x+4y=25} \\quad \\text{と} \\quad \\boxed{4x-3y=25}" }
+  ];
+  let curStep = 0;
+
+  function renderWalk() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const st = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}"><div class="label">${st.title}</div><div class="formula-line">${T(st.tex)}</div></div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    document.getElementById('f-circle').innerHTML = T("x^2+y^2=r^2");
+    document.getElementById('f-tangent-pt').innerHTML = T("(x_1, y_1)");
+    tex("x_1 x + y_1 y = r^2", document.getElementById('formula-tangent'), true);
+    document.getElementById('f-contact').innerHTML = T("(x_1, y_1)");
+    document.getElementById('note-method').innerHTML =
+      "接点 " + T("(x_1, y_1)") + " は円上にあるので " + T("x_1^2+y_1^2=r^2") +
+      " を満たし、接線 " + T("x_1 x + y_1 y = r^2") + " が外部の点を通るという2つの条件を連立して解きます。";
+    document.getElementById('f-ex-pt').innerHTML = T("(7, 1)");
+    document.getElementById('f-ex-circle').innerHTML = T("x^2+y^2=25");
+
+    drawSVG();
+    animate();
+
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    document.getElementById('prev').addEventListener('click', () => { if (curStep > 0) { curStep--; renderWalk(); } });
+    document.getElementById('next').addEventListener('click', () => { if (curStep < steps.length - 1) { curStep++; renderWalk(); } });
+    renderWalk();
+  }
+
+  if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

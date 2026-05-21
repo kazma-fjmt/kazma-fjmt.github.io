@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>座標平面上の内分点・外分点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745;
+    --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0;
+  }
+  @media (max-width: 600px) { .formula-grid { grid-template-columns: 1fr; } }
+  .formula-card {
+    border-radius: 10px; padding: .75rem 1rem; text-align: center; overflow-x: auto;
+  }
+  .formula-card.int { background: #e8f5e9; border: 1.5px solid var(--c-green); }
+  .formula-card.ext { background: #fff3e0; border: 1.5px solid var(--c-orange); }
+  .formula-card.mid { background: #eef4ff; border: 1.5px solid var(--accent); }
+  .formula-card .label { font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
+  .formula-card .katex { font-size: 1.05rem; }
+
+  .graph-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1rem; margin: 1rem 0; overflow-x: auto;
+  }
+  canvas { display: block; margin: 0 auto; touch-action: none; }
+
+  .ctrl-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: .6rem; margin: .75rem 0;
+  }
+  .ctrl-row label { font-weight: 600; font-size: .95rem; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 44px; border: none; border-radius: 8px;
+    font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; transition: opacity .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { opacity: .7; }
+  .btn-sm { min-width: 36px; height: 36px; font-size: .95rem; border-radius: 6px; }
+  .val-display {
+    min-width: 32px; text-align: center; font-size: 1.1rem; font-weight: 700;
+    color: var(--accent);
+  }
+
+  .toggle-row {
+    display: flex; gap: .5rem; justify-content: center; margin: .75rem 0;
+  }
+  .toggle-btn {
+    height: 40px; padding: 0 1rem; border-radius: 20px;
+    font-size: .9rem; font-weight: 600; cursor: pointer;
+    border: 1.5px solid #ccc; background: #fff; color: var(--fg);
+    -webkit-tap-highlight-color: transparent; transition: all .2s;
+  }
+  .toggle-btn.active-int { border-color: var(--c-green); background: #e8f5e9; color: var(--c-green); }
+  .toggle-btn.active-ext { border-color: var(--c-orange); background: #fff3e0; color: var(--c-orange); }
+  .toggle-btn.active-mid { border-color: var(--accent); background: #eef4ff; color: var(--accent); }
+  .toggle-btn.active-proj { border-color: var(--c-purple); background: #f3efff; color: var(--c-purple); }
+
+  .calc-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }
+  .calc-title { font-size: .9rem; color: var(--c-orange); font-weight: 700; margin-bottom: .5rem; }
+  .calc-step { margin: .4rem 0; overflow-x: auto; }
+  .calc-step .katex { font-size: 1.05rem; }
+
+  .info-box {
+    background: #eef4ff; border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: .75rem 1rem; margin: 1rem 0; font-size: .9rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>座標平面上の内分点・外分点</h1>
+  <p class="subtitle">2次元座標での内分・外分・中点の公式を視覚的に理解しよう</p>
+
+  <h2>公式</h2>
+  <div class="formula-grid">
+    <div class="formula-card int">
+      <div class="label" style="color:#28a745;">内分点（m:n）</div>
+      <div id="fInt"></div>
+    </div>
+    <div class="formula-card ext">
+      <div class="label" style="color:#e67e22;">外分点（m:n）</div>
+      <div id="fExt"></div>
+    </div>
+  </div>
+  <div class="formula-grid" style="grid-template-columns:1fr;">
+    <div class="formula-card mid">
+      <div class="label" style="color:var(--accent);">中点</div>
+      <div id="fMid"></div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>考え方：</strong><span id="f-xcoord"></span>座標・<span id="f-ycoord"></span>座標をそれぞれ数直線と考えて、別々に内分（外分）の公式を適用します。
+  </div>
+
+  <h2>座標平面で確かめよう</h2>
+
+  <div class="ctrl-row">
+    <label><span id="lbl-m"></span> :</label>
+    <button class="btn btn-sm" id="mDec">−</button>
+    <span class="val-display" id="mVal">2</span>
+    <button class="btn btn-sm" id="mInc">＋</button>
+    <span style="width:1rem"></span>
+    <label><span id="lbl-n"></span> :</label>
+    <button class="btn btn-sm" id="nDec">−</button>
+    <span class="val-display" id="nVal">1</span>
+    <button class="btn btn-sm" id="nInc">＋</button>
+  </div>
+
+  <div class="toggle-row">
+    <button class="toggle-btn active-int" id="togInt">内分点</button>
+    <button class="toggle-btn active-ext" id="togExt">外分点</button>
+    <button class="toggle-btn active-mid" id="togMid">中点</button>
+    <button class="toggle-btn active-proj" id="togProj">射影線</button>
+  </div>
+
+  <div class="graph-wrap">
+    <canvas id="graphCanvas" width="700" height="500"></canvas>
+  </div>
+
+  <div id="coordDisplay" style="text-align:center;margin:.5rem 0;font-size:.9rem;color:var(--muted);"></div>
+
+  <h2>例題の計算</h2>
+  <p><span id="exProblem"></span></p>
+
+  <div class="calc-box">
+    <div class="calc-title">内分点Pの計算（2:1）</div>
+    <div class="calc-step" id="calcP1"></div>
+    <div class="calc-step" id="calcP2"></div>
+    <div class="calc-step" id="calcP3"></div>
+  </div>
+
+  <div class="calc-box">
+    <div class="calc-title">外分点Qの計算（2:1）</div>
+    <div class="calc-step" id="calcQ1"></div>
+    <div class="calc-step" id="calcQ2"></div>
+    <div class="calc-step" id="calcQ3"></div>
+  </div>
+
+  <div class="calc-box">
+    <div class="calc-title">中点Mの計算</div>
+    <div class="calc-step" id="calcM1"></div>
+    <div class="calc-step" id="calcM2"></div>
+  </div>
+</main>
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+let m=2, n=1;
+let showInt=true, showExt=true, showMid=true, showProj=true;
+const Ax=-2, Ay=1, Bx=4, By=4;
+
+function intP(){ return {x:(n*Ax+m*Bx)/(m+n), y:(n*Ay+m*By)/(m+n)}; }
+function extP(){
+  if(m===n) return {x:Infinity, y:Infinity};
+  return {x:(-n*Ax+m*Bx)/(m-n), y:(-n*Ay+m*By)/(m-n)};
+}
+function midP(){ return {x:(Ax+Bx)/2, y:(Ay+By)/2}; }
+
+function drawGraph(){
+  const c=document.getElementById('graphCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(700,c.parentElement.clientWidth-20);
+  const ch=Math.min(500,cw*0.72);
+  c.style.width=cw+'px'; c.style.height=ch+'px';
+  c.width=cw*dpr; c.height=ch*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,ch);
+
+  // Determine view bounds
+  const pts=[{x:Ax,y:Ay},{x:Bx,y:By},intP(),midP()];
+  const ep=extP();
+  if(showExt && isFinite(ep.x)) pts.push(ep);
+
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  pts.forEach(p=>{
+    if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+    if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+  });
+  const padV=2;
+  minX=Math.min(minX-padV,-1); maxX=Math.max(maxX+padV,6);
+  minY=Math.min(minY-padV,-1); maxY=Math.max(maxY+padV,6);
+
+  // Ensure aspect ratio
+  const rangeX=maxX-minX, rangeY=maxY-minY;
+  const scale=Math.min((cw-80)/rangeX,(ch-80)/rangeY);
+  const ox=40+(cw-80-rangeX*scale)/2;
+  const oy=ch-40-(ch-80-rangeY*scale)/2;
+
+  const toSX=v=>ox+(v-minX)*scale;
+  const toSY=v=>oy-(v-minY)*scale;
+
+  // grid
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  for(let gx=Math.ceil(minX);gx<=Math.floor(maxX);gx++){
+    const sx=toSX(gx);
+    ctx.beginPath(); ctx.moveTo(sx,toSY(minY)); ctx.lineTo(sx,toSY(maxY)); ctx.stroke();
+  }
+  for(let gy=Math.ceil(minY);gy<=Math.floor(maxY);gy++){
+    const sy=toSY(gy);
+    ctx.beginPath(); ctx.moveTo(toSX(minX),sy); ctx.lineTo(toSX(maxX),sy); ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5;
+  if(minY<=0&&maxY>=0){
+    ctx.beginPath(); ctx.moveTo(toSX(minX),toSY(0)); ctx.lineTo(toSX(maxX),toSY(0)); ctx.stroke();
+  }
+  if(minX<=0&&maxX>=0){
+    ctx.beginPath(); ctx.moveTo(toSX(0),toSY(minY)); ctx.lineTo(toSX(0),toSY(maxY)); ctx.stroke();
+  }
+
+  // axis labels
+  ctx.fillStyle='#999'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  for(let gx=Math.ceil(minX);gx<=Math.floor(maxX);gx++){
+    if(gx===0) continue;
+    ctx.fillText(gx,toSX(gx),toSY(0)+15);
+  }
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(minY);gy<=Math.floor(maxY);gy++){
+    if(gy===0) continue;
+    ctx.fillText(gy,toSX(0)-6,toSY(gy)+4);
+  }
+  ctx.fillText('O',toSX(0)-6,toSY(0)+15);
+  ctx.textAlign='center';
+  ctx.fillText('x',toSX(maxX)-5,toSY(0)+15);
+  ctx.textAlign='right';
+  ctx.fillText('y',toSX(0)-6,toSY(maxY)+12);
+
+  // AB line
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(toSX(Ax),toSY(Ay)); ctx.lineTo(toSX(Bx),toSY(By)); ctx.stroke();
+
+  // extend line if external
+  if(showExt && isFinite(ep.x)){
+    ctx.setLineDash([5,4]); ctx.strokeStyle='#e67e22'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(toSX(Bx),toSY(By)); ctx.lineTo(toSX(ep.x),toSY(ep.y)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // projection lines
+  const ip=intP();
+  if(showProj){
+    ctx.setLineDash([3,3]); ctx.lineWidth=1;
+    // A projections
+    ctx.strokeStyle='rgba(217,83,79,0.4)';
+    ctx.beginPath(); ctx.moveTo(toSX(Ax),toSY(Ay)); ctx.lineTo(toSX(Ax),toSY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toSX(Ax),toSY(Ay)); ctx.lineTo(toSX(0),toSY(Ay)); ctx.stroke();
+    // B projections
+    ctx.strokeStyle='rgba(42,109,244,0.4)';
+    ctx.beginPath(); ctx.moveTo(toSX(Bx),toSY(By)); ctx.lineTo(toSX(Bx),toSY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toSX(Bx),toSY(By)); ctx.lineTo(toSX(0),toSY(By)); ctx.stroke();
+    // P projections
+    if(showInt){
+      ctx.strokeStyle='rgba(40,167,69,0.5)';
+      ctx.beginPath(); ctx.moveTo(toSX(ip.x),toSY(ip.y)); ctx.lineTo(toSX(ip.x),toSY(0)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(toSX(ip.x),toSY(ip.y)); ctx.lineTo(toSX(0),toSY(ip.y)); ctx.stroke();
+    }
+    if(showExt && isFinite(ep.x)){
+      ctx.strokeStyle='rgba(230,126,34,0.5)';
+      ctx.beginPath(); ctx.moveTo(toSX(ep.x),toSY(ep.y)); ctx.lineTo(toSX(ep.x),toSY(0)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(toSX(ep.x),toSY(ep.y)); ctx.lineTo(toSX(0),toSY(ep.y)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // dots
+  function dot(x,y,col,label,offX,offY){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(toSX(x),toSY(y),7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(toSX(x),toSY(y),7,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle=col; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,toSX(x)+(offX||0),toSY(y)+(offY||-14));
+  }
+
+  dot(Ax,Ay,'#d9534f',`A(${Ax},${Ay})`,-10,-14);
+  dot(Bx,By,'#2a6df4',`B(${Bx},${By})`,10,-14);
+
+  if(showInt){
+    const px=Math.round(ip.x*10)/10, py=Math.round(ip.y*10)/10;
+    dot(ip.x,ip.y,'#28a745',`P(${px},${py})`,0,20);
+  }
+  if(showExt && isFinite(ep.x)){
+    const qx=Math.round(ep.x*10)/10, qy=Math.round(ep.y*10)/10;
+    dot(ep.x,ep.y,'#e67e22',`Q(${qx},${qy})`,0,-14);
+  }
+  if(showMid){
+    const mp=midP();
+    dot(mp.x,mp.y,'#2a6df4',`M(${mp.x},${mp.y})`,0,20);
+  }
+}
+
+function updateDisplay(){
+  const ip=intP(), ep=extP(), mp=midP();
+  let txt=`A(${Ax},${Ay})　B(${Bx},${By})　比 ${m}:${n}`;
+  if(showInt) txt+=`　内分P(${Math.round(ip.x*10)/10}, ${Math.round(ip.y*10)/10})`;
+  if(showExt && isFinite(ep.x)) txt+=`　外分Q(${Math.round(ep.x*10)/10}, ${Math.round(ep.y*10)/10})`;
+  if(showMid) txt+=`　中点M(${mp.x}, ${mp.y})`;
+  document.getElementById('coordDisplay').textContent=txt;
+}
+
+function updateCalc(){
+  // Internal P with m=2, n=1 for example
+  tex(`x = \\frac{1 \\cdot(-2) + 2 \\cdot 4}{2+1} = \\frac{-2+8}{3} = 2`,document.getElementById('calcP1'),true);
+  tex(`y = \\frac{1 \\cdot 1 + 2 \\cdot 4}{2+1} = \\frac{1+8}{3} = 3`,document.getElementById('calcP2'),true);
+  tex(`\\therefore\\; \\mathrm{P}(2,\\,3)`,document.getElementById('calcP3'),true);
+
+  tex(`x = \\frac{-1 \\cdot(-2) + 2 \\cdot 4}{2-1} = \\frac{2+8}{1} = 10`,document.getElementById('calcQ1'),true);
+  tex(`y = \\frac{-1 \\cdot 1 + 2 \\cdot 4}{2-1} = \\frac{-1+8}{1} = 7`,document.getElementById('calcQ2'),true);
+  tex(`\\therefore\\; \\mathrm{Q}(10,\\,7)`,document.getElementById('calcQ3'),true);
+
+  tex(`x = \\frac{-2+4}{2} = 1,\\quad y = \\frac{1+4}{2} = \\frac{5}{2}`,document.getElementById('calcM1'),true);
+  tex(`\\therefore\\; \\mathrm{M}\\!\\left(1,\\,\\frac{5}{2}\\right)`,document.getElementById('calcM2'),true);
+}
+
+function updateAll(){
+  if(m===n){
+    if(m<9) n=m+1; else m=n-1;
+  }
+  document.getElementById('mVal').textContent=m;
+  document.getElementById('nVal').textContent=n;
+
+  tex(`\\left(\\frac{nx_1+mx_2}{m+n},\\;\\frac{ny_1+my_2}{m+n}\\right)`,document.getElementById('fInt'),true);
+  tex(`\\left(\\frac{-nx_1+mx_2}{m-n},\\;\\frac{-ny_1+my_2}{m-n}\\right)`,document.getElementById('fExt'),true);
+  tex(`\\left(\\frac{x_1+x_2}{2},\\;\\frac{y_1+y_2}{2}\\right)`,document.getElementById('fMid'),true);
+
+  document.getElementById('exProblem').innerHTML=
+    `${T('\\mathrm{A}(-2,1)')}, ${T('\\mathrm{B}(4,4)')} を ${T('2:1')} に内分する点P、外分する点Q、および中点Mを求める。`;
+
+  drawGraph();
+  updateDisplay();
+  updateCalc();
+}
+
+function init(){
+  tex('m', document.getElementById('lbl-m'));
+  tex('n', document.getElementById('lbl-n'));
+  document.getElementById('f-xcoord').innerHTML = T('x');
+  document.getElementById('f-ycoord').innerHTML = T('y');
+  document.getElementById('mDec').addEventListener('click',()=>{if(m>1){m--;updateAll();}});
+  document.getElementById('mInc').addEventListener('click',()=>{if(m<9){m++;updateAll();}});
+  document.getElementById('nDec').addEventListener('click',()=>{if(n>1){n--;updateAll();}});
+  document.getElementById('nInc').addEventListener('click',()=>{if(n<9){n++;updateAll();}});
+
+  function toggleBtn(id,prop,cls){
+    document.getElementById(id).addEventListener('click',function(){
+      if(prop==='showInt') showInt=!showInt;
+      if(prop==='showExt') showExt=!showExt;
+      if(prop==='showMid') showMid=!showMid;
+      if(prop==='showProj') showProj=!showProj;
+      const active=prop==='showInt'?showInt:prop==='showExt'?showExt:prop==='showMid'?showMid:showProj;
+      if(active) this.classList.add(cls); else this.classList.remove(cls);
+      drawGraph(); updateDisplay();
+    });
+  }
+  toggleBtn('togInt','showInt','active-int');
+  toggleBtn('togExt','showExt','active-ext');
+  toggleBtn('togMid','showMid','active-mid');
+  toggleBtn('togProj','showProj','active-proj');
+
+  updateAll();
+  window.addEventListener('resize',drawGraph);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

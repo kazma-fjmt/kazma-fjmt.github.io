@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>2つの円の交点を通る円</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-a: #d9534f; --c-b: #2a6df4; --c-k: #8e44ad; --c-pt: #27ae60; --c-line: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .slider-row {
+    display: flex; align-items: center; gap: .75rem;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0;
+  }
+  .slider-row label { font-weight: 600; min-width: 2.5rem; font-size: .95rem; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .val { min-width: 3.5rem; text-align: right; font-weight: 600; color: var(--c-k); font-size: .95rem; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: .5rem 0; font-size: .85rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; }
+  .legend-swatch { width: 16px; height: 4px; border-radius: 2px; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.15rem; }
+  .step.current .formula-line .katex { font-size: 1.3rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>2つの円の交点を通る円</h1>
+  <p class="subtitle">パラメータ <span id="sub-k"></span> を使って、2つの円の交点を通る図形の族を表す方法を学びましょう。</p>
+
+  <h2>交点を通る円の族</h2>
+  <p>2つの円 <span id="f-c1-label"></span> と <span id="f-c2-label"></span> が2点で交わるとき、</p>
+  <div class="formula-box" id="formula-family"></div>
+  <p>は、<span id="f-k-cond"></span> のとき<strong>交点を通る円</strong>を、<span id="f-k-line"></span> のとき<strong>交点を通る直線（共通弦）</strong>を表します。</p>
+  <div class="note" id="note-exclude"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>スライダーで <span id="f-k-slider-label"></span> の値を変えると、交点を通るさまざまな円（または直線）が表示されます。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="plane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-a)"></div>C₁</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-b)"></div>C₂</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-k)"></div>k による円/直線</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--c-pt);height:8px;width:8px;border-radius:50%"></div>交点</div>
+  </div>
+
+  <div class="slider-row">
+    <label style="color:var(--c-k)"><span id="lbl-k"></span></label>
+    <input type="range" id="slider-k" min="-5" max="5" step="0.1" value="0">
+    <span class="val" id="val-k">0</span>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題6の解法</h2>
+  <p><span id="f-ex-c1"></span> と <span id="f-ex-c2"></span> の2つの交点と原点を通る円の方程式を求めます。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+  function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+  function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+  /*
+    C1: x²+y²-10=0  (center 0,0, r=√10)
+    C2: x²+y²-12x+6y+20=0 (center 6,-3, r=5)
+    Intersection: (1,-3) and (3,1)
+    Family: k(x²+y²-10) + (x²+y²-12x+6y+20) = 0
+    => (k+1)x² + (k+1)y² - 12x + 6y + (-10k+20) = 0
+    k=-1 => line: -12x+6y+30=0 => 2x-y-5=0
+    k≠-1 => circle: x² + y² - 12/(k+1) x + 6/(k+1) y + (-10k+20)/(k+1) = 0
+  */
+
+  let kVal = 0;
+  const GRID_MIN = -6, GRID_MAX = 10;
+  const SVG_SIZE = 600, PAD = 40;
+  const usable = SVG_SIZE - 2 * PAD;
+
+  /* Fixed intersection points */
+  const ip1 = { x: 1, y: -3 }, ip2 = { x: 3, y: 1 };
+
+  function toSX(v){ return PAD + (v - GRID_MIN) / (GRID_MAX - GRID_MIN) * usable; }
+  function toSY(v){ return PAD + (GRID_MAX - v) / (GRID_MAX - GRID_MIN) * usable; }
+
+  /* Get family circle/line for given k */
+  function getFamily(k) {
+    // (k+1)x² + (k+1)y² - 12x + 6y + (-10k+20) = 0
+    const kp1 = k + 1;
+    if (Math.abs(kp1) < 0.05) {
+      // Line: -12x + 6y + (-10k+20) = 0
+      // At k=-1: -12x+6y+30=0 => 2x-y-5=0
+      const A = -12, B = 6, C = -(-10*k + 20);
+      return { type: 'line', A, B, C }; // Ax+By+C=0 => Ax+By = -C
+    }
+    // Circle: x² + y² + Dx + Ey + F = 0
+    const D = -12 / kp1;
+    const E = 6 / kp1;
+    const F = (-10*k + 20) / kp1;
+    const cx = -D / 2, cy = -E / 2;
+    const r2 = cx*cx + cy*cy - F;
+    if (r2 < 0.01) return { type: 'point', cx, cy };
+    return { type: 'circle', cx, cy, r: Math.sqrt(r2), D, E, F };
+  }
+
+  let animT = 0;
+  let animFrame = null;
+
+  function drawSVG() {
+    const svg = document.getElementById('plane');
+    let s = '';
+
+    /* Grid */
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      const x = toSX(i), y = toSY(i);
+      s += `<line x1="${x}" y1="${PAD}" x2="${x}" y2="${SVG_SIZE-PAD}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+      s += `<line x1="${PAD}" y1="${y}" x2="${SVG_SIZE-PAD}" y2="${y}" stroke="${i===0?'#999':'#e8e8e8'}" stroke-width="${i===0?1.5:1}"/>`;
+    }
+    s += `<foreignObject x="${Math.min(SVG_SIZE-PAD+2,SVG_SIZE-26)}" y="${toSY(0)-14}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('x')}</div></foreignObject>`;
+    s += `<foreignObject x="${toSX(0)-12}" y="${Math.max(PAD-28,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;text-align:center">${T('y')}</div></foreignObject>`;
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      if (i === 0) continue;
+      s += `<text x="${toSX(i)}" y="${toSY(0)+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+      s += `<text x="${toSX(0)-10}" y="${toSY(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+    }
+    s += `<text x="${toSX(0)-10}" y="${toSY(0)+18}" text-anchor="end" font-size="11" fill="#aaa">O</text>`;
+
+    /* C1: x²+y²=10 */
+    const r1 = Math.sqrt(10);
+    const sr1 = r1 / (GRID_MAX - GRID_MIN) * usable;
+    s += `<circle cx="${toSX(0)}" cy="${toSY(0)}" r="${sr1}" fill="none" stroke="var(--c-a)" stroke-width="2" stroke-opacity="0.5"/>`;
+    s += `<text x="${toSX(0)-sr1-5}" y="${toSY(0)-8}" font-size="12" font-weight="600" fill="var(--c-a)" text-anchor="end">C₁</text>`;
+
+    /* C2: center (6,-3), r=5 */
+    const sr2 = 5 / (GRID_MAX - GRID_MIN) * usable;
+    s += `<circle cx="${toSX(6)}" cy="${toSY(-3)}" r="${sr2}" fill="none" stroke="var(--c-b)" stroke-width="2" stroke-opacity="0.5"/>`;
+    s += `<text x="${toSX(6)+sr2+5}" y="${toSY(-3)-8}" font-size="12" font-weight="600" fill="var(--c-b)">C₂</text>`;
+
+    /* Family curve */
+    const fam = getFamily(kVal);
+    if (fam.type === 'line') {
+      // Ax + By + C = 0 => y = -(A/B)x - C/B (if B≠0)
+      let lx1, ly1, lx2, ly2;
+      if (Math.abs(fam.B) > 0.01) {
+        lx1 = GRID_MIN; ly1 = -(fam.A * lx1 + fam.C) / fam.B;
+        lx2 = GRID_MAX; ly2 = -(fam.A * lx2 + fam.C) / fam.B;
+      } else {
+        const xv = -fam.C / fam.A;
+        lx1 = xv; ly1 = GRID_MIN;
+        lx2 = xv; ly2 = GRID_MAX;
+      }
+      s += `<line x1="${toSX(lx1)}" y1="${toSY(ly1)}" x2="${toSX(lx2)}" y2="${toSY(ly2)}" stroke="var(--c-line)" stroke-width="3" stroke-opacity="0.8"/>`;
+      s += `<foreignObject x="${toSX((lx1+lx2)/2)+15}" y="${toSY((ly1+ly2)/2)-30}" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-line);font-weight:600;white-space:nowrap">共通弦 (${T('k')}=−1)</div></foreignObject>`;
+    } else if (fam.type === 'circle') {
+      const sr = fam.r / (GRID_MAX - GRID_MIN) * usable;
+      // Clamp to prevent huge circles from breaking SVG
+      if (sr < 2000) {
+        s += `<circle cx="${toSX(fam.cx)}" cy="${toSY(fam.cy)}" r="${sr}" fill="rgba(142,68,173,0.06)" stroke="var(--c-k)" stroke-width="2.5"/>`;
+        // Center marker
+        if (fam.cx >= GRID_MIN && fam.cx <= GRID_MAX && fam.cy >= GRID_MIN && fam.cy <= GRID_MAX) {
+          s += `<circle cx="${toSX(fam.cx)}" cy="${toSY(fam.cy)}" r="4" fill="var(--c-k)" stroke="#fff" stroke-width="1.5"/>`;
+        }
+      }
+    }
+
+    /* Intersection points - always shown */
+    const pulseR = 6 + 2.5 * Math.sin(animT * 3);
+    s += `<circle cx="${toSX(ip1.x)}" cy="${toSY(ip1.y)}" r="${pulseR}" fill="var(--c-pt)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${toSX(ip1.x)-14}" y="${toSY(ip1.y)+20}" font-size="11" font-weight="600" fill="var(--c-pt)" text-anchor="end">(1, −3)</text>`;
+    const pulseR2 = 6 + 2.5 * Math.sin(animT * 3 + Math.PI);
+    s += `<circle cx="${toSX(ip2.x)}" cy="${toSY(ip2.y)}" r="${pulseR2}" fill="var(--c-pt)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${toSX(ip2.x)+14}" y="${toSY(ip2.y)-12}" font-size="11" font-weight="600" fill="var(--c-pt)">(3, 1)</text>`;
+
+    svg.innerHTML = s;
+    updateCalc(fam);
+  }
+
+  function updateCalc(fam) {
+    const el = document.getElementById('live-calc');
+    const k = kVal;
+    const kStr = Math.round(k * 10) / 10;
+
+    let html = `<div style="margin-bottom:.5rem">${T(`k = ${kStr}`)}</div>`;
+
+    if (fam.type === 'line') {
+      html += `<div style="color:var(--c-line);font-weight:600">直線（共通弦）：${T("2x - y - 5 = 0")}</div>`;
+    } else if (fam.type === 'circle') {
+      const cx = Math.round(fam.cx * 100) / 100;
+      const cy = Math.round(fam.cy * 100) / 100;
+      const r = Math.round(fam.r * 100) / 100;
+      html += `<div style="color:var(--c-k);font-weight:600">円：${T(`\\text{中心 }(${cx},\\; ${cy}),\\; \\text{半径 } ${r}`)}</div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function animate() {
+    animT += 0.02;
+    drawSVG();
+    animFrame = requestAnimationFrame(animate);
+  }
+
+  /* Walkthrough for Example 6 */
+  const steps = [
+    { title: "2つの円", tex: "C_1: x^2+y^2-1=0 \\quad C_2: x^2+y^2-4x-4y+3=0" },
+    { title: "交点を通る円の族", tex: "k(x^2+y^2-1)+(x^2+y^2-4x-4y+3)=0 \\quad \\cdots (*)" },
+    { title: "原点を通る条件", tex: "x=0, \\; y=0 \\text{ を代入：} \\quad k(0+0-1)+(0+0-0-0+3)=0" },
+    { title: "kを求める", tex: "-k + 3 = 0 \\quad \\Rightarrow \\quad k = 3" },
+    { title: "k=3を(*)に代入", tex: "3(x^2+y^2-1)+(x^2+y^2-4x-4y+3)=0" },
+    { title: "展開・整理", tex: "3x^2+3y^2-3+x^2+y^2-4x-4y+3=0 \\\\[4pt] 4x^2+4y^2-4x-4y=0" },
+    { title: "4で割る", tex: "x^2+y^2-x-y=0" },
+    { title: "答え", tex: "\\boxed{x^2+y^2-x-y=0} \\quad \\left(\\text{中心 }\\left(\\tfrac{1}{2},\\tfrac{1}{2}\\right),\\; \\text{半径 }\\tfrac{\\sqrt{2}}{2}\\right)" }
+  ];
+  let curStep = 0;
+
+  function renderWalk() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const st = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}"><div class="label">${st.title}</div><div class="formula-line">${T(st.tex)}</div></div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    document.getElementById('f-c1-label').innerHTML = T("C_1: f(x,y)=0");
+    document.getElementById('f-c2-label').innerHTML = T("C_2: g(x,y)=0");
+    tex("k \\cdot f(x,y) + g(x,y) = 0", document.getElementById('formula-family'), true);
+    document.getElementById('f-k-cond').innerHTML = T("k \\neq -1");
+    document.getElementById('f-k-line').innerHTML = T("k = -1");
+    document.getElementById('note-exclude').innerHTML =
+      "この式は " + T("C_2") + " を含みますが（" + T("k=0") + " のとき）、" + T("C_1") + " 自体は表せません。" + T("C_1") + " も交点を通る円の1つですが、この族には含まれないことに注意しましょう。";
+    document.getElementById('f-k-slider-label').innerHTML = T("k");
+    document.getElementById('lbl-k').innerHTML = T("k");
+    document.getElementById('sub-k').innerHTML = T("k");
+    document.getElementById('f-ex-c1').innerHTML = T("x^2+y^2-1=0");
+    document.getElementById('f-ex-c2').innerHTML = T("x^2+y^2-4x-4y+3=0");
+
+    const sK = document.getElementById('slider-k');
+    sK.addEventListener('input', () => {
+      kVal = parseFloat(sK.value);
+      document.getElementById('val-k').textContent = Math.round(kVal * 10) / 10;
+    });
+
+    drawSVG();
+    animate();
+
+    document.getElementById('prev').addEventListener('click', () => { if (curStep > 0) { curStep--; renderWalk(); } });
+    document.getElementById('next').addEventListener('click', () => { if (curStep < steps.length - 1) { curStep++; renderWalk(); } });
+    renderWalk();
+  }
+
+  if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

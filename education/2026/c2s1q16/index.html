@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>直線の切片形</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.35rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .slider-group {
+    display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0;
+    align-items: center;
+  }
+  .slider-item {
+    flex: 1; min-width: 200px;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1rem;
+  }
+  .slider-item label { font-weight: 600; font-size: .95rem; }
+  .slider-item input[type="range"] { width: 100%; margin: .25rem 0; }
+  .slider-val { font-size: 1.1rem; font-weight: 600; text-align: center; }
+
+  .eq-display {
+    background: #eef4ff; border: 2px solid var(--accent); border-radius: 12px;
+    padding: 1rem; text-align: center; margin: 1rem 0;
+  }
+  .eq-display .katex { font-size: 1.4rem; }
+
+  .derivation {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0;
+  }
+  .deriv-step {
+    padding: .6rem .25rem; border-bottom: 1px dashed #eee;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .deriv-step:last-child { border-bottom: none; }
+  .deriv-step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: .6rem 1.5rem;
+    font-size: .95rem; cursor: pointer; margin: .5rem .25rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .step-btn:active { transform: scale(.97); }
+  .step-btn:disabled { background: #ccc; }
+
+  .intercept-label {
+    font-size: .85rem; padding: 2px 8px; border-radius: 6px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>直線の切片形</h1>
+  <p class="subtitle">x切片とy切片で表す直線の方程式</p>
+
+  <h2>切片形とは</h2>
+  <p id="desc1"></p>
+  <div class="formula-box" id="formula-intercept"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>スライダーで <span style="color:var(--c-red);font-weight:600;"><span id="inl-x"></span>切片 <span id="inl-a"></span></span> と <span style="color:var(--c-blue);font-weight:600;"><span id="inl-y"></span>切片 <span id="inl-b"></span></span> を調整してみましょう。</p>
+
+  <div class="slider-group">
+    <div class="slider-item">
+      <label style="color:var(--c-red);"><span id="lbl-x-int"></span> 切片 <span id="lbl-a"></span></label>
+      <input type="range" id="slider-a" min="-5" max="5" step="0.5" value="3">
+      <div class="slider-val" id="val-a" style="color:var(--c-red);"></div>
+    </div>
+    <div class="slider-item">
+      <label style="color:var(--c-blue);"><span id="lbl-y-int"></span> 切片 <span id="lbl-b"></span></label>
+      <input type="range" id="slider-b" min="-5" max="5" step="0.5" value="4">
+      <div class="slider-val" id="val-b" style="color:var(--c-blue);"></div>
+    </div>
+  </div>
+
+  <div class="eq-display" id="eq-live"></div>
+
+  <div class="svg-container">
+    <svg id="graph" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <h2>導出のステップ</h2>
+  <p>2点 <span id="desc-pts"></span> を通る直線の方程式を求めます。</p>
+  <div class="derivation" id="derivation"></div>
+  <div style="text-align:center;">
+    <button class="step-btn" id="btn-prev" disabled>← 戻る</button>
+    <button class="step-btn" id="btn-next">次のステップ →</button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  tex('\\dfrac{x}{a}+\\dfrac{y}{b}=1 \\quad (a \\neq 0,\\; b \\neq 0)', document.getElementById('formula-intercept'), true);
+  document.getElementById('desc1').innerHTML =
+    '直線が '+T('x')+' 軸と点 '+T('(a,\\,0)')+'、'+T('y')+' 軸と点 '+T('(0,\\,b)')+' で交わるとき、'+
+    'その直線の方程式は <strong>切片形</strong> で表せます。ただし '+T('a \\neq 0')+', '+T('b \\neq 0')+' です。';
+
+  document.getElementById('lbl-x-int').innerHTML = T('x');
+  document.getElementById('lbl-a').innerHTML = T('a');
+  document.getElementById('lbl-y-int').innerHTML = T('y');
+  document.getElementById('lbl-b').innerHTML = T('b');
+  document.getElementById('inl-x').innerHTML = T('x');
+  document.getElementById('inl-a').innerHTML = T('a');
+  document.getElementById('inl-y').innerHTML = T('y');
+  document.getElementById('inl-b').innerHTML = T('b');
+
+  const slA = document.getElementById('slider-a');
+  const slB = document.getElementById('slider-b');
+  const valA = document.getElementById('val-a');
+  const valB = document.getElementById('val-b');
+  const eqLive = document.getElementById('eq-live');
+  const svg = document.getElementById('graph');
+
+  let currentStep = -1;
+  const derivSteps = [];
+
+  function frac(n){
+    if(n===Math.round(n)) return String(n);
+    const sign = n<0?'-':'';
+    const abs = Math.abs(n);
+    for(let d=2;d<=10;d++){
+      const num = abs*d;
+      if(Math.abs(num-Math.round(num))<1e-9) return sign+'\\tfrac{'+Math.round(num)+'}{'+d+'}';
+    }
+    return String(Math.round(n*100)/100);
+  }
+
+  function buildDerivation(a,b){
+    currentStep = -1;
+    const cont = document.getElementById('derivation');
+    const steps = [];
+    steps.push('2点 '+T('('+frac(a)+',\\,0)')+' と '+T('(0,\\,'+frac(b)+')')+' を通る直線を求めます。');
+    steps.push('傾きは '+T('\\dfrac{'+frac(b)+'-0}{0-('+frac(a)+')} = \\dfrac{'+frac(b)+'}{'+frac(-a)+'}'));
+    steps.push('点 '+T('('+frac(a)+',\\,0)')+' を通るので：'+T('y - 0 = \\dfrac{'+frac(b)+'}{'+frac(-a)+'}(x - ('+frac(a)+'))'));
+    steps.push('両辺を整理して：'+T('y = \\dfrac{'+frac(b)+'}{'+frac(-a)+'}\\,x + '+frac(b)));
+    steps.push('両辺を '+T(frac(b))+' で割ると：'+T('\\dfrac{y}{'+frac(b)+'} = \\dfrac{-1}{'+frac(a)+'}\\,x + 1'));
+    steps.push(T('\\dfrac{x}{'+frac(a)+'} + \\dfrac{y}{'+frac(b)+'} = 1')+'　←　<strong>切片形</strong>の完成！');
+    cont.innerHTML = '';
+    derivSteps.length = 0;
+    steps.forEach((s,i)=>{
+      const div = document.createElement('div');
+      div.className = 'deriv-step';
+      div.innerHTML = s;
+      cont.appendChild(div);
+      derivSteps.push(div);
+    });
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = false;
+  }
+
+  function showStep(dir){
+    const next = currentStep + dir;
+    if(next<0||next>=derivSteps.length) return;
+    currentStep = next;
+    derivSteps.forEach((el,i)=>{
+      if(i<=currentStep) el.classList.add('visible');
+      else el.classList.remove('visible');
+    });
+    document.getElementById('btn-prev').disabled = currentStep<=0;
+    document.getElementById('btn-next').disabled = currentStep>=derivSteps.length-1;
+  }
+
+  document.getElementById('btn-next').addEventListener('click',()=>showStep(1));
+  document.getElementById('btn-prev').addEventListener('click',()=>showStep(-1));
+
+  function update(){
+    let a = parseFloat(slA.value);
+    let b = parseFloat(slB.value);
+    if(a===0) a=0.5;
+    if(b===0) b=0.5;
+    valA.innerHTML = T('a') + ' = ' + a;
+    valB.innerHTML = T('b') + ' = ' + b;
+
+    tex('\\dfrac{x}{'+frac(a)+'} + \\dfrac{y}{'+frac(b)+'} = 1', eqLive, true);
+
+    document.getElementById('desc-pts').innerHTML = T('('+frac(a)+',\\,0)')+' と '+T('(0,\\,'+frac(b)+')');
+
+    drawGraph(a,b);
+    buildDerivation(a,b);
+  }
+
+  function drawGraph(a,b){
+    const W=500, H=500;
+    const cx=W/2, cy=H/2;
+    const scale=40;
+    function tx(x){return cx+x*scale;}
+    function ty(y){return cy-y*scale;}
+
+    let html = '';
+    // grid
+    for(let i=-6;i<=6;i++){
+      const gx=tx(i), gy=ty(i);
+      html+='<line x1="'+gx+'" y1="0" x2="'+gx+'" y2="'+H+'" stroke="#eee" stroke-width="1"/>';
+      html+='<line x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'" stroke="#eee" stroke-width="1"/>';
+    }
+    // axes
+    html+='<line x1="0" y1="'+cy+'" x2="'+W+'" y2="'+cy+'" stroke="#999" stroke-width="1.5"/>';
+    html+='<line x1="'+cx+'" y1="0" x2="'+cx+'" y2="'+H+'" stroke="#999" stroke-width="1.5"/>';
+    // axis labels
+    for(let i=-6;i<=6;i++){
+      if(i===0) continue;
+      html+='<text x="'+(tx(i))+'" y="'+(cy+16)+'" text-anchor="middle" font-size="11" fill="#999">'+i+'</text>';
+      html+='<text x="'+(cx-12)+'" y="'+(ty(i)+4)+'" text-anchor="end" font-size="11" fill="#999">'+i+'</text>';
+    }
+    html+='<foreignObject x="'+(Math.min(W-8,W-26))+'" y="'+(cy-22)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('x')+'</div></foreignObject>';
+    html+='<foreignObject x="'+(cx+6)+'" y="'+Math.max(2,2)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('y')+'</div></foreignObject>';
+    html+='<text x="'+(cx-12)+'" y="'+(cy+16)+'" font-size="11" fill="#999">O</text>';
+
+    // line: x/a + y/b = 1 → y = b(1 - x/a)
+    // find intersections with view boundary
+    const pts = [];
+    for(let sx=-7;sx<=7;sx+=0.05){
+      const sy = b*(1 - sx/a);
+      if(sy>=-7 && sy<=7) pts.push([tx(sx), ty(sy)]);
+    }
+    if(pts.length>1){
+      let d='M'+pts[0][0]+','+pts[0][1];
+      for(let i=1;i<pts.length;i++) d+=' L'+pts[i][0]+','+pts[i][1];
+      html+='<path d="'+d+'" stroke="var(--c-green)" stroke-width="2.5" fill="none"/>';
+    }
+
+    // intercept points
+    const ax=tx(a), ay=ty(0);
+    const bx=tx(0), by=ty(b);
+
+    // dashed lines from intercepts to axes
+    html+='<line x1="'+ax+'" y1="'+ay+'" x2="'+ax+'" y2="'+cy+'" stroke="var(--c-red)" stroke-width="1" stroke-dasharray="4,3"/>';
+    html+='<line x1="'+bx+'" y1="'+by+'" x2="'+cx+'" y2="'+by+'" stroke="var(--c-blue)" stroke-width="1" stroke-dasharray="4,3"/>';
+
+    // points
+    html+='<circle cx="'+ax+'" cy="'+ay+'" r="7" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>';
+    html+='<circle cx="'+bx+'" cy="'+by+'" r="7" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>';
+
+    // labels
+    html+='<text x="'+(ax+(a>0?8:-8))+'" y="'+(ay+(b>0?-10:18))+'" font-size="14" font-weight="600" fill="var(--c-red)" text-anchor="'+(a>0?'start':'end')+'">('+a+', 0)</text>';
+    html+='<text x="'+(bx+(a>0?10:-10))+'" y="'+(by+5)+'" font-size="14" font-weight="600" fill="var(--c-blue)" text-anchor="start">(0, '+b+')</text>';
+
+    // x-intercept / y-intercept labels on axis
+    html+='<foreignObject x="'+(ax-60)+'" y="'+(cy+18)+'" width="120" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-red);font-weight:600;text-align:center;white-space:nowrap">'+T('x')+'切片 '+T('= '+a)+'</div></foreignObject>';
+    html+='<foreignObject x="'+(cx-150)+'" y="'+(by-8)+'" width="120" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-blue);font-weight:600;text-align:right;white-space:nowrap">'+T('y')+'切片 '+T('= '+b)+'</div></foreignObject>';
+
+    svg.innerHTML = html;
+  }
+
+  slA.addEventListener('input', update);
+  slB.addEventListener('input', update);
+  update();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>2直線の平行条件・垂直条件</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .cond-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0;
+  }
+  @media (max-width: 550px){ .cond-grid { grid-template-columns: 1fr; } }
+  .cond-card {
+    background: #fff; border: 2px solid #e3e3e3; border-radius: 12px;
+    padding: 1rem; text-align: center;
+  }
+  .cond-card.active-para { border-color: var(--c-red); background: #fef2f2; }
+  .cond-card.active-perp { border-color: var(--c-blue); background: #eef4ff; }
+  .cond-card h3 { margin: 0 0 .5rem; font-size: 1rem; }
+  .cond-card .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .slider-group {
+    display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; align-items: center;
+  }
+  .slider-item {
+    flex: 1; min-width: 200px;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1rem;
+  }
+  .slider-item label { font-weight: 600; font-size: .95rem; }
+  .slider-item input[type="range"] { width: 100%; margin: .25rem 0; }
+  .slider-val { font-size: 1rem; font-weight: 600; text-align: center; }
+
+  .status-box {
+    text-align: center; padding: .75rem; border-radius: 10px; margin: .75rem 0;
+    font-size: 1.05rem; font-weight: 600; transition: all .3s ease;
+  }
+  .status-parallel { background: #fef2f2; border: 2px solid var(--c-red); color: var(--c-red); }
+  .status-perp { background: #eef4ff; border: 2px solid var(--c-blue); color: var(--c-blue); }
+  .status-neither { background: #f8f8f8; border: 2px solid #ccc; color: var(--muted); }
+
+  .product-display {
+    text-align: center; margin: .5rem 0; font-size: 1.1rem;
+  }
+
+  .derivation {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0;
+  }
+  .deriv-step {
+    padding: .6rem .25rem; border-bottom: 1px dashed #eee;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .deriv-step:last-child { border-bottom: none; }
+  .deriv-step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: .6rem 1.5rem;
+    font-size: .95rem; cursor: pointer; margin: .5rem .25rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .step-btn:active { transform: scale(.97); }
+  .step-btn:disabled { background: #ccc; }
+
+  .right-angle {
+    fill: none; stroke: var(--c-green); stroke-width: 2;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>2直線の平行条件・垂直条件</h1>
+  <p class="subtitle">傾きから平行・垂直を判定する</p>
+
+  <h2>平行条件と垂直条件</h2>
+  <p id="desc1"></p>
+
+  <div class="cond-grid">
+    <div class="cond-card" id="card-para">
+      <h3 style="color:var(--c-red);">平行条件</h3>
+      <div id="formula-para"></div>
+    </div>
+    <div class="cond-card" id="card-perp">
+      <h3 style="color:var(--c-blue);">垂直条件</h3>
+      <div id="formula-perp"></div>
+    </div>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>2つの直線の傾きを変えて、平行・垂直の関係を観察しましょう。</p>
+
+  <div class="slider-group">
+    <div class="slider-item">
+      <label style="color:var(--c-red);">直線 l の傾き <span id="lbl-m"></span></label>
+      <input type="range" id="slider-m" min="-4" max="4" step="0.1" value="1">
+      <div class="slider-val" id="val-m" style="color:var(--c-red);"></div>
+    </div>
+    <div class="slider-item">
+      <label style="color:var(--c-blue);">直線 l' の傾き <span id="lbl-m2"></span></label>
+      <input type="range" id="slider-m2" min="-4" max="4" step="0.1" value="-1">
+      <div class="slider-val" id="val-m2" style="color:var(--c-blue);"></div>
+    </div>
+  </div>
+
+  <div class="product-display" id="product-display"></div>
+  <div class="status-box status-neither" id="status-box">調整中…</div>
+
+  <div class="svg-container">
+    <svg id="graph" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <h2>垂直条件の導出</h2>
+  <p id="desc-perp"></p>
+
+  <div class="svg-container">
+    <svg id="proof-graph" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="derivation" id="derivation"></div>
+  <div style="text-align:center;">
+    <button class="step-btn" id="btn-prev" disabled>← 戻る</button>
+    <button class="step-btn" id="btn-next">次のステップ →</button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  // formulas
+  tex('m = m\'', document.getElementById('formula-para'), true);
+  tex('mm\' = -1', document.getElementById('formula-perp'), true);
+  document.getElementById('desc1').innerHTML =
+    '2直線 '+T('l: y=mx+n')+' と '+T("l': y=m'x+n'")+' について：';
+  document.getElementById('desc-perp').innerHTML =
+    '原点 O を通る傾き '+T('m')+' の直線上に点 '+T('\\mathrm{P}(1,m)')+' を、'+
+    '傾き '+T("m'")+' の直線上に点 '+T("\\mathrm{Q}(1,m')")+' をとります。'+
+    T('\\mathrm{OP} \\perp \\mathrm{OQ}')+' のとき、三平方の定理から垂直条件を導きます。';
+
+  document.getElementById('lbl-m').innerHTML = T('m');
+  document.getElementById('lbl-m2').innerHTML = T("m'");
+
+  const slM = document.getElementById('slider-m');
+  const slM2 = document.getElementById('slider-m2');
+
+  let currentStep = -1;
+  const derivSteps = [];
+
+  function buildDerivation(){
+    currentStep = -1;
+    const cont = document.getElementById('derivation');
+    const steps = [
+      '原点 O を通る2直線上に点 '+T('\\mathrm{P}(1,\\,m)')+'、'+T("\\mathrm{Q}(1,\\,m')")+' をとる。',
+      T('\\mathrm{OP} \\perp \\mathrm{OQ}')+' のとき、三平方の定理より '+T('\\mathrm{PQ}^2 = \\mathrm{OP}^2 + \\mathrm{OQ}^2'),
+      T("\\mathrm{PQ}^2 = (1-1)^2 + (m-m')^2 = (m-m')^2"),
+      T('\\mathrm{OP}^2 = 1^2 + m^2 = 1 + m^2'),
+      T("\\mathrm{OQ}^2 = 1^2 + m'^2 = 1 + m'^2"),
+      '代入すると：'+T("(m-m')^2 = (1+m^2)+(1+m'^2)"),
+      '展開：'+T("m^2 - 2mm' + m'^2 = 2 + m^2 + m'^2"),
+      '整理：'+T("-2mm' = 2")+' すなわち '+T("mm' = -1"),
+      '<strong>結論：</strong>2直線が垂直 ⟺ '+T("mm' = -1")
+    ];
+    cont.innerHTML = '';
+    derivSteps.length = 0;
+    steps.forEach(s=>{
+      const div = document.createElement('div');
+      div.className = 'deriv-step';
+      div.innerHTML = s;
+      cont.appendChild(div);
+      derivSteps.push(div);
+    });
+  }
+
+  function showStep(dir){
+    const next = currentStep + dir;
+    if(next<0||next>=derivSteps.length) return;
+    currentStep = next;
+    derivSteps.forEach((el,i)=>{
+      if(i<=currentStep) el.classList.add('visible');
+      else el.classList.remove('visible');
+    });
+    document.getElementById('btn-prev').disabled = currentStep<=0;
+    document.getElementById('btn-next').disabled = currentStep>=derivSteps.length-1;
+  }
+  document.getElementById('btn-next').addEventListener('click',()=>showStep(1));
+  document.getElementById('btn-prev').addEventListener('click',()=>showStep(-1));
+
+  function update(){
+    const m = parseFloat(slM.value);
+    const m2 = parseFloat(slM2.value);
+    document.getElementById('val-m').innerHTML = T('m') + ' = ' + m.toFixed(1);
+    document.getElementById('val-m2').innerHTML = T("m'") + ' = ' + m2.toFixed(1);
+
+    const prod = m*m2;
+    const prodEl = document.getElementById('product-display');
+    prodEl.innerHTML = T("mm' = "+m.toFixed(1)+"\\times"+(m2<0?"("+m2.toFixed(1)+")":m2.toFixed(1))+" = "+prod.toFixed(2));
+
+    const statusEl = document.getElementById('status-box');
+    const cardPara = document.getElementById('card-para');
+    const cardPerp = document.getElementById('card-perp');
+    cardPara.className = 'cond-card';
+    cardPerp.className = 'cond-card';
+
+    const isPara = Math.abs(m-m2)<0.05;
+    const isPerp = Math.abs(prod+1)<0.05;
+
+    if(isPara){
+      statusEl.className = 'status-box status-parallel';
+      statusEl.innerHTML = '✨ 平行！ ' + T("m = m'");
+      cardPara.className = 'cond-card active-para';
+    } else if(isPerp){
+      statusEl.className = 'status-box status-perp';
+      statusEl.innerHTML = '✨ 垂直！ ' + T("mm' = -1");
+      cardPerp.className = 'cond-card active-perp';
+    } else {
+      statusEl.className = 'status-box status-neither';
+      statusEl.textContent = '平行でも垂直でもない';
+    }
+
+    drawMain(m, m2, isPara, isPerp);
+    drawProof(m, m2);
+  }
+
+  function drawMain(m, m2, isPara, isPerp){
+    const W=500,H=500,cx=W/2,cy=H/2,sc=40;
+    function tx(x){return cx+x*sc;}
+    function ty(y){return cy-y*sc;}
+    let html='';
+    // grid
+    for(let i=-6;i<=6;i++){
+      html+='<line x1="'+tx(i)+'" y1="0" x2="'+tx(i)+'" y2="'+H+'" stroke="#eee" stroke-width="1"/>';
+      html+='<line x1="0" y1="'+ty(i)+'" x2="'+W+'" y2="'+ty(i)+'" stroke="#eee" stroke-width="1"/>';
+    }
+    html+='<line x1="0" y1="'+cy+'" x2="'+W+'" y2="'+cy+'" stroke="#999" stroke-width="1.5"/>';
+    html+='<line x1="'+cx+'" y1="0" x2="'+cx+'" y2="'+H+'" stroke="#999" stroke-width="1.5"/>';
+    html+='<foreignObject x="'+(Math.min(W-8,W-26))+'" y="'+(cy-22)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('x')+'</div></foreignObject>';
+    html+='<foreignObject x="'+(cx+6)+'" y="'+Math.max(2,2)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('y')+'</div></foreignObject>';
+    html+='<text x="'+(cx-12)+'" y="'+(cy+16)+'" font-size="11" fill="#999">O</text>';
+
+    // line l: y = mx (through origin for simplicity)
+    function drawLine(slope, color, label, yShift){
+      const pts=[];
+      for(let sx=-7;sx<=7;sx+=0.1){
+        const sy=slope*sx+yShift;
+        if(sy>=-7&&sy<=7) pts.push([tx(sx),ty(sy)]);
+      }
+      if(pts.length>1){
+        let d='M'+pts[0][0]+','+pts[0][1];
+        for(let i=1;i<pts.length;i++) d+=' L'+pts[i][0]+','+pts[i][1];
+        html+='<path d="'+d+'" stroke="'+color+'" stroke-width="2.5" fill="none"/>';
+      }
+      // label
+      const lx=3, ly=slope*lx+yShift;
+      if(ly>=-6&&ly<=6){
+        html+='<text x="'+(tx(lx)+8)+'" y="'+(ty(ly)-8)+'" font-size="14" font-weight="600" fill="'+color+'">'+label+'</text>';
+      }
+    }
+    drawLine(m, 'var(--c-red)', 'l', 1);
+    drawLine(m2, 'var(--c-blue)', "l'", -1);
+
+    // right angle indicator at intersection if perpendicular
+    if(Math.abs(m*m2+1)<0.05 && Math.abs(m-m2)>0.1){
+      // find intersection: mx+1 = m2*x-1 → x = -2/(m-m2)
+      const ix = -2/(m-m2);
+      const iy = m*ix+1;
+      const size = 0.4;
+      // perpendicular indicator using two direction vectors
+      const d1x=1/Math.sqrt(1+m*m), d1y=m/Math.sqrt(1+m*m);
+      const d2x=1/Math.sqrt(1+m2*m2), d2y=m2/Math.sqrt(1+m2*m2);
+      const p1x=ix+d1x*size, p1y=iy+d1y*size;
+      const p2x=ix+d2x*size, p2y=iy+d2y*size;
+      const p3x=ix+(d1x+d2x)*size, p3y=iy+(d1y+d2y)*size;
+      html+='<path d="M'+tx(p1x)+','+ty(p1y)+' L'+tx(p3x)+','+ty(p3y)+' L'+tx(p2x)+','+ty(p2y)+'" class="right-angle"/>';
+    }
+
+    document.getElementById('graph').innerHTML = html;
+  }
+
+  function drawProof(m, m2){
+    const W=500,H=400,cx=120,cy=300,sc=100;
+    function tx(x){return cx+x*sc;}
+    function ty(y){return cy-y*sc;}
+    let html='';
+
+    // axes
+    html+='<line x1="'+(cx-20)+'" y1="'+cy+'" x2="'+(W-20)+'" y2="'+cy+'" stroke="#999" stroke-width="1.5"/>';
+    html+='<line x1="'+cx+'" y1="'+(H-10)+'" x2="'+cx+'" y2="20" stroke="#999" stroke-width="1.5"/>';
+
+    // line through O with slope m
+    const endX1=3.5;
+    html+='<line x1="'+tx(0)+'" y1="'+ty(0)+'" x2="'+tx(endX1)+'" y2="'+ty(m*endX1)+'" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="6,3"/>';
+    // line through O with slope m'
+    html+='<line x1="'+tx(0)+'" y1="'+ty(0)+'" x2="'+tx(endX1)+'" y2="'+ty(m2*endX1)+'" stroke="var(--c-blue)" stroke-width="2" stroke-dasharray="6,3"/>';
+
+    // P(1,m)
+    const px=tx(1),py=ty(m);
+    html+='<circle cx="'+px+'" cy="'+py+'" r="6" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>';
+    html+='<text x="'+(px+10)+'" y="'+(py-8)+'" font-size="13" font-weight="600" fill="var(--c-red)">P(1, '+m.toFixed(1)+')</text>';
+
+    // Q(1,m')
+    const qx=tx(1),qy=ty(m2);
+    html+='<circle cx="'+qx+'" cy="'+qy+'" r="6" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>';
+    html+='<text x="'+(qx+10)+'" y="'+(qy+(m2<m?16:-8))+'" font-size="13" font-weight="600" fill="var(--c-blue)">Q(1, '+m2.toFixed(1)+')</text>';
+
+    // O
+    html+='<circle cx="'+tx(0)+'" cy="'+ty(0)+'" r="5" fill="#333"/>';
+    html+='<text x="'+(tx(0)-15)+'" y="'+(ty(0)+18)+'" font-size="13" font-weight="600">O</text>';
+
+    // segments OP, OQ, PQ
+    html+='<line x1="'+tx(0)+'" y1="'+ty(0)+'" x2="'+px+'" y2="'+py+'" stroke="var(--c-red)" stroke-width="2.5"/>';
+    html+='<line x1="'+tx(0)+'" y1="'+ty(0)+'" x2="'+qx+'" y2="'+qy+'" stroke="var(--c-blue)" stroke-width="2.5"/>';
+    html+='<line x1="'+px+'" y1="'+py+'" x2="'+qx+'" y2="'+qy+'" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="5,3"/>';
+
+    // vertical dashed line x=1
+    html+='<line x1="'+tx(1)+'" y1="'+cy+'" x2="'+tx(1)+'" y2="'+Math.min(py,qy,-10)+'" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>';
+
+    // length labels
+    const op2 = 1+m*m;
+    const oq2 = 1+m2*m2;
+    const pq2 = (m-m2)*(m-m2);
+    html+='<text x="'+(tx(0.5)-5)+'" y="'+(ty(m*0.5)-10)+'" font-size="11" fill="var(--c-red)">OP²='+(Math.round(op2*100)/100)+'</text>';
+    html+='<text x="'+(tx(0.5)-5)+'" y="'+(ty(m2*0.5)+20)+'" font-size="11" fill="var(--c-blue)">OQ²='+(Math.round(oq2*100)/100)+'</text>';
+    html+='<text x="'+(tx(1)+14)+'" y="'+(ty((m+m2)/2)+4)+'" font-size="11" fill="var(--c-orange)">PQ²='+(Math.round(pq2*100)/100)+'</text>';
+
+    // right angle at O if perpendicular
+    if(Math.abs(m*m2+1)<0.05){
+      const sz=0.15;
+      const d1x=1/Math.sqrt(op2), d1y=m/Math.sqrt(op2);
+      const d2x=1/Math.sqrt(oq2), d2y=m2/Math.sqrt(oq2);
+      html+='<path d="M'+tx(d1x*sz)+','+ty(d1y*sz)+' L'+tx((d1x+d2x)*sz)+','+ty((d1y+d2y)*sz)+' L'+tx(d2x*sz)+','+ty(d2y*sz)+'" class="right-angle" stroke-width="2"/>';
+    }
+
+    document.getElementById('proof-graph').innerHTML = html;
+  }
+
+  buildDerivation();
+  slM.addEventListener('input', update);
+  slM2.addEventListener('input', update);
+  update();
+}
+</script>
+</body>
+</html>

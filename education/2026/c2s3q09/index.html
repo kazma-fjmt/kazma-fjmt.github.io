@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>連立不等式の表す領域（続き）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-c: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+    position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center;
+    overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .tabs {
+    display: flex; gap: .5rem; margin: .75rem 0 1rem; flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1 1 200px; appearance: none; background: #fff;
+    border: 1.5px solid #d4dbeb; color: var(--fg); border-radius: 10px;
+    padding: 1rem .75rem; font-size: 1rem; font-family: inherit;
+    cursor: pointer; min-height: 56px; user-select: none;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .tab.active { border-color: var(--accent); background: #eef4ff; }
+  .tab:active { transform: scale(.98); }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0;
+    font-size: .9rem; align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; }
+  .legend-swatch {
+    display: inline-block; width: 18px; height: 18px; border-radius: 4px;
+  }
+
+  .test-result {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .test-result .check { color: #5cb85c; font-weight: 700; }
+  .test-result .cross { color: #d9534f; font-weight: 700; }
+
+  .quadrant-info {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+    min-height: 3rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<main>
+  <h1>連立不等式の表す領域（続き）</h1>
+  <p class="subtitle">連立不等式の領域と象限の表し方を学びます。</p>
+
+  <div class="tabs" id="main-tabs">
+    <button class="tab active" data-tab="0">問8：連立不等式</button>
+    <button class="tab" data-tab="1">象限と不等式</button>
+  </div>
+
+  <!-- Tab 0: System of inequalities -->
+  <div id="tab0">
+    <h2>問8</h2>
+    <div class="formula-box" id="formula-system"></div>
+
+    <h2>ステップ解説</h2>
+    <div class="walkthrough" id="walkthrough"></div>
+    <div class="controls-row">
+      <button class="btn" id="prev">&larr; 戻る</button>
+      <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+      <button class="btn primary" id="next">次へ &rarr;</button>
+    </div>
+
+    <h2>グラフ</h2>
+    <p>テストポイント（赤い点）をドラッグして確認しましょう。</p>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:rgba(42,109,244,0.25);"></span>領域 A（①の領域）</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:rgba(217,83,79,0.25);"></span>領域 B（②の領域）</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:rgba(120,70,180,0.35);"></span>A∩B</div>
+    </div>
+    <div class="svg-container" id="svg-wrap-0">
+      <svg id="coordplane0" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="test-result" id="test-result-0"></div>
+  </div>
+
+  <!-- Tab 1: Quadrant explorer -->
+  <div id="tab1" style="display:none">
+    <h2>象限と連立不等式</h2>
+    <p>座標平面の各象限は、連立不等式で表すことができます。象限をタップして確認しましょう。</p>
+
+    <div class="svg-container" id="svg-wrap-1">
+      <svg id="coordplane1" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="quadrant-info" id="quadrant-info">象限をタップすると、その象限を表す不等式が表示されます。</div>
+
+    <div class="note">
+      <strong>まとめ：</strong>座標軸で区切られた各象限は、x と y の符号条件（連立不等式）で表せます。境界（座標軸上）は含みません。
+    </div>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const W = 600, H = 600;
+const OX = 300, OY = 300;
+const SCALE = 60;
+
+function toSVG(x,y){ return [OX + x*SCALE, OY - y*SCALE]; }
+function fromSVG(px,py){ return [(px - OX)/SCALE, (OY - py)/SCALE]; }
+
+/* Tab switching */
+let activeTab = 0;
+document.getElementById("main-tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab");
+  if(!btn) return;
+  activeTab = parseInt(btn.dataset.tab);
+  document.querySelectorAll("#main-tabs .tab").forEach((t,i) => t.classList.toggle("active", i===activeTab));
+  document.getElementById("tab0").style.display = activeTab===0 ? "" : "none";
+  document.getElementById("tab1").style.display = activeTab===1 ? "" : "none";
+  if(activeTab===1) drawQuadrants();
+});
+
+/* ============ TAB 0: System { 2x+y>3, 3x-2y<8 } ============ */
+// ① 2x+y>3 → y > -2x+3 → above line y=-2x+3
+// ② 3x-2y<8 → y > (3/2)x - 4 → above line y=(3/2)x - 4
+// Intersection of lines: -2x+3 = 1.5x-4 → 3.5x=7 → x=2, y=-1
+
+const steps = [
+  {
+    label: "ステップ 1",
+    html: () => `① の表す領域を A、② の表す領域を B とする。求める領域は ${T("\\mathrm{A} \\cap \\mathrm{B}")}`
+  },
+  {
+    label: "ステップ 2",
+    html: () => `① ${T("2x + y > 3")} より ${T("y > -2x + 3")}<br>→ 直線 ${T("y = -2x + 3")} の<strong>上側</strong>（境界含まず）`
+  },
+  {
+    label: "ステップ 3",
+    html: () => `② ${T("3x - 2y < 8")} より ${T("y > \\dfrac{3}{2}x - 4")}<br>→ 直線 ${T("y = \\dfrac{3}{2}x - 4")} の<strong>上側</strong>（境界含まず）`
+  },
+  {
+    label: "ステップ 4",
+    html: () => `2直線の交点を求める：${T("-2x + 3 = \\dfrac{3}{2}x - 4")}<br>${T("\\Rightarrow \\dfrac{7}{2}x = 7 \\Rightarrow x = 2,\\; y = -1")}<br>交点 ${T("(2, -1)")}`
+  },
+  {
+    label: "ステップ 5",
+    html: () => `${T("\\mathrm{A} \\cap \\mathrm{B}")} は、両直線の<strong>上側</strong>の共通部分<br>境界線はいずれも含まない（破線で表す）`
+  }
+];
+
+let curStep = 0;
+let testPt = {x: 2, y: 1};
+let dragging = false;
+
+function renderSteps(){
+  const wt = document.getElementById("walkthrough");
+  let h = "";
+  steps.forEach((s,i) => {
+    const cls = i === curStep ? "step current" : "step";
+    const vis = i <= curStep ? "" : ' style="display:none"';
+    h += `<div class="${cls}"${vis}><div class="label">${s.label}</div><div class="formula-line">${s.html()}</div></div>`;
+  });
+  wt.innerHTML = h;
+  document.getElementById("step-cur").textContent = curStep + 1;
+  document.getElementById("step-tot").textContent = steps.length;
+  document.getElementById("prev").disabled = curStep === 0;
+  document.getElementById("next").disabled = curStep === steps.length - 1;
+  drawTab0();
+}
+
+document.getElementById("prev").addEventListener("click", () => { if(curStep>0){curStep--;renderSteps();} });
+document.getElementById("next").addEventListener("click", () => { if(curStep<steps.length-1){curStep++;renderSteps();} });
+
+function buildGrid(svg){
+  for(let x=-4; x<=4; x++){
+    const [sx] = toSVG(x,0);
+    const l = document.createElementNS(SVG_NS,"line");
+    l.setAttribute("x1",sx); l.setAttribute("y1",0);
+    l.setAttribute("x2",sx); l.setAttribute("y2",H);
+    l.setAttribute("stroke", x===0 ? "#555" : "#e0e0e0");
+    l.setAttribute("stroke-width", x===0 ? 1.5 : 0.8);
+    svg.appendChild(l);
+  }
+  for(let y=-4; y<=4; y++){
+    const [,sy] = toSVG(0,y);
+    const l = document.createElementNS(SVG_NS,"line");
+    l.setAttribute("x1",0); l.setAttribute("y1",sy);
+    l.setAttribute("x2",W); l.setAttribute("y2",sy);
+    l.setAttribute("stroke", y===0 ? "#555" : "#e0e0e0");
+    l.setAttribute("stroke-width", y===0 ? 1.5 : 0.8);
+    svg.appendChild(l);
+  }
+  for(let v=-4; v<=4; v++){
+    if(v===0) continue;
+    const [sx,sy] = toSVG(v,0);
+    const tx = document.createElementNS(SVG_NS,"text");
+    tx.setAttribute("x",sx); tx.setAttribute("y",sy+18);
+    tx.setAttribute("text-anchor","middle"); tx.setAttribute("font-size","12"); tx.setAttribute("fill","#888");
+    tx.textContent = v; svg.appendChild(tx);
+    const [sx2,sy2] = toSVG(0,v);
+    const ty = document.createElementNS(SVG_NS,"text");
+    ty.setAttribute("x",sx2-12); ty.setAttribute("y",sy2+4);
+    ty.setAttribute("text-anchor","middle"); ty.setAttribute("font-size","12"); ty.setAttribute("fill","#888");
+    ty.textContent = v; svg.appendChild(ty);
+  }
+  const [ox,oy] = toSVG(0,0);
+  const oL = document.createElementNS(SVG_NS,"text");
+  oL.setAttribute("x",ox-12); oL.setAttribute("y",oy+16);
+  oL.setAttribute("font-size","13"); oL.setAttribute("fill","#888");
+  oL.textContent = "O"; svg.appendChild(oL);
+}
+
+function clipHalf(yFn, above){
+  const pts = [];
+  const xMin=-5,xMax=5,yMin=-5,yMax=5;
+  for(let x=xMin;x<=xMax;x+=0.1){
+    const y=yFn(x);
+    pts.push(toSVG(x, Math.max(yMin,Math.min(yMax,y))));
+  }
+  if(above){
+    pts.push(toSVG(xMax,yMax));
+    pts.push(toSVG(xMin,yMax));
+  } else {
+    pts.push(toSVG(xMax,yMin));
+    pts.push(toSVG(xMin,yMin));
+  }
+  return pts.map(p=>p[0]+","+p[1]).join(" ");
+}
+
+function buildIntersectionPoly0(){
+  // Both regions are "above" their respective lines
+  // A: y > -2x+3, B: y > 1.5x-4
+  // Intersection at (2,-1)
+  // For x < 2: line1 (-2x+3) is higher
+  // For x > 2: line2 (1.5x-4) is higher
+  const xMin=-5,xMax=5,yMin=-5,yMax=5;
+  const pts=[];
+  const ix=2,iy=-1;
+
+  // Trace the effective lower boundary: max(line1, line2)
+  for(let x=xMin; x<=xMax; x+=0.05){
+    const y1=-2*x+3, y2=1.5*x-4;
+    const yBound = Math.max(y1,y2);
+    if(yBound > yMax) continue;
+    pts.push(toSVG(x, Math.max(yBound, yMin)));
+  }
+  // Close along top
+  pts.push(toSVG(xMax, yMax));
+  pts.push(toSVG(xMin, yMax));
+  return pts.map(p=>p[0]+","+p[1]).join(" ");
+}
+
+function drawLineOnSVG(svg, yFn, color, dashed, label, labelPos){
+  const pts=[];
+  for(let x=-5;x<=5;x+=0.1){
+    const y=yFn(x);
+    if(y<-5.5||y>5.5) continue;
+    pts.push(toSVG(x,y));
+  }
+  if(pts.length<2) return;
+  const pl=document.createElementNS(SVG_NS,"polyline");
+  pl.setAttribute("points",pts.map(p=>p[0]+","+p[1]).join(" "));
+  pl.setAttribute("fill","none"); pl.setAttribute("stroke",color);
+  pl.setAttribute("stroke-width","2.5");
+  if(dashed) pl.setAttribute("stroke-dasharray","8,5");
+  svg.appendChild(pl);
+  if(label){
+    const idx = labelPos || Math.floor(pts.length*0.15);
+    const mid = pts[Math.min(idx, pts.length-1)];
+    if(mid){
+      const lbl=document.createElementNS(SVG_NS,"text");
+      lbl.setAttribute("x",mid[0]+8); lbl.setAttribute("y",mid[1]-10);
+      lbl.setAttribute("font-size","14"); lbl.setAttribute("font-weight","600");
+      lbl.setAttribute("fill",color); lbl.textContent=label;
+      svg.appendChild(lbl);
+    }
+  }
+}
+
+function drawTab0(){
+  const svg=document.getElementById("coordplane0");
+  svg.innerHTML="";
+  buildGrid(svg);
+
+  const showA=curStep>=1, showB=curStep>=2, showI=curStep>=3;
+
+  if(showA && !showI){
+    const p=document.createElementNS(SVG_NS,"polygon");
+    p.setAttribute("points",clipHalf(x=>-2*x+3, true));
+    p.setAttribute("fill","rgba(42,109,244,0.15)"); p.setAttribute("stroke","none");
+    p.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(p);
+  }
+  if(showB && !showI){
+    const p=document.createElementNS(SVG_NS,"polygon");
+    p.setAttribute("points",clipHalf(x=>1.5*x-4, true));
+    p.setAttribute("fill","rgba(217,83,79,0.15)"); p.setAttribute("stroke","none");
+    p.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(p);
+  }
+  if(showI){
+    const pA=document.createElementNS(SVG_NS,"polygon");
+    pA.setAttribute("points",clipHalf(x=>-2*x+3, true));
+    pA.setAttribute("fill","rgba(42,109,244,0.06)"); pA.setAttribute("stroke","none");
+    svg.appendChild(pA);
+    const pB=document.createElementNS(SVG_NS,"polygon");
+    pB.setAttribute("points",clipHalf(x=>1.5*x-4, true));
+    pB.setAttribute("fill","rgba(217,83,79,0.06)"); pB.setAttribute("stroke","none");
+    svg.appendChild(pB);
+    const pI=document.createElementNS(SVG_NS,"polygon");
+    pI.setAttribute("points",buildIntersectionPoly0());
+    pI.setAttribute("fill","rgba(120,70,180,0.25)"); pI.setAttribute("stroke","none");
+    pI.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(pI);
+  }
+
+  if(showA) drawLineOnSVG(svg, x=>-2*x+3, "var(--c-b)", true, "①");
+  if(showB) drawLineOnSVG(svg, x=>1.5*x-4, "var(--c-a)", true, "②");
+
+  if(curStep>=3){
+    const [cx,cy]=toSVG(2,-1);
+    const d=document.createElementNS(SVG_NS,"circle");
+    d.setAttribute("cx",cx); d.setAttribute("cy",cy); d.setAttribute("r",4);
+    d.setAttribute("fill","#555"); svg.appendChild(d);
+    const lbl=document.createElementNS(SVG_NS,"text");
+    lbl.setAttribute("x",cx+10); lbl.setAttribute("y",cy-8);
+    lbl.setAttribute("font-size","13"); lbl.setAttribute("fill","#555");
+    lbl.textContent="(2, −1)"; svg.appendChild(lbl);
+  }
+
+  // Test point
+  const [px,py]=toSVG(testPt.x,testPt.y);
+  const c=document.createElementNS(SVG_NS,"circle");
+  c.setAttribute("cx",px); c.setAttribute("cy",py); c.setAttribute("r",10);
+  c.setAttribute("fill","rgba(217,83,79,0.8)");
+  c.setAttribute("stroke","#fff"); c.setAttribute("stroke-width","2");
+  c.setAttribute("style","cursor:grab;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
+  svg.appendChild(c);
+  const tl=document.createElementNS(SVG_NS,"text");
+  tl.setAttribute("x",px+14); tl.setAttribute("y",py-10);
+  tl.setAttribute("font-size","12"); tl.setAttribute("font-weight","600"); tl.setAttribute("fill","#d9534f");
+  tl.textContent=`(${testPt.x.toFixed(1)}, ${testPt.y.toFixed(1)})`; svg.appendChild(tl);
+
+  // Test result
+  const el=document.getElementById("test-result-0");
+  const x=testPt.x, y=testPt.y;
+  const c1=2*x+y>3, c2=3*x-2*y<8;
+  el.innerHTML=`<strong>テストポイント</strong> ${T(`(${x.toFixed(1)},\\;${y.toFixed(1)})`)}<br>`
+    +`① ${T(`2x+y=${(2*x+y).toFixed(1)}`)} ${c1?`${T("> 3")} <span class="check">✓</span>`:`${T("\\leq 3")} <span class="cross">✗</span>`}<br>`
+    +`② ${T(`3x-2y=${(3*x-2*y).toFixed(1)}`)} ${c2?`${T("< 8")} <span class="check">✓</span>`:`${T("\\geq 8")} <span class="cross">✗</span>`}<br>`
+    +(c1&&c2?`→ 領域 ${T("\\mathrm{A} \\cap \\mathrm{B}")} に<strong>含まれる</strong> <span class="check">✓</span>`:`→ 領域 ${T("\\mathrm{A} \\cap \\mathrm{B}")} に<strong>含まれない</strong> <span class="cross">✗</span>`);
+}
+
+// Drag for tab0
+const wrap0=document.getElementById("svg-wrap-0");
+const svg0=document.getElementById("coordplane0");
+
+function getPos0(e){
+  const rect=svg0.getBoundingClientRect();
+  const sx=W/rect.width, sy=H/rect.height;
+  const t=e.touches?e.touches[0]:e;
+  return [(t.clientX-rect.left)*sx,(t.clientY-rect.top)*sy];
+}
+function onStart0(e){
+  const [px,py]=getPos0(e);
+  const [tx,ty]=toSVG(testPt.x,testPt.y);
+  if(Math.hypot(px-tx,py-ty)<25){dragging=true;e.preventDefault();}
+}
+function onMove0(e){
+  if(!dragging) return; e.preventDefault();
+  const [px,py]=getPos0(e);
+  const [mx,my]=fromSVG(px,py);
+  testPt.x=Math.round(mx*10)/10; testPt.y=Math.round(my*10)/10;
+  testPt.x=Math.max(-4.5,Math.min(4.5,testPt.x));
+  testPt.y=Math.max(-4.5,Math.min(4.5,testPt.y));
+  drawTab0();
+}
+function onEnd0(){dragging=false;}
+wrap0.addEventListener("mousedown",onStart0);
+wrap0.addEventListener("mousemove",onMove0);
+wrap0.addEventListener("mouseup",onEnd0);
+wrap0.addEventListener("touchstart",onStart0,{passive:false});
+wrap0.addEventListener("touchmove",onMove0,{passive:false});
+wrap0.addEventListener("touchend",onEnd0);
+
+/* ============ TAB 1: Quadrant explorer ============ */
+let selectedQuadrant = 0;
+const quadrantData = [
+  { name: "第1象限", cond: "x > 0,\\; y > 0", color: "rgba(42,109,244,0.2)", xSign: 1, ySign: 1 },
+  { name: "第2象限", cond: "x < 0,\\; y > 0", color: "rgba(92,184,92,0.2)", xSign: -1, ySign: 1 },
+  { name: "第3象限", cond: "x < 0,\\; y < 0", color: "rgba(217,83,79,0.2)", xSign: -1, ySign: -1 },
+  { name: "第4象限", cond: "x > 0,\\; y < 0", color: "rgba(240,173,78,0.2)", xSign: 1, ySign: -1 }
+];
+
+function drawQuadrants(){
+  const svg=document.getElementById("coordplane1");
+  svg.innerHTML="";
+  buildGrid(svg);
+
+  quadrantData.forEach((q,i)=>{
+    const x1 = q.xSign>0 ? 0 : -5;
+    const x2 = q.xSign>0 ? 5 : 0;
+    const y1 = q.ySign>0 ? 0 : -5;
+    const y2 = q.ySign>0 ? 5 : 0;
+    const pts = [toSVG(x1,y1),toSVG(x2,y1),toSVG(x2,y2),toSVG(x1,y2)];
+    const poly=document.createElementNS(SVG_NS,"polygon");
+    poly.setAttribute("points",pts.map(p=>p[0]+","+p[1]).join(" "));
+    poly.setAttribute("fill", i===selectedQuadrant ? q.color.replace("0.2","0.35") : q.color);
+    poly.setAttribute("stroke", i===selectedQuadrant ? "var(--accent)" : "none");
+    poly.setAttribute("stroke-width", i===selectedQuadrant ? "2" : "0");
+    poly.setAttribute("data-q",i);
+    poly.setAttribute("style","cursor:pointer");
+    svg.appendChild(poly);
+
+    // Label in center of quadrant
+    const cx = (x1+x2)/2, cy = (y1+y2)/2;
+    const [lx,ly] = toSVG(cx,cy);
+    const label=document.createElementNS(SVG_NS,"text");
+    label.setAttribute("x",lx); label.setAttribute("y",ly);
+    label.setAttribute("text-anchor","middle"); label.setAttribute("dominant-baseline","middle");
+    label.setAttribute("font-size","16"); label.setAttribute("font-weight","600");
+    label.setAttribute("fill", i===selectedQuadrant ? "var(--accent)" : "#666");
+    label.setAttribute("pointer-events","none");
+    label.textContent = q.name;
+    svg.appendChild(label);
+  });
+
+  // Update info panel
+  const info=document.getElementById("quadrant-info");
+  const q=quadrantData[selectedQuadrant];
+  info.innerHTML=`<strong>${q.name}</strong>の不等式表現：<br>`
+    +`<div style="text-align:center;margin:.5rem 0">${T(`\\begin{cases} ${q.cond} \\end{cases}`)}</div>`
+    +`<span style="color:var(--muted);font-size:.9rem">${q.xSign>0?"x が正":"x が負"}、${q.ySign>0?"y が正":"y が負"} の領域（境界の座標軸は含まない）</span>`;
+}
+
+const wrap1=document.getElementById("svg-wrap-1");
+wrap1.addEventListener("click",e=>{
+  const rect=document.getElementById("coordplane1").getBoundingClientRect();
+  const sx=W/rect.width, sy=H/rect.height;
+  const px=(e.clientX-rect.left)*sx, py=(e.clientY-rect.top)*sy;
+  const [mx,my]=fromSVG(px,py);
+  if(mx>0&&my>0) selectedQuadrant=0;
+  else if(mx<0&&my>0) selectedQuadrant=1;
+  else if(mx<0&&my<0) selectedQuadrant=2;
+  else if(mx>0&&my<0) selectedQuadrant=3;
+  else return;
+  drawQuadrants();
+});
+wrap1.addEventListener("touchend",e=>{
+  if(e.changedTouches.length===0) return;
+  const t=e.changedTouches[0];
+  const rect=document.getElementById("coordplane1").getBoundingClientRect();
+  const sx=W/rect.width, sy=H/rect.height;
+  const px=(t.clientX-rect.left)*sx, py=(t.clientY-rect.top)*sy;
+  const [mx,my]=fromSVG(px,py);
+  if(mx>0&&my>0) selectedQuadrant=0;
+  else if(mx<0&&my>0) selectedQuadrant=1;
+  else if(mx<0&&my<0) selectedQuadrant=2;
+  else if(mx>0&&my<0) selectedQuadrant=3;
+  else return;
+  drawQuadrants();
+});
+
+function init(){
+  tex("\\begin{cases} 2x + y > 3 & \\cdots \\text{①} \\\\ 3x - 2y < 8 & \\cdots \\text{②} \\end{cases}", document.getElementById("formula-system"), true);
+  renderSteps();
+}
+
+if(window.katex) init(); else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex) init();
+  else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+});
+</script>
+</body>
+</html>

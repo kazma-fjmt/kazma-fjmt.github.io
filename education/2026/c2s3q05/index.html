@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>不等式の表す領域（直線）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    margin: 1rem 0;
+  }
+  @media (max-width: 600px) {
+    .concept-grid { grid-template-columns: 1fr; }
+  }
+  .concept-card {
+    background: #eef4ff;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    text-align: center;
+  }
+
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    margin: 1rem 0 .5rem;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: .5rem 1.25rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .svg-container {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .5rem;
+    margin: 1rem 0;
+    text-align: center;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .svg-container svg {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+  }
+
+  .point-info {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    margin: .75rem 0;
+    text-align: center;
+    font-size: .95rem;
+    min-height: 3rem;
+    transition: background .3s;
+  }
+  .point-info.inside { background: #e8f5e9; border-color: var(--c-green); }
+  .point-info.outside { background: #fce4ec; border-color: var(--c-red); }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+  }
+  .step {
+    display: none;
+    animation: fadeIn .4s ease;
+  }
+  .step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-indicator {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    margin-bottom: .5rem;
+  }
+
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    gap: .75rem;
+    margin-top: 1rem;
+  }
+  .controls-row button {
+    padding: .5rem 1.5rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .controls-row button:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+  .controls-row button.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .note {
+    background: #fffde7;
+    border-left: 4px solid var(--c-orange);
+    border-radius: 0 10px 10px 0;
+    padding: .75rem 1rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>不等式の表す領域（直線）</h1>
+  <p class="subtitle">直線の不等式が表す領域を視覚的に理解しよう</p>
+
+  <h2>基本の考え方</h2>
+  <p>直線の不等式が表す領域は、直線で分けられた平面の片側の部分です。</p>
+
+  <div class="concept-grid">
+    <div class="concept-card" id="concept1"></div>
+    <div class="concept-card" id="concept2"></div>
+    <div class="concept-card" id="concept3"></div>
+    <div class="concept-card" id="concept4"></div>
+  </div>
+
+  <div class="note" id="note-technique"></div>
+
+  <h2>例題4</h2>
+  <p>次の不等式の表す領域を図示せよ。</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="0">(1) 2x - y + 1 &gt; 0</button>
+    <button class="tab-btn" data-tab="1">(2) x &ge; 2</button>
+  </div>
+
+  <!-- SVG Graph -->
+  <div class="svg-container" id="graph-container">
+    <svg id="coord-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="point-info" id="point-info">テスト点をドラッグして動かしてみよう</div>
+
+  <!-- Walkthrough -->
+  <div class="walkthrough" id="walkthrough">
+    <div class="step-indicator" id="step-indicator"></div>
+    <div id="steps-container"></div>
+    <div class="controls-row">
+      <button id="btn-prev" disabled>前へ</button>
+      <button id="btn-next" class="primary">次へ</button>
+    </div>
+  </div>
+
+  <h2>境界線のまとめ</h2>
+  <div class="concept-grid">
+    <div class="concept-card" id="boundary-strict"></div>
+    <div class="concept-card" id="boundary-incl"></div>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+
+function init(){
+  // Concept cards
+  document.getElementById('concept1').innerHTML = T('y > mx + n') + '<br><span style="font-size:.85rem">直線の<b>上側</b></span>';
+  document.getElementById('concept2').innerHTML = T('y < mx + n') + '<br><span style="font-size:.85rem">直線の<b>下側</b></span>';
+  document.getElementById('concept3').innerHTML = T('y \\ge mx + n') + '<br><span style="font-size:.85rem">直線の<b>上側</b>（境界含む）</span>';
+  document.getElementById('concept4').innerHTML = T('y \\le mx + n') + '<br><span style="font-size:.85rem">直線の<b>下側</b>（境界含む）</span>';
+
+  document.getElementById('note-technique').innerHTML = '<b>判定テクニック：</b>原点 ' + T('(0,0)') + ' を不等式に代入して成り立つか確認すると、領域がどちら側かすぐに分かります。';
+
+  document.getElementById('boundary-strict').innerHTML = '<b>厳密不等式</b> ' + T('(>, <)') + '<br><span style="font-size:.85rem">境界線は<b>含まない</b>（破線）</span>';
+  document.getElementById('boundary-incl').innerHTML = '<b>等号付き</b> ' + T('(\\ge, \\le)') + '<br><span style="font-size:.85rem">境界線を<b>含む</b>（実線）</span>';
+
+  // Tab data
+  const tabs = [
+    {
+      title: '(1) 2x - y + 1 > 0',
+      steps: [
+        '不等式を変形します：<br>' + T('2x - y + 1 > 0') + '<br>' + T('\\Rightarrow\\; y < 2x + 1'),
+        '直線 ' + T('y = 2x + 1') + ' の<b>下側</b>が領域です。',
+        '原点 ' + T('(0,0)') + ' で確認：<br>' + T('0 < 2 \\cdot 0 + 1 = 1') + ' &ensp;✓ 成り立つ<br>→ 原点を含む側（下側）が領域',
+        '厳密不等式 ' + T('(>)') + ' なので境界線は<b>含まない</b>（<span style="color:var(--c-blue)">破線</span>で表示）。<br>下側の領域を塗ります。'
+      ],
+      lineType: 'dashed',
+      // line: y = 2x + 1, region: y < 2x+1
+      testFn: function(x, y){ return y < 2*x + 1; },
+      testExpr: function(x, y){
+        var lhs = y.toFixed(1);
+        var rhs = (2*x+1).toFixed(1);
+        return T('y = '+lhs) + ', &ensp;' + T('2x+1 = '+rhs);
+      }
+    },
+    {
+      title: '(2) x ≥ 2',
+      steps: [
+        '不等式 ' + T('x \\ge 2') + ' は、' + T('x') + ' 座標が2以上のすべての点を表します。',
+        '直線 ' + T('x = 2') + '（垂直線）の<b>右側</b>が領域です。',
+        '原点 ' + T('(0,0)') + ' で確認：<br>' + T('0 \\ge 2') + ' &ensp;✗ 成り立たない<br>→ 原点を含まない側（右側）が領域',
+        '等号付き不等式 ' + T('(\\ge)') + ' なので境界線を<b>含む</b>（<span style="color:var(--c-blue)">実線</span>で表示）。<br>右側の領域を塗ります。'
+      ],
+      lineType: 'solid',
+      testFn: function(x, y){ return x >= 2; },
+      testExpr: function(x, y){
+        return T('x = '+x.toFixed(1)) + ', &ensp;' + T('x \\ge 2') + ' → ' + (x >= 2 ? '✓' : '✗');
+      }
+    }
+  ];
+
+  let currentTab = 0;
+  let currentStep = 0;
+
+  // SVG setup
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('coord-svg');
+  const W = 500, H = 500;
+  const margin = 40;
+  const xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+
+  function toSvgX(x){ return margin + (x - xMin)/(xMax - xMin)*(W - 2*margin); }
+  function toSvgY(y){ return H - margin - (y - yMin)/(yMax - yMin)*(H - 2*margin); }
+  function fromSvgX(sx){ return xMin + (sx - margin)/(W - 2*margin)*(xMax - xMin); }
+  function fromSvgY(sy){ return yMax - (sy - margin)/(H - 2*margin)*(yMax - yMin); }
+
+  function createSvgEl(tag, attrs){
+    var el = document.createElementNS(SVG_NS, tag);
+    for(var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  // Draw grid + axes
+  function drawGrid(){
+    // Grid lines
+    for(var x = xMin; x <= xMax; x++){
+      var sx = toSvgX(x);
+      svg.appendChild(createSvgEl('line',{x1:sx,y1:margin,x2:sx,y2:H-margin,stroke:'#e0e0e0','stroke-width':1}));
+    }
+    for(var y = yMin; y <= yMax; y++){
+      var sy = toSvgY(y);
+      svg.appendChild(createSvgEl('line',{x1:margin,y1:sy,x2:W-margin,y2:sy,stroke:'#e0e0e0','stroke-width':1}));
+    }
+    // Axes
+    svg.appendChild(createSvgEl('line',{x1:margin,y1:toSvgY(0),x2:W-margin,y2:toSvgY(0),stroke:'#333','stroke-width':2}));
+    svg.appendChild(createSvgEl('line',{x1:toSvgX(0),y1:margin,x2:toSvgX(0),y2:H-margin,stroke:'#333','stroke-width':2}));
+    // Arrow heads
+    var ax = W - margin;
+    svg.appendChild(createSvgEl('polygon',{points:(ax-6)+','+(toSvgY(0)-4)+' '+ax+','+toSvgY(0)+' '+(ax-6)+','+(toSvgY(0)+4),fill:'#333'}));
+    var ay = margin;
+    svg.appendChild(createSvgEl('polygon',{points:(toSvgX(0)-4)+','+(ay+6)+' '+toSvgX(0)+','+ay+' '+(toSvgX(0)+4)+','+(ay+6),fill:'#333'}));
+    // Labels
+    var xlbl = document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+    xlbl.setAttribute('x', Math.min(W-margin+2, W-26));
+    xlbl.setAttribute('y', toSvgY(0)-12);
+    xlbl.setAttribute('width', '24');
+    xlbl.setAttribute('height', '24');
+    xlbl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('x')+'</div>';
+    svg.appendChild(xlbl);
+    var ylbl = document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+    ylbl.setAttribute('x', toSvgX(0)+6);
+    ylbl.setAttribute('y', Math.max(margin-18, 2));
+    ylbl.setAttribute('width', '24');
+    ylbl.setAttribute('height', '24');
+    ylbl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#333">'+T('y')+'</div>';
+    svg.appendChild(ylbl);
+    // Tick labels
+    for(var x = xMin; x <= xMax; x++){
+      if(x===0) continue;
+      var t = createSvgEl('text',{x:toSvgX(x),y:toSvgY(0)+18,'text-anchor':'middle','font-size':'11',fill:'#888'});
+      t.textContent = x;
+      svg.appendChild(t);
+    }
+    for(var y = yMin; y <= yMax; y++){
+      if(y===0) continue;
+      var t = createSvgEl('text',{x:toSvgX(0)-12,y:toSvgY(y)+4,'text-anchor':'end','font-size':'11',fill:'#888'});
+      t.textContent = y;
+      svg.appendChild(t);
+    }
+    var o = createSvgEl('text',{x:toSvgX(0)-8,y:toSvgY(0)+16,'font-size':'11',fill:'#888'});
+    o.textContent = 'O';
+    svg.appendChild(o);
+  }
+
+  // Region and line elements
+  var regionEl, lineEl, testPointEl, testPointCircle;
+  var testX = 1, testY = 0;
+
+  function drawScene(){
+    svg.innerHTML = '';
+    drawGrid();
+
+    // Clip region to graph area
+    var defs = createSvgEl('defs',{});
+    var clip = createSvgEl('clipPath',{id:'graphClip'});
+    clip.appendChild(createSvgEl('rect',{x:margin,y:margin,width:W-2*margin,height:H-2*margin}));
+    defs.appendChild(clip);
+    svg.appendChild(defs);
+
+    var g = createSvgEl('g',{'clip-path':'url(#graphClip)'});
+
+    // Draw region
+    regionEl = createSvgEl('path',{fill:'rgba(42,109,244,0.15)',stroke:'none',opacity:'0'});
+    if(currentTab === 0){
+      // y < 2x+1: shade below line
+      var pts = '';
+      for(var sx = margin; sx <= W-margin; sx += 2){
+        var x = fromSvgX(sx);
+        var lineY = 2*x + 1;
+        pts += sx + ',' + toSvgY(lineY) + ' ';
+      }
+      // close at bottom
+      pts += (W-margin) + ',' + (H-margin) + ' ' + margin + ',' + (H-margin);
+      regionEl = createSvgEl('polygon',{points:pts,fill:'rgba(42,109,244,0.18)',stroke:'none',opacity:'0'});
+      regionEl.style.transition = 'opacity .8s ease';
+    } else {
+      // x >= 2: shade right of x=2
+      var sx2 = toSvgX(2);
+      regionEl = createSvgEl('rect',{x:sx2,y:margin,width:(W-margin-sx2),height:H-2*margin,fill:'rgba(42,109,244,0.18)',stroke:'none',opacity:'0'});
+      regionEl.style.transition = 'opacity .8s ease';
+    }
+    g.appendChild(regionEl);
+
+    // Draw line
+    if(currentTab === 0){
+      // y = 2x+1
+      var x1 = xMin, y1 = 2*xMin+1, x2 = xMax, y2 = 2*xMax+1;
+      lineEl = createSvgEl('line',{x1:toSvgX(x1),y1:toSvgY(y1),x2:toSvgX(x2),y2:toSvgY(y2),
+        stroke:'var(--c-blue)','stroke-width':2.5,'stroke-dasharray':'8,5'});
+    } else {
+      // x = 2
+      lineEl = createSvgEl('line',{x1:toSvgX(2),y1:margin,x2:toSvgX(2),y2:H-margin,
+        stroke:'var(--c-blue)','stroke-width':2.5});
+    }
+    g.appendChild(lineEl);
+
+    // Line label
+    var labelX, labelY, labelText;
+    if(currentTab === 0){
+      labelX = toSvgX(1.5); labelY = toSvgY(2*1.5+1) - 10;
+      labelText = 'y = 2x + 1';
+    } else {
+      labelX = toSvgX(2) + 10; labelY = margin + 25;
+      labelText = 'x = 2';
+    }
+    var lbl = document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+    lbl.setAttribute('x', labelX);
+    lbl.setAttribute('y', labelY - 18);
+    lbl.setAttribute('width', currentTab === 0 ? '150' : '80');
+    lbl.setAttribute('height', '28');
+    lbl.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:bold;white-space:nowrap">'+T(currentTab === 0 ? 'y = 2x + 1' : 'x = 2')+'</div>';
+    g.appendChild(lbl);
+
+    // Test point
+    var tg = createSvgEl('g',{cursor:'grab',id:'test-point-g'});
+    testPointCircle = createSvgEl('circle',{cx:toSvgX(testX),cy:toSvgY(testY),r:12,fill:'var(--c-orange)',opacity:.85,stroke:'#fff','stroke-width':2});
+    tg.appendChild(testPointCircle);
+    var tp_label = createSvgEl('text',{x:toSvgX(testX),y:toSvgY(testY)-16,'text-anchor':'middle','font-size':'12',fill:'var(--c-orange)','font-weight':'bold',id:'tp-label'});
+    tp_label.textContent = 'P('+testX.toFixed(1)+', '+testY.toFixed(1)+')';
+    tg.appendChild(tp_label);
+    g.appendChild(tg);
+    testPointEl = tg;
+
+    svg.appendChild(g);
+
+    // Show region based on step
+    if(currentStep >= tabs[currentTab].steps.length - 1){
+      setTimeout(function(){ regionEl.setAttribute('opacity','1'); }, 50);
+    }
+
+    updatePointInfo();
+    setupDrag();
+  }
+
+  function updatePointInfo(){
+    var tab = tabs[currentTab];
+    var inside = tab.testFn(testX, testY);
+    var info = document.getElementById('point-info');
+    var expr = tab.testExpr(testX, testY);
+    if(currentTab === 0){
+      var lhs = testY;
+      var rhs = 2*testX + 1;
+      info.innerHTML = 'P(' + testX.toFixed(1) + ', ' + testY.toFixed(1) + ')：' + expr + '<br>' +
+        (inside ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内（' + T('y < 2x+1') + '）</span>' :
+                  '<span style="color:var(--c-red);font-weight:bold">✗ 領域外</span>');
+    } else {
+      info.innerHTML = 'P(' + testX.toFixed(1) + ', ' + testY.toFixed(1) + ')：' + expr + '<br>' +
+        (inside ? '<span style="color:var(--c-green);font-weight:bold">✓ 領域内（' + T('x \\ge 2') + '）</span>' :
+                  '<span style="color:var(--c-red);font-weight:bold">✗ 領域外</span>');
+    }
+    info.className = 'point-info ' + (inside ? 'inside' : 'outside');
+
+    // Update point color
+    if(testPointCircle){
+      testPointCircle.setAttribute('fill', inside ? 'var(--c-green)' : 'var(--c-red)');
+    }
+  }
+
+  function setupDrag(){
+    var dragging = false;
+    var svgEl = svg;
+    var container = document.getElementById('graph-container');
+
+    function getPos(e){
+      var rect = svgEl.getBoundingClientRect();
+      var scale = W / rect.width;
+      var clientX, clientY;
+      if(e.touches){
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      return {
+        x: (clientX - rect.left) * scale,
+        y: (clientY - rect.top) * scale
+      };
+    }
+
+    function startDrag(e){
+      var pos = getPos(e);
+      var px = toSvgX(testX), py = toSvgY(testY);
+      if(Math.hypot(pos.x - px, pos.y - py) < 30){
+        dragging = true;
+        e.preventDefault();
+      }
+    }
+    function moveDrag(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var pos = getPos(e);
+      testX = Math.round(fromSvgX(pos.x) * 2) / 2;
+      testY = Math.round(fromSvgY(pos.y) * 2) / 2;
+      testX = Math.max(xMin, Math.min(xMax, testX));
+      testY = Math.max(yMin, Math.min(yMax, testY));
+      testPointCircle.setAttribute('cx', toSvgX(testX));
+      testPointCircle.setAttribute('cy', toSvgY(testY));
+      var lbl = document.getElementById('tp-label');
+      if(lbl){
+        lbl.setAttribute('x', toSvgX(testX));
+        lbl.setAttribute('y', toSvgY(testY) - 16);
+        lbl.textContent = 'P('+testX.toFixed(1)+', '+testY.toFixed(1)+')';
+      }
+      updatePointInfo();
+    }
+    function endDrag(){ dragging = false; }
+
+    svgEl.addEventListener('mousedown', startDrag);
+    svgEl.addEventListener('mousemove', moveDrag);
+    svgEl.addEventListener('mouseup', endDrag);
+    svgEl.addEventListener('mouseleave', endDrag);
+    svgEl.addEventListener('touchstart', startDrag, {passive:false});
+    svgEl.addEventListener('touchmove', moveDrag, {passive:false});
+    svgEl.addEventListener('touchend', endDrag);
+  }
+
+  // Steps
+  function renderSteps(){
+    var tab = tabs[currentTab];
+    var container = document.getElementById('steps-container');
+    container.innerHTML = '';
+    tab.steps.forEach(function(s, i){
+      var div = document.createElement('div');
+      div.className = 'step' + (i === currentStep ? ' active' : '');
+      div.innerHTML = s;
+      container.appendChild(div);
+    });
+    document.getElementById('step-indicator').textContent = 'ステップ ' + (currentStep+1) + ' / ' + tab.steps.length;
+    document.getElementById('btn-prev').disabled = currentStep === 0;
+    document.getElementById('btn-next').disabled = currentStep === tab.steps.length - 1;
+
+    // Animate region on last step
+    if(regionEl){
+      if(currentStep >= tab.steps.length - 1){
+        regionEl.setAttribute('opacity','1');
+      } else {
+        regionEl.setAttribute('opacity','0');
+      }
+    }
+  }
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentTab = parseInt(btn.getAttribute('data-tab'));
+      currentStep = 0;
+      testX = currentTab === 0 ? 1 : 3;
+      testY = 0;
+      drawScene();
+      renderSteps();
+    });
+  });
+
+  document.getElementById('btn-prev').addEventListener('click', function(){
+    if(currentStep > 0){
+      currentStep--;
+      renderSteps();
+    }
+  });
+  document.getElementById('btn-next').addEventListener('click', function(){
+    if(currentStep < tabs[currentTab].steps.length - 1){
+      currentStep++;
+      renderSteps();
+      // Trigger region animation on last step
+      if(currentStep === tabs[currentTab].steps.length - 1){
+        setTimeout(function(){ if(regionEl) regionEl.setAttribute('opacity','1'); }, 50);
+      }
+    }
+  });
+
+  // Initial render
+  drawScene();
+  renderSteps();
+}
+</script>
+</body>
+</html>

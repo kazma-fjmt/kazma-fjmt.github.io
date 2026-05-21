@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>円と直線の共有点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-group {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0;
+  }
+  .slider-row {
+    display: flex; align-items: center; gap: .75rem; margin: .5rem 0;
+  }
+  .slider-row label { min-width: 120px; font-weight: 600; font-size: .95rem; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .val { min-width: 40px; text-align: right; font-weight: 600; font-size: .95rem; }
+
+  .case-indicator {
+    text-align: center; font-size: 1.1rem; font-weight: 700;
+    padding: .75rem; border-radius: 10px; margin: .5rem 0;
+    transition: all .3s ease;
+  }
+  .case-indicator.two { background: #e8f5e9; border: 2px solid var(--c-green); color: var(--c-green); }
+  .case-indicator.one { background: #fff3e0; border: 2px solid var(--c-orange); color: var(--c-orange); }
+  .case-indicator.zero { background: #ffebee; border: 2px solid var(--c-red); color: var(--c-red); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>円と直線の共有点</h1>
+  <p class="subtitle">円と直線の交点を連立方程式で求めましょう。</p>
+
+  <h2>3つの場合</h2>
+  <p>円と直線の位置関係には、次の3つの場合があります。</p>
+  <div class="formula-box" id="formula-cases"></div>
+
+  <h2>共有点の求め方</h2>
+  <p>円と直線の方程式を<strong>連立</strong>して解きます。直線の式を円の式に代入し、得られる2次方程式の解が共有点の座標です。</p>
+
+  <h2>例題3の解法</h2>
+  <p><span id="f-example-eq"></span> の共有点を求めます。</p>
+  <div class="walkthrough" id="wt-example"></div>
+  <div class="controls-row">
+    <button class="btn" id="we-prev" disabled>&larr; 前へ</button>
+    <span class="step-counter" id="we-counter"></span>
+    <button class="btn primary" id="we-next">次へ &rarr;</button>
+  </div>
+
+  <h2>直線を動かして交点を観察しよう</h2>
+  <p>スライダーで直線の切片を変えて、円との交点がどう変わるか観察しましょう。</p>
+
+  <div class="slider-group">
+    <div class="slider-row">
+      <label>切片（<span id="lbl-b"></span>）</label>
+      <input type="range" id="sl-intercept" min="-10" max="10" step="0.5" value="1">
+      <span class="val" id="val-intercept">1</span>
+    </div>
+    <div class="slider-row">
+      <label>傾き（<span id="lbl-a"></span>）</label>
+      <input type="range" id="sl-slope" min="-3" max="3" step="0.25" value="-1">
+      <span class="val" id="val-slope">-1</span>
+    </div>
+  </div>
+
+  <div class="live-calc" id="live-eq"></div>
+  <div id="case-box" class="case-indicator two"></div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-points"></div>
+
+  <div class="note" id="note-method"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+const R = 5; // radius of x^2+y^2=25
+
+function init(){
+  document.getElementById('formula-cases').innerHTML =
+    T('\\text{2個の共有点}') + '：直線が円と2箇所で交わる<br>' +
+    T('\\text{1個の共有点}') + '：直線が円に<strong>接する</strong>（接線）<br>' +
+    T('\\text{0個の共有点}') + '：直線が円と交わらない';
+
+  tex('x^2+y^2=25\\;\\text{と}\\;y=-x+1', document.getElementById('f-example-eq'));
+
+  document.getElementById('note-method').innerHTML =
+    '<strong>求め方のまとめ：</strong><br>' +
+    '1. 直線の式を ' + T('y = \\cdots') + ' の形にする<br>' +
+    '2. 円の式に代入して ' + T('x') + ' の2次方程式を得る<br>' +
+    '3. 2次方程式を解いて ' + T('x') + ' の値を求める<br>' +
+    '4. ' + T('x') + ' の値を直線の式に代入して ' + T('y') + ' を求める';
+
+  document.getElementById('lbl-b').innerHTML = T('b');
+  document.getElementById('lbl-a').innerHTML = T('a');
+
+  initExample();
+  initSliders();
+}
+
+function initExample(){
+  const steps = [
+    { label: 'Step 1: 連立方程式を書く', formula: '\\begin{cases} x^2 + y^2 = 25 \\\\ y = -x + 1 \\end{cases}' },
+    { label: 'Step 2: y を代入', formula: 'x^2 + (-x+1)^2 = 25' },
+    { label: 'Step 3: 展開', formula: 'x^2 + x^2 - 2x + 1 = 25' },
+    { label: 'Step 4: 整理', formula: '2x^2 - 2x - 24 = 0' },
+    { label: 'Step 5: 2で割る', formula: 'x^2 - x - 12 = 0' },
+    { label: 'Step 6: 因数分解', formula: '(x-4)(x+3) = 0' },
+    { label: 'Step 7: x の値', formula: 'x = 4 \\quad\\text{または}\\quad x = -3' },
+    { label: 'Step 8: y の値を求める', formula: 'x=4:\\;y=-4+1=-3,\\quad x=-3:\\;y=3+1=4' },
+    { label: 'Step 9: 共有点', formula: '\\text{共有点は}\\;(4,\\,-3)\\;\\text{と}\\;(-3,\\,4)' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-example');
+  const counter = document.getElementById('we-counter');
+  const prevBtn = document.getElementById('we-prev');
+  const nextBtn = document.getElementById('we-next');
+
+  function render(){
+    let html = '';
+    for(let i = 0; i <= cur; i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === steps.length - 1;
+  }
+
+  prevBtn.addEventListener('click', () => { if(cur > 0){ cur--; render(); } });
+  nextBtn.addEventListener('click', () => { if(cur < steps.length - 1){ cur++; render(); } });
+  render();
+}
+
+function initSliders(){
+  const slI = document.getElementById('sl-intercept');
+  const slS = document.getElementById('sl-slope');
+
+  function update(){
+    const b = parseFloat(slI.value);
+    const a = parseFloat(slS.value);
+
+    document.getElementById('val-intercept').textContent = b;
+    document.getElementById('val-slope').textContent = a;
+
+    // Line: y = ax + b
+    const fmt = v => Number.isInteger(v) ? `${v}` : v.toFixed(1);
+    let lineStr = 'y = ';
+    if(a === 0) lineStr += fmt(b);
+    else if(a === 1) lineStr += 'x' + (b >= 0 ? ' + ' + fmt(b) : ' - ' + fmt(-b));
+    else if(a === -1) lineStr += '-x' + (b >= 0 ? ' + ' + fmt(b) : ' - ' + fmt(-b));
+    else lineStr += fmt(a) + 'x' + (b >= 0 ? ' + ' + fmt(b) : ' - ' + fmt(-b));
+
+    if(b === 0){
+      if(a === 0) lineStr = 'y = 0';
+      else if(a === 1) lineStr = 'y = x';
+      else if(a === -1) lineStr = 'y = -x';
+      else lineStr = 'y = ' + fmt(a) + 'x';
+    }
+
+    tex(`x^2+y^2=25,\\quad ${lineStr}`, document.getElementById('live-eq'), true);
+
+    // Substitute: x^2 + (ax+b)^2 = 25
+    // (1+a^2)x^2 + 2abx + b^2 - 25 = 0
+    const A2 = 1 + a*a;
+    const B2 = 2*a*b;
+    const C2 = b*b - 25;
+    const disc = B2*B2 - 4*A2*C2;
+
+    const caseBox = document.getElementById('case-box');
+    const ptEl = document.getElementById('live-points');
+
+    let intersections = [];
+
+    if(disc > 0.001){
+      caseBox.className = 'case-indicator two';
+      caseBox.textContent = '共有点：2個';
+      const sqD = Math.sqrt(disc);
+      const x1 = (-B2 + sqD) / (2*A2);
+      const x2 = (-B2 - sqD) / (2*A2);
+      const y1 = a*x1 + b;
+      const y2 = a*x2 + b;
+      intersections = [{x:x1, y:y1}, {x:x2, y:y2}];
+      ptEl.innerHTML = T(`\\text{共有点：}\\;(${fmt(x1)},\\;${fmt(y1)}),\\;(${fmt(x2)},\\;${fmt(y2)})`);
+    } else if(Math.abs(disc) <= 0.001){
+      caseBox.className = 'case-indicator one';
+      caseBox.textContent = '共有点：1個（接線）';
+      const x1 = -B2 / (2*A2);
+      const y1 = a*x1 + b;
+      intersections = [{x:x1, y:y1}];
+      ptEl.innerHTML = T(`\\text{接点：}\\;(${fmt(x1)},\\;${fmt(y1)})`);
+    } else {
+      caseBox.className = 'case-indicator zero';
+      caseBox.textContent = '共有点：0個';
+      intersections = [];
+      ptEl.innerHTML = T('\\text{共有点なし}');
+    }
+
+    drawGraph(a, b, intersections, disc);
+  }
+
+  slI.addEventListener('input', update);
+  slS.addEventListener('input', update);
+  update();
+}
+
+function drawGraph(slope, intercept, intersections, disc){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 600, ox = 300, oy = 300, scale = 35;
+
+  function px(x){ return ox + x * scale; }
+  function py(y){ return oy - y * scale; }
+
+  let html = '';
+
+  // Grid
+  for(let i = -8; i <= 8; i++){
+    html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee"/>`;
+    html += `<line x1="10" y1="${py(i)}" x2="${W-10}" y2="${py(i)}" stroke="#eee"/>`;
+  }
+
+  // Axes
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${W-26}" y="${oy-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(8,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  // Axis labels
+  for(let i = -7; i <= 7; i++){
+    if(i === 0) continue;
+    if(i % 2 === 0 || Math.abs(i) <= 5){
+      html += `<text x="${px(i)}" y="${oy+18}" font-size="11" fill="#aaa" text-anchor="middle">${i}</text>`;
+      html += `<text x="${ox-14}" y="${py(i)+4}" font-size="11" fill="#aaa" text-anchor="end">${i}</text>`;
+    }
+  }
+
+  // Circle x^2+y^2=25
+  html += `<circle cx="${px(0)}" cy="${py(0)}" r="${R*scale}" fill="rgba(42,109,244,0.06)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  // Line y = slope*x + intercept
+  const lineColor = disc > 0.001 ? 'var(--c-green)' : (Math.abs(disc) <= 0.001 ? 'var(--c-orange)' : 'var(--c-red)');
+  const xLeft = -8, xRight = 8;
+  const yLeft = slope * xLeft + intercept;
+  const yRight = slope * xRight + intercept;
+  html += `<line x1="${px(xLeft)}" y1="${py(yLeft)}" x2="${px(xRight)}" y2="${py(yRight)}" stroke="${lineColor}" stroke-width="2.5"/>`;
+
+  // Distance from center to line (for visualization)
+  // Line: ax - y + b = 0  (y = ax + b => ax - y + b = 0)
+  const dist = Math.abs(intercept) / Math.sqrt(slope*slope + 1);
+  // Foot of perpendicular from origin
+  const fpX = -slope * intercept / (slope*slope + 1);
+  const fpY = intercept / (slope*slope + 1);
+  html += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(fpX)}" y2="${py(fpY)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  html += `<foreignObject x="${px(fpX/2)+8}" y="${py(fpY/2)-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--muted)">${T('d')}</div></foreignObject>`;
+
+  // Intersection points
+  intersections.forEach((pt, i) => {
+    html += `<circle cx="${px(pt.x)}" cy="${py(pt.y)}" r="7" fill="var(--c-red)" stroke="#fff" stroke-width="2">`;
+    html += `<animate attributeName="r" values="7;10;7" dur="1.5s" repeatCount="indefinite"/></circle>`;
+    const label = intersections.length === 1 ? '接点' : `P${i+1}`;
+    html += `<text x="${px(pt.x)+12}" y="${py(pt.y)-12}" font-size="13" font-weight="700" fill="var(--c-red)">${label}</text>`;
+  });
+
+  svg.innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>内分点の定義</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-p: #ff9800;
+    --c-q: #9c27b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center;
+    overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.2rem; }
+  .live-calc .row { margin: .4rem 0; }
+
+  .ratio-controls {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: 1rem; flex-wrap: wrap;
+  }
+  .ratio-controls label { font-size: .95rem; color: var(--muted); }
+  .ratio-btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    width: 44px; height: 44px; border-radius: 10px; font-size: 1.3rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    user-select: none; font-family: inherit; color: var(--accent);
+  }
+  .ratio-btn:active { transform: scale(.93); background: #f0f5ff; }
+  .ratio-val {
+    font-size: 1.4rem; font-weight: 700; min-width: 2rem; text-align: center;
+    color: var(--fg);
+  }
+
+  .example-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .example-box .katex { font-size: 1.15rem; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideP {
+    0% { opacity: .3; } 100% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>内分点の定義</h1>
+  <p class="subtitle">線分を内分する点の意味と位置を視覚的に理解しましょう。</p>
+
+  <h2>内分点とは</h2>
+  <p>線分 AB 上の点 P が <span id="f-ap-pb"></span> を満たすとき、P は線分 AB を <span id="f-mn"></span> に<strong>内分する</strong>といいます。</p>
+  <div class="formula-box" id="formula-def"></div>
+
+  <h2>数直線で確かめよう</h2>
+  <p><span id="f-m2"></span> と <span id="f-n2"></span> の値を変えて、内分点 P の位置がどう変わるか確かめましょう。点 P をドラッグしても動かせます。</p>
+
+  <div class="ratio-controls">
+    <label><span id="lbl-m"></span> =</label>
+    <button class="ratio-btn" id="m-dec">&minus;</button>
+    <span class="ratio-val" id="m-val">1</span>
+    <button class="ratio-btn" id="m-inc">+</button>
+    <span style="width:1.5rem"></span>
+    <label><span id="lbl-n"></span> =</label>
+    <button class="ratio-btn" id="n-dec">&minus;</button>
+    <span class="ratio-val" id="n-val">4</span>
+    <button class="ratio-btn" id="n-inc">+</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="numberline" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題 5</h2>
+  <p>線分 AB を以下の比で内分する点の位置を確認しましょう。</p>
+  <div class="example-box" id="example5"></div>
+
+  <div class="note" id="note-mid"></div>
+</main>
+
+<script>
+  function tex(latex, el, dm) { katex.render(latex, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  /* state */
+  let m = 1, n = 4;
+  const A_POS = 0, B_POS = 10; /* logical positions on number line */
+  const NL_MIN = -1, NL_MAX = 11;
+  const PAD_L = 50, PAD_R = 50, SVG_W = 700;
+  const Y_LINE = 100;
+  const usable = SVG_W - PAD_L - PAD_R;
+
+  function valToX(v) { return PAD_L + (v - NL_MIN) / (NL_MAX - NL_MIN) * usable; }
+  function xToVal(x) { return NL_MIN + (x - PAD_L) / usable * (NL_MAX - NL_MIN); }
+
+  function pPos() {
+    return A_POS + (B_POS - A_POS) * m / (m + n);
+  }
+
+  function drawSVG() {
+    const svg = document.getElementById('numberline');
+    let s = '';
+    const xA = valToX(A_POS), xB = valToX(B_POS);
+    const pp = pPos();
+    const xP = valToX(pp);
+
+    /* axis line */
+    s += `<line x1="${PAD_L}" y1="${Y_LINE}" x2="${SVG_W-PAD_R}" y2="${Y_LINE}" stroke="#bbb" stroke-width="2"/>`;
+
+    /* ticks */
+    for (let i = NL_MIN; i <= NL_MAX; i++) {
+      const x = valToX(i);
+      const h = (i === A_POS || i === B_POS) ? 8 : 5;
+      s += `<line x1="${x}" y1="${Y_LINE-h}" x2="${x}" y2="${Y_LINE+h}" stroke="#ccc" stroke-width="1.2"/>`;
+      if (i >= 0 && i <= 10) {
+        s += `<text x="${x}" y="${Y_LINE+24}" text-anchor="middle" font-size="12" fill="#aaa">${i}</text>`;
+      }
+    }
+
+    /* segment AB highlight */
+    s += `<line x1="${xA}" y1="${Y_LINE}" x2="${xB}" y2="${Y_LINE}" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>`;
+
+    /* AP segment */
+    s += `<line x1="${xA}" y1="${Y_LINE}" x2="${xP}" y2="${Y_LINE}" stroke="var(--c-a)" stroke-width="4" stroke-linecap="round" opacity=".6"/>`;
+    /* PB segment */
+    s += `<line x1="${xP}" y1="${Y_LINE}" x2="${xB}" y2="${Y_LINE}" stroke="var(--c-b)" stroke-width="4" stroke-linecap="round" opacity=".6"/>`;
+
+    /* AP bracket */
+    const bracketY = Y_LINE - 35;
+    s += `<line x1="${xA}" y1="${bracketY}" x2="${xP}" y2="${bracketY}" stroke="var(--c-a)" stroke-width="2"/>`;
+    s += `<line x1="${xA}" y1="${bracketY-5}" x2="${xA}" y2="${bracketY+5}" stroke="var(--c-a)" stroke-width="2"/>`;
+    s += `<line x1="${xP}" y1="${bracketY-5}" x2="${xP}" y2="${bracketY+5}" stroke="var(--c-a)" stroke-width="2"/>`;
+    s += `<foreignObject x="${(xA+xP)/2-40}" y="${bracketY-24}" width="80" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-a);font-weight:600;text-align:center;white-space:nowrap">${T('m = '+m)}</div></foreignObject>`;
+
+    /* PB bracket */
+    s += `<line x1="${xP}" y1="${bracketY}" x2="${xB}" y2="${bracketY}" stroke="var(--c-b)" stroke-width="2"/>`;
+    s += `<line x1="${xP}" y1="${bracketY-5}" x2="${xP}" y2="${bracketY+5}" stroke="var(--c-b)" stroke-width="2"/>`;
+    s += `<line x1="${xB}" y1="${bracketY-5}" x2="${xB}" y2="${bracketY+5}" stroke="var(--c-b)" stroke-width="2"/>`;
+    s += `<foreignObject x="${(xP+xB)/2-40}" y="${bracketY-24}" width="80" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-b);font-weight:600;text-align:center;white-space:nowrap">${T('n = '+n)}</div></foreignObject>`;
+
+    /* point A */
+    s += `<circle cx="${xA}" cy="${Y_LINE}" r="8" fill="var(--c-a)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${xA}" y="${Y_LINE+42}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--c-a)">A</text>`;
+
+    /* point B */
+    s += `<circle cx="${xB}" cy="${Y_LINE}" r="8" fill="var(--c-b)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${xB}" y="${Y_LINE+42}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--c-b)">B</text>`;
+
+    /* point P */
+    s += `<circle cx="${xP}" cy="${Y_LINE}" r="9" fill="var(--c-p)" stroke="#fff" stroke-width="2" class="draggable" data-pt="P" style="cursor:grab; animation: slideP .3s ease"/>`;
+    s += `<text x="${xP}" y="${Y_LINE+42}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--c-p)">P</text>`;
+
+    /* ratio display */
+    s += `<text x="${SVG_W/2}" y="${Y_LINE+72}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--fg)">AP : PB = ${m} : ${n}</text>`;
+
+    svg.innerHTML = s;
+    updateCalc();
+  }
+
+  function updateCalc() {
+    const el = document.getElementById('live-calc');
+    const pp = pPos();
+    const ppStr = Number.isInteger(pp) ? String(pp) : `\\frac{${m * B_POS}}{${m+n}}`;
+    const apLen = pp - A_POS;
+    const pbLen = B_POS - pp;
+    const apStr = Number.isInteger(apLen) ? String(Math.round(apLen * 100)/100) : `\\frac{${m * (B_POS - A_POS)}}{${m+n}}`;
+    const pbStr = Number.isInteger(pbLen) ? String(Math.round(pbLen * 100)/100) : `\\frac{${n * (B_POS - A_POS)}}{${m+n}}`;
+    let html = '';
+    html += `<div class="row">${T(`\\text{P の位置} = \\frac{${n} \\times ${A_POS} + ${m} \\times ${B_POS}}{${m} + ${n}} = \\frac{${m * B_POS}}{${m+n}}`)}</div>`;
+    html += `<div class="row">${T(`\\mathrm{AP} = ${apStr},\\quad \\mathrm{PB} = ${pbStr}`)}</div>`;
+    html += `<div class="row">${T(`\\mathrm{AP} : \\mathrm{PB} = ${m} : ${n}`)}</div>`;
+    el.innerHTML = html;
+  }
+
+  /* drag P on number line to change ratio */
+  let dragging = false;
+  function ptrDown(e) {
+    if (e.target.classList && e.target.classList.contains('draggable')) {
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+  function ptrMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const svg = document.getElementById('numberline');
+    const rect = svg.getBoundingClientRect();
+    const scaleX = SVG_W / rect.width;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const sx = (cx - rect.left) * scaleX;
+    let v = xToVal(sx);
+    /* clamp P between A and B */
+    v = Math.max(A_POS + 0.5, Math.min(B_POS - 0.5, v));
+    /* find best integer ratio */
+    const totalParts = 10;
+    const bestM = Math.max(1, Math.min(totalParts - 1, Math.round(v / B_POS * totalParts)));
+    const bestN = totalParts - bestM;
+    /* simplify */
+    const g = gcd(bestM, bestN);
+    m = bestM / g;
+    n = bestN / g;
+    document.getElementById('m-val').textContent = m;
+    document.getElementById('n-val').textContent = n;
+    drawSVG();
+  }
+  function ptrUp() { dragging = false; }
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function init() {
+    document.getElementById('f-ap-pb').innerHTML = T("\\mathrm{AP} : \\mathrm{PB} = m : n");
+    document.getElementById('f-mn').innerHTML = T("m : n");
+    tex("\\text{P は線分 AB 上にあり、} \\mathrm{AP} : \\mathrm{PB} = m : n", document.getElementById('formula-def'), true);
+    tex('m', document.getElementById('lbl-m'));
+    tex('n', document.getElementById('lbl-n'));
+    document.getElementById('f-m2').innerHTML = T('m');
+    document.getElementById('f-n2').innerHTML = T('n');
+
+    /* example 5 */
+    document.getElementById('example5').innerHTML =
+      '<p>' + T("\\text{P は AB を } 1:4 \\text{ に内分}") + ' ... P は A に近い位置</p>' +
+      '<p>' + T("\\text{Q は AB を } 3:2 \\text{ に内分}") + ' ... Q は B に近い位置</p>' +
+      '<p>' + T('m') + ' が大きいほど B に近づき、' + T('n') + ' が大きいほど A に近づきます。</p>';
+
+    /* note */
+    document.getElementById('note-mid').innerHTML =
+      T("m = n") + " のとき（つまり " + T("1:1") + " に内分するとき）、内分点 P は線分 AB の<strong>中点</strong>になります。";
+
+    /* ratio buttons */
+    document.getElementById('m-dec').addEventListener('click', () => { if (m > 1) { m--; document.getElementById('m-val').textContent = m; drawSVG(); } });
+    document.getElementById('m-inc').addEventListener('click', () => { if (m < 9) { m++; document.getElementById('m-val').textContent = m; drawSVG(); } });
+    document.getElementById('n-dec').addEventListener('click', () => { if (n > 1) { n--; document.getElementById('n-val').textContent = n; drawSVG(); } });
+    document.getElementById('n-inc').addEventListener('click', () => { if (n < 9) { n++; document.getElementById('n-val').textContent = n; drawSVG(); } });
+
+    /* drag */
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    drawSVG();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

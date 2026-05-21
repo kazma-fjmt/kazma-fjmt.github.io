@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>三角形の辺の長さと形</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-c: #5cb85c;
+    --c-right: #ff9800;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc .row { margin: .3rem 0; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .badge {
+    display: inline-block; padding: .35rem .8rem; border-radius: 8px;
+    font-weight: 600; font-size: .95rem; margin: .5rem 0;
+  }
+  .badge.right { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .badge.acute { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .badge.obtuse { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+  @keyframes rightAnglePulse {
+    0%,100% { opacity: .6; } 50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>三角形の辺の長さと形</h1>
+  <p class="subtitle">3点の座標から三角形の辺の長さを求め、三角形の種類を判定しましょう。</p>
+
+  <h2>判定方法</h2>
+  <p>三角形の3辺の長さの2乗を比較して、三角形の種類を判定できます。最も長い辺を <span id="f-c"></span> とすると：</p>
+  <div class="formula-box" id="formula-criteria"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>3つの頂点 A, B, C をドラッグして動かしてみましょう。辺の長さと三角形の種類が自動で更新されます。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="coordplane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題 3</h2>
+  <p>A(2, 3)、B(1, 1)、C(5, &minus;1) を頂点とする三角形の形を調べます。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+  function tex(latex, el, dm) { katex.render(latex, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  /* state */
+  let pts = [
+    { x: 2, y: 3 },  /* A */
+    { x: 1, y: 1 },  /* B */
+    { x: 5, y: -1 }  /* C */
+  ];
+  const labels = ['A', 'B', 'C'];
+  const colors = ['var(--c-a)', 'var(--c-b)', 'var(--c-c)'];
+  const GRID_MIN = -5, GRID_MAX = 8;
+  const SVG_SIZE = 600, MARGIN = 40;
+  const usable = SVG_SIZE - 2 * MARGIN;
+
+  function toSVG(vx, vy) {
+    return {
+      x: MARGIN + (vx - GRID_MIN) / (GRID_MAX - GRID_MIN) * usable,
+      y: MARGIN + (GRID_MAX - vy) / (GRID_MAX - GRID_MIN) * usable
+    };
+  }
+  function toVal(sx, sy) {
+    const vx = GRID_MIN + (sx - MARGIN) / usable * (GRID_MAX - GRID_MIN);
+    const vy = GRID_MAX - (sy - MARGIN) / usable * (GRID_MAX - GRID_MIN);
+    return { x: Math.round(vx), y: Math.round(vy) };
+  }
+
+  function dist2(p, q) {
+    return (q.x-p.x)*(q.x-p.x) + (q.y-p.y)*(q.y-p.y);
+  }
+
+  function simpleSqrt(n) {
+    const r = Math.sqrt(n);
+    if (Number.isInteger(r)) return String(Math.round(r));
+    /* try a√b form */
+    for (let a = Math.floor(r); a >= 2; a--) {
+      if (n % (a*a) === 0) {
+        const b = n / (a*a);
+        return b === 1 ? String(a) : `${a}\\sqrt{${b}}`;
+      }
+    }
+    return `\\sqrt{${n}}`;
+  }
+
+  /* Plain-text version for SVG labels (no LaTeX) */
+  function simpleSqrtText(n) {
+    const r = Math.sqrt(n);
+    if (Number.isInteger(r)) return String(Math.round(r));
+    for (let a = Math.floor(r); a >= 2; a--) {
+      if (n % (a*a) === 0) {
+        const b = n / (a*a);
+        return b === 1 ? String(a) : `${a}√${b}`;
+      }
+    }
+    return `√${n}`;
+  }
+
+  function classifyTriangle(ab2, bc2, ca2) {
+    const sides = [ab2, bc2, ca2].sort((a,b) => a - b);
+    const sum = sides[0] + sides[1];
+    if (sum === sides[2]) return 'right';
+    if (sum > sides[2]) return 'acute';
+    return 'obtuse';
+  }
+
+  function rightAngleVertex(ab2, bc2, ca2) {
+    /* returns index of vertex at right angle, or -1 */
+    if (ab2 + bc2 === ca2) return 1; /* B */
+    if (bc2 + ca2 === ab2) return 2; /* C */
+    if (ca2 + ab2 === bc2) return 0; /* A */
+    return -1;
+  }
+
+  function drawSVG() {
+    const svg = document.getElementById('coordplane');
+    let s = '';
+    /* grid */
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      const p1 = toSVG(i, GRID_MIN), p2 = toSVG(i, GRID_MAX);
+      const q1 = toSVG(GRID_MIN, i), q2 = toSVG(GRID_MAX, i);
+      const c = i === 0 ? '#aaa' : '#eee';
+      const w = i === 0 ? 1.5 : 0.8;
+      s += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${c}" stroke-width="${w}"/>`;
+      s += `<line x1="${q1.x}" y1="${q1.y}" x2="${q2.x}" y2="${q2.y}" stroke="${c}" stroke-width="${w}"/>`;
+      if (i !== 0) {
+        const tx = toSVG(i, 0), ty = toSVG(0, i);
+        s += `<text x="${tx.x}" y="${tx.y+16}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+        s += `<text x="${ty.x-10}" y="${ty.y+4}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+      }
+    }
+    const ox = toSVG(0,0);
+    s += `<text x="${ox.x-10}" y="${ox.y+16}" text-anchor="middle" font-size="11" fill="#999">O</text>`;
+
+    const sp = pts.map(p => toSVG(p.x, p.y));
+    const ab2 = dist2(pts[0], pts[1]), bc2 = dist2(pts[1], pts[2]), ca2 = dist2(pts[2], pts[0]);
+    const type = classifyTriangle(ab2, bc2, ca2);
+    const rv = rightAngleVertex(ab2, bc2, ca2);
+
+    /* triangle fill */
+    s += `<polygon points="${sp.map(p=>p.x+','+p.y).join(' ')}" fill="var(--accent)" opacity=".07"/>`;
+    /* triangle edges */
+    for (let i = 0; i < 3; i++) {
+      const j = (i+1) % 3;
+      s += `<line x1="${sp[i].x}" y1="${sp[i].y}" x2="${sp[j].x}" y2="${sp[j].y}" stroke="var(--accent)" stroke-width="2"/>`;
+    }
+
+    /* right angle marker */
+    if (rv >= 0) {
+      const vi = rv, v1 = (rv+1)%3, v2 = (rv+2)%3;
+      const cx = sp[vi].x, cy = sp[vi].y;
+      const d1x = sp[v1].x - cx, d1y = sp[v1].y - cy;
+      const d2x = sp[v2].x - cx, d2y = sp[v2].y - cy;
+      const len1 = Math.sqrt(d1x*d1x + d1y*d1y), len2 = Math.sqrt(d2x*d2x + d2y*d2y);
+      const sz = 15;
+      const u1x = d1x/len1*sz, u1y = d1y/len1*sz;
+      const u2x = d2x/len2*sz, u2y = d2y/len2*sz;
+      s += `<polyline points="${cx+u1x},${cy+u1y} ${cx+u1x+u2x},${cy+u1y+u2y} ${cx+u2x},${cy+u2y}" fill="none" stroke="var(--c-right)" stroke-width="2.5" style="animation: rightAnglePulse 1.5s ease infinite"/>`;
+    }
+
+    /* edge labels */
+    const edgeNames = ['AB', 'BC', 'CA'];
+    const edgeDists = [ab2, bc2, ca2];
+    for (let i = 0; i < 3; i++) {
+      const j = (i+1) % 3;
+      const mx = (sp[i].x + sp[j].x) / 2, my = (sp[i].y + sp[j].y) / 2;
+      const dx = sp[j].x - sp[i].x, dy = sp[j].y - sp[i].y;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      const nx = -dy/len * 16, ny = dx/len * 16;
+      s += `<text x="${mx+nx}" y="${my+ny+4}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--accent)">${edgeNames[i]}=${simpleSqrtText(edgeDists[i])}</text>`;
+    }
+
+    /* points */
+    for (let i = 0; i < 3; i++) {
+      s += `<circle cx="${sp[i].x}" cy="${sp[i].y}" r="8" fill="${colors[i]}" stroke="#fff" stroke-width="2" class="draggable" data-idx="${i}" style="cursor:grab"/>`;
+      s += `<text x="${sp[i].x}" y="${sp[i].y-14}" text-anchor="middle" font-size="14" font-weight="700" fill="${colors[i]}">${labels[i]}(${pts[i].x}, ${pts[i].y})</text>`;
+    }
+
+    svg.innerHTML = s;
+    updateCalc(ab2, bc2, ca2, type, rv);
+  }
+
+  function updateCalc(ab2, bc2, ca2, type, rv) {
+    const el = document.getElementById('live-calc');
+    const typeLabel = type === 'right' ? '直角三角形' : type === 'acute' ? '鋭角三角形' : '鈍角三角形';
+    const badgeClass = type;
+    const sides = [{name:'AB', v:ab2}, {name:'BC', v:bc2}, {name:'CA', v:ca2}].sort((a,b) => a.v - b.v);
+    const compStr = sides[0].v + sides[1].v === sides[2].v
+      ? `\\mathrm{${sides[0].name}}^2 + \\mathrm{${sides[1].name}}^2 = \\mathrm{${sides[2].name}}^2`
+      : sides[0].v + sides[1].v > sides[2].v
+        ? `\\mathrm{${sides[0].name}}^2 + \\mathrm{${sides[1].name}}^2 > \\mathrm{${sides[2].name}}^2`
+        : `\\mathrm{${sides[0].name}}^2 + \\mathrm{${sides[1].name}}^2 < \\mathrm{${sides[2].name}}^2`;
+
+    let html = '';
+    html += `<div class="row">${T(`\\mathrm{AB} = ${simpleSqrt(ab2)},\\quad \\mathrm{BC} = ${simpleSqrt(bc2)},\\quad \\mathrm{CA} = ${simpleSqrt(ca2)}`)}</div>`;
+    html += `<div class="row">${T(`\\mathrm{${sides[0].name}}^2 + \\mathrm{${sides[1].name}}^2 = ${sides[0].v + sides[1].v},\\quad \\mathrm{${sides[2].name}}^2 = ${sides[2].v}`)}</div>`;
+    html += `<div class="row">${T(compStr)}</div>`;
+    html += `<div class="badge ${badgeClass}">${typeLabel}${rv >= 0 ? '（頂点 ' + labels[rv] + ' で直角）' : ''}</div>`;
+    el.innerHTML = html;
+  }
+
+  /* drag */
+  let dragging = -1;
+  function ptrDown(e) {
+    const tgt = e.target;
+    if (tgt.classList && tgt.classList.contains('draggable')) {
+      dragging = parseInt(tgt.dataset.idx);
+      e.preventDefault();
+    }
+  }
+  function ptrMove(e) {
+    if (dragging < 0) return;
+    e.preventDefault();
+    const svg = document.getElementById('coordplane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    const v = toVal((cx - rect.left)*scale, (cy - rect.top)*scale);
+    v.x = Math.max(GRID_MIN+1, Math.min(GRID_MAX-1, v.x));
+    v.y = Math.max(GRID_MIN+1, Math.min(GRID_MAX-1, v.y));
+    pts[dragging] = v;
+    drawSVG();
+  }
+  function ptrUp() { dragging = -1; }
+
+  /* walkthrough */
+  const steps = [
+    { title: "問題", tex: "\\mathrm{A}(2,3),\\; \\mathrm{B}(1,1),\\; \\mathrm{C}(5,-1) \\text{ の三角形の形を調べる}" },
+    { title: "AB を求める", tex: "\\mathrm{AB}^2 = (1-2)^2 + (1-3)^2 = 1 + 4 = 5 \\implies \\mathrm{AB} = \\sqrt{5}" },
+    { title: "BC を求める", tex: "\\mathrm{BC}^2 = (5-1)^2 + (-1-1)^2 = 16 + 4 = 20 \\implies \\mathrm{BC} = 2\\sqrt{5}" },
+    { title: "CA を求める", tex: "\\mathrm{CA}^2 = (2-5)^2 + (3-(-1))^2 = 9 + 16 = 25 \\implies \\mathrm{CA} = 5" },
+    { title: "2乗を比較", tex: "\\mathrm{AB}^2 + \\mathrm{BC}^2 = 5 + 20 = 25 = \\mathrm{CA}^2" },
+    { title: "判定", tex: "\\mathrm{AB}^2 + \\mathrm{BC}^2 = \\mathrm{CA}^2 \\text{ → 頂点 B で直角}" },
+    { title: "答え", tex: "\\therefore\\; \\angle B = 90° \\text{ の直角三角形}" }
+  ];
+  let curStep = 0;
+
+  function renderWalk() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    document.getElementById('f-c').innerHTML = T("c");
+    tex("\\begin{cases} a^2+b^2 = c^2 & \\Rightarrow \\text{直角三角形} \\\\ a^2+b^2 > c^2 & \\Rightarrow \\text{鋭角三角形} \\\\ a^2+b^2 < c^2 & \\Rightarrow \\text{鈍角三角形} \\end{cases}", document.getElementById('formula-criteria'), true);
+
+    drawSVG();
+
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalk(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < steps.length - 1) { curStep++; renderWalk(); }
+    });
+    renderWalk();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

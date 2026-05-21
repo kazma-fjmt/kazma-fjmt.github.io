@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>円と直線の連立不等式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-c: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+    position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0;
+    font-size: .9rem; align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; }
+  .legend-swatch {
+    display: inline-block; width: 18px; height: 18px; border-radius: 4px;
+  }
+
+  .test-result {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .test-result .check { color: #5cb85c; font-weight: 700; }
+  .test-result .cross { color: #d9534f; font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<main>
+  <h1>円と直線の連立不等式</h1>
+  <p class="subtitle">円の不等式と直線の不等式を組み合わせた領域を求めます。</p>
+
+  <h2>例題5</h2>
+  <div class="formula-box" id="formula-system"></div>
+
+  <h2>ステップ解説</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>グラフ</h2>
+  <p>円の外部と直線の下側の共通部分が求める領域です。テストポイントをドラッグして確認しましょう。</p>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(42,109,244,0.2);"></span>① 円の外部</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(217,83,79,0.2);"></span>② 直線の下側</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(120,70,180,0.3);"></span>共通領域</div>
+  </div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="coordplane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="test-result" id="test-result"></div>
+
+  <div class="note">
+    <strong>ポイント：</strong>円の不等式 ${T ? "" : ""}と直線の不等式を組み合わせても、考え方は同じです。各不等式の表す領域を求め、共通部分を取ります。円の境界は破線（含まない）か実線（含む）かに注意しましょう。
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const SVG_NS="http://www.w3.org/2000/svg";
+const W=600,H=600,OX=300,OY=300,SCALE=70;
+
+function toSVG(x,y){return[OX+x*SCALE,OY-y*SCALE];}
+function fromSVG(px,py){return[(px-OX)/SCALE,(OY-py)/SCALE];}
+
+// ① x²+y²>4 : exterior of circle r=2
+// ② y<x+1 : below line y=x+1
+// Both strict → dashed boundaries, not included
+
+const steps=[
+  {label:"ステップ 1", html:()=>`① ${T("x^2+y^2>4")} の表す領域は、円 ${T("x^2+y^2=4")}（中心 ${T("\\mathrm{O}")}、半径 ${T("2")}）の<strong>外部</strong>`},
+  {label:"ステップ 2", html:()=>`② ${T("y<x+1")} の表す領域は、直線 ${T("y=x+1")} の<strong>下側</strong>`},
+  {label:"ステップ 3", html:()=>`求める領域は ①∩② の共通部分<br>つまり、円の外部 かつ 直線の下側`},
+  {label:"ステップ 4", html:()=>`境界線はいずれも含まない（${T(">")} と ${T("<")} のため）<br>→ 円も直線も<strong>破線</strong>で表す`}
+];
+
+let curStep=0;
+let testPt={x:3,y:-1};
+let dragging=false;
+
+function renderSteps(){
+  const wt=document.getElementById("walkthrough");
+  let h="";
+  steps.forEach((s,i)=>{
+    const cls=i===curStep?"step current":"step";
+    const vis=i<=curStep?"":'style="display:none"';
+    h+=`<div class="${cls}" ${vis}><div class="label">${s.label}</div><div class="formula-line">${s.html()}</div></div>`;
+  });
+  wt.innerHTML=h;
+  document.getElementById("step-cur").textContent=curStep+1;
+  document.getElementById("step-tot").textContent=steps.length;
+  document.getElementById("prev").disabled=curStep===0;
+  document.getElementById("next").disabled=curStep===steps.length-1;
+  drawSVG();
+}
+
+document.getElementById("prev").addEventListener("click",()=>{if(curStep>0){curStep--;renderSteps();}});
+document.getElementById("next").addEventListener("click",()=>{if(curStep<steps.length-1){curStep++;renderSteps();}});
+
+function buildGrid(svg){
+  for(let x=-4;x<=4;x++){
+    const[sx]=toSVG(x,0);
+    const l=document.createElementNS(SVG_NS,"line");
+    l.setAttribute("x1",sx);l.setAttribute("y1",0);l.setAttribute("x2",sx);l.setAttribute("y2",H);
+    l.setAttribute("stroke",x===0?"#555":"#e0e0e0");l.setAttribute("stroke-width",x===0?1.5:0.8);
+    svg.appendChild(l);
+  }
+  for(let y=-4;y<=4;y++){
+    const[,sy]=toSVG(0,y);
+    const l=document.createElementNS(SVG_NS,"line");
+    l.setAttribute("x1",0);l.setAttribute("y1",sy);l.setAttribute("x2",W);l.setAttribute("y2",sy);
+    l.setAttribute("stroke",y===0?"#555":"#e0e0e0");l.setAttribute("stroke-width",y===0?1.5:0.8);
+    svg.appendChild(l);
+  }
+  for(let v=-4;v<=4;v++){
+    if(v===0)continue;
+    const[sx,sy]=toSVG(v,0);
+    const tx=document.createElementNS(SVG_NS,"text");
+    tx.setAttribute("x",sx);tx.setAttribute("y",sy+18);
+    tx.setAttribute("text-anchor","middle");tx.setAttribute("font-size","12");tx.setAttribute("fill","#888");
+    tx.textContent=v;svg.appendChild(tx);
+    const[sx2,sy2]=toSVG(0,v);
+    const ty=document.createElementNS(SVG_NS,"text");
+    ty.setAttribute("x",sx2-14);ty.setAttribute("y",sy2+4);
+    ty.setAttribute("text-anchor","middle");ty.setAttribute("font-size","12");ty.setAttribute("fill","#888");
+    ty.textContent=v;svg.appendChild(ty);
+  }
+  const[ox,oy]=toSVG(0,0);
+  const oL=document.createElementNS(SVG_NS,"text");
+  oL.setAttribute("x",ox-14);oL.setAttribute("y",oy+16);
+  oL.setAttribute("font-size","13");oL.setAttribute("fill","#888");
+  oL.textContent="O";svg.appendChild(oL);
+}
+
+function drawSVG(){
+  const svg=document.getElementById("coordplane");
+  svg.innerHTML="";
+
+  // Defs for clip paths
+  const defs=document.createElementNS(SVG_NS,"defs");
+
+  // Clip: circle exterior (use rect minus circle)
+  const clipExt=document.createElementNS(SVG_NS,"clipPath");
+  clipExt.id="clip-exterior";
+  // We use a mask instead for circle exterior
+
+  // Mask for circle exterior
+  const maskExt=document.createElementNS(SVG_NS,"mask");
+  maskExt.id="mask-exterior";
+  const maskRect=document.createElementNS(SVG_NS,"rect");
+  maskRect.setAttribute("x",0);maskRect.setAttribute("y",0);
+  maskRect.setAttribute("width",W);maskRect.setAttribute("height",H);
+  maskRect.setAttribute("fill","white");
+  maskExt.appendChild(maskRect);
+  const[cx,cy]=toSVG(0,0);
+  const maskCircle=document.createElementNS(SVG_NS,"circle");
+  maskCircle.setAttribute("cx",cx);maskCircle.setAttribute("cy",cy);
+  maskCircle.setAttribute("r",2*SCALE);maskCircle.setAttribute("fill","black");
+  maskExt.appendChild(maskCircle);
+  defs.appendChild(maskExt);
+
+  // Clip: below line y=x+1
+  const clipBelow=document.createElementNS(SVG_NS,"clipPath");
+  clipBelow.id="clip-below-line";
+  const clipPoly=document.createElementNS(SVG_NS,"polygon");
+  // Line y=x+1, below means polygon from line down to bottom
+  const lPts=[];
+  for(let x=-5;x<=5;x+=0.2){
+    const y=x+1;
+    lPts.push(toSVG(x,Math.min(5,Math.max(-5,y))));
+  }
+  lPts.push(toSVG(5,-5));
+  lPts.push(toSVG(-5,-5));
+  clipPoly.setAttribute("points",lPts.map(p=>p[0]+","+p[1]).join(" "));
+  clipBelow.appendChild(clipPoly);
+  defs.appendChild(clipBelow);
+
+  svg.appendChild(defs);
+
+  buildGrid(svg);
+
+  const showCircleRegion=curStep>=0;
+  const showLineRegion=curStep>=1;
+  const showIntersection=curStep>=2;
+
+  // Region ① circle exterior — blue
+  if(showCircleRegion && !showIntersection){
+    const r=document.createElementNS(SVG_NS,"rect");
+    r.setAttribute("x",0);r.setAttribute("y",0);r.setAttribute("width",W);r.setAttribute("height",H);
+    r.setAttribute("fill","rgba(42,109,244,0.12)");
+    r.setAttribute("mask","url(#mask-exterior)");
+    r.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(r);
+  }
+
+  // Region ② below line — red
+  if(showLineRegion && !showIntersection){
+    const poly=document.createElementNS(SVG_NS,"polygon");
+    const pts=[];
+    for(let x=-5;x<=5;x+=0.1){
+      pts.push(toSVG(x,Math.min(5,x+1)));
+    }
+    pts.push(toSVG(5,-5));
+    pts.push(toSVG(-5,-5));
+    poly.setAttribute("points",pts.map(p=>p[0]+","+p[1]).join(" "));
+    poly.setAttribute("fill","rgba(217,83,79,0.12)");
+    poly.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(poly);
+  }
+
+  // Intersection: circle exterior AND below line
+  if(showIntersection){
+    // Light backgrounds
+    const rExt=document.createElementNS(SVG_NS,"rect");
+    rExt.setAttribute("x",0);rExt.setAttribute("y",0);rExt.setAttribute("width",W);rExt.setAttribute("height",H);
+    rExt.setAttribute("fill","rgba(42,109,244,0.05)");
+    rExt.setAttribute("mask","url(#mask-exterior)");
+    svg.appendChild(rExt);
+
+    const polyL=document.createElementNS(SVG_NS,"polygon");
+    const ptsL=[];
+    for(let x=-5;x<=5;x+=0.1){ptsL.push(toSVG(x,Math.min(5,x+1)));}
+    ptsL.push(toSVG(5,-5));ptsL.push(toSVG(-5,-5));
+    polyL.setAttribute("points",ptsL.map(p=>p[0]+","+p[1]).join(" "));
+    polyL.setAttribute("fill","rgba(217,83,79,0.05)");
+    svg.appendChild(polyL);
+
+    // Intersection: exterior AND below line
+    // Use mask for exterior, clip for below line
+    const intRect=document.createElementNS(SVG_NS,"rect");
+    intRect.setAttribute("x",0);intRect.setAttribute("y",0);
+    intRect.setAttribute("width",W);intRect.setAttribute("height",H);
+    intRect.setAttribute("fill","rgba(120,70,180,0.2)");
+    intRect.setAttribute("mask","url(#mask-exterior)");
+    intRect.setAttribute("clip-path","url(#clip-below-line)");
+    intRect.style.animation="fadeIn 0.6s ease";
+    svg.appendChild(intRect);
+  }
+
+  // Draw circle (dashed)
+  if(curStep>=0){
+    const[ccx,ccy]=toSVG(0,0);
+    const circ=document.createElementNS(SVG_NS,"circle");
+    circ.setAttribute("cx",ccx);circ.setAttribute("cy",ccy);
+    circ.setAttribute("r",2*SCALE);
+    circ.setAttribute("fill","none");circ.setAttribute("stroke","var(--c-b)");
+    circ.setAttribute("stroke-width","2.5");circ.setAttribute("stroke-dasharray","8,5");
+    svg.appendChild(circ);
+    // Label
+    const lbl=document.createElementNS(SVG_NS,"text");
+    const[lx,ly]=toSVG(1.5,1.5);
+    lbl.setAttribute("x",lx+15);lbl.setAttribute("y",ly-5);
+    lbl.setAttribute("font-size","14");lbl.setAttribute("font-weight","600");
+    lbl.setAttribute("fill","var(--c-b)");lbl.textContent="①";
+    svg.appendChild(lbl);
+  }
+
+  // Draw line y=x+1 (dashed)
+  if(curStep>=1){
+    const pts=[];
+    for(let x=-4;x<=4;x+=0.1){
+      const y=x+1;
+      if(y<-4.5||y>4.5)continue;
+      pts.push(toSVG(x,y));
+    }
+    const pl=document.createElementNS(SVG_NS,"polyline");
+    pl.setAttribute("points",pts.map(p=>p[0]+","+p[1]).join(" "));
+    pl.setAttribute("fill","none");pl.setAttribute("stroke","var(--c-a)");
+    pl.setAttribute("stroke-width","2.5");pl.setAttribute("stroke-dasharray","8,5");
+    svg.appendChild(pl);
+    const lbl=document.createElementNS(SVG_NS,"text");
+    const mid=pts[Math.floor(pts.length*0.8)];
+    if(mid){
+      lbl.setAttribute("x",mid[0]+10);lbl.setAttribute("y",mid[1]-10);
+      lbl.setAttribute("font-size","14");lbl.setAttribute("font-weight","600");
+      lbl.setAttribute("fill","var(--c-a)");lbl.textContent="②";
+      svg.appendChild(lbl);
+    }
+  }
+
+  // Test point
+  const[px,py]=toSVG(testPt.x,testPt.y);
+  const dot=document.createElementNS(SVG_NS,"circle");
+  dot.setAttribute("cx",px);dot.setAttribute("cy",py);dot.setAttribute("r",10);
+  dot.setAttribute("fill","rgba(217,83,79,0.8)");
+  dot.setAttribute("stroke","#fff");dot.setAttribute("stroke-width","2");
+  dot.setAttribute("style","cursor:grab;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
+  svg.appendChild(dot);
+  const tl=document.createElementNS(SVG_NS,"text");
+  tl.setAttribute("x",px+14);tl.setAttribute("y",py-10);
+  tl.setAttribute("font-size","12");tl.setAttribute("font-weight","600");tl.setAttribute("fill","#d9534f");
+  tl.textContent=`(${testPt.x.toFixed(1)}, ${testPt.y.toFixed(1)})`;svg.appendChild(tl);
+
+  updateTestResult();
+}
+
+function updateTestResult(){
+  const el=document.getElementById("test-result");
+  const x=testPt.x,y=testPt.y;
+  const r2=x*x+y*y;
+  const c1=r2>4;
+  const lineVal=y-(x+1);
+  const c2=lineVal<0;
+  el.innerHTML=`<strong>テストポイント</strong> ${T(`(${x.toFixed(1)},\\;${y.toFixed(1)})`)}<br>`
+    +`① ${T(`x^2+y^2=${r2.toFixed(2)}`)} ${c1?`${T("> 4")} <span class="check">✓</span>`:`${T("\\leq 4")} <span class="cross">✗</span>`}<br>`
+    +`② ${T(`y - (x+1) = ${lineVal.toFixed(2)}`)} ${c2?`${T("< 0")} <span class="check">✓</span>`:`${T("\\geq 0")} <span class="cross">✗</span>`}<br>`
+    +(c1&&c2?`→ 領域に<strong>含まれる</strong> <span class="check">✓</span>`:`→ 領域に<strong>含まれない</strong> <span class="cross">✗</span>`);
+}
+
+// Drag
+const svgWrap=document.getElementById("svg-wrap");
+const svgEl=document.getElementById("coordplane");
+function getPos(e){
+  const rect=svgEl.getBoundingClientRect();
+  const sx=W/rect.width,sy=H/rect.height;
+  const t=e.touches?e.touches[0]:e;
+  return[(t.clientX-rect.left)*sx,(t.clientY-rect.top)*sy];
+}
+function onStart(e){
+  const[px,py]=getPos(e);
+  const[tx,ty]=toSVG(testPt.x,testPt.y);
+  if(Math.hypot(px-tx,py-ty)<25){dragging=true;e.preventDefault();}
+}
+function onMove(e){
+  if(!dragging)return;e.preventDefault();
+  const[px,py]=getPos(e);
+  const[mx,my]=fromSVG(px,py);
+  testPt.x=Math.round(mx*10)/10;testPt.y=Math.round(my*10)/10;
+  testPt.x=Math.max(-3.8,Math.min(3.8,testPt.x));
+  testPt.y=Math.max(-3.8,Math.min(3.8,testPt.y));
+  drawSVG();
+}
+function onEnd(){dragging=false;}
+svgWrap.addEventListener("mousedown",onStart);
+svgWrap.addEventListener("mousemove",onMove);
+svgWrap.addEventListener("mouseup",onEnd);
+svgWrap.addEventListener("touchstart",onStart,{passive:false});
+svgWrap.addEventListener("touchmove",onMove,{passive:false});
+svgWrap.addEventListener("touchend",onEnd);
+
+function init(){
+  tex("\\begin{cases} x^2 + y^2 > 4 & \\cdots \\text{①} \\\\ y < x + 1 & \\cdots \\text{②} \\end{cases}", document.getElementById("formula-system"), true);
+
+  // Fix the note's KaTeX rendering
+  const noteEl = document.querySelector(".note");
+  noteEl.innerHTML = `<strong>ポイント：</strong>円の不等式と直線の不等式を組み合わせても、考え方は同じです。各不等式の表す領域を求め、共通部分を取ります。円の境界は破線（含まない）か実線（含む）かに注意しましょう。`;
+
+  renderSteps();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

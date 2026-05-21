@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>2直線の交点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.25rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1rem;
+  }
+  .slider-row label { font-weight: 600; min-width: 60px; }
+  .slider-row input[type=range] { flex: 1; min-height: 44px; }
+  .slider-row .val { min-width: 60px; text-align: right; font-weight: 600; color: var(--accent); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { r: 8; } 50% { r: 11; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>2直線の交点</h1>
+  <p class="subtitle">2直線の交点を連立方程式で求め、3直線が1点で交わる条件を学びましょう。</p>
+
+  <h2>2直線の交点</h2>
+  <p>平行でない2直線は必ず1点で交わります。その交点の座標は、2直線の方程式を<strong>連立方程式</strong>として解くことで求められます。</p>
+
+  <div class="formula-box" id="formula-main"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>2直線 <span id="l1-label"></span> と <span id="l2-label"></span> の交点を確認しましょう。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph1" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc1"></div>
+
+  <h2>例題4：3直線が1点で交わる条件</h2>
+  <p>次の3直線が1点で交わるとき、定数 <span id="m-const-label"></span> の値を求めよ。</p>
+  <div class="formula-box" id="three-lines-eq"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="wt-container"></div>
+  <div class="controls-row">
+    <button class="btn" id="wt-prev" disabled>← 前へ</button>
+    <span class="step-counter" id="wt-counter"></span>
+    <button class="btn primary" id="wt-next">次へ →</button>
+  </div>
+
+  <h2>直線 l₃ の回転</h2>
+  <p>スライダーで <span id="m-slider-label"></span> の値を変えて、直線 <span id="l3-slider-label"></span> がどう回転するか確認しましょう。</p>
+
+  <div class="slider-row">
+    <label id="slider-m-label"><span id="lbl-m"></span> =</label>
+    <input type="range" id="m-slider" min="-3" max="3" step="0.01" value="0.67">
+    <span class="val" id="m-val">0.67</span>
+  </div>
+
+  <div class="svg-container" id="svg-wrap2">
+    <svg id="graph2" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc2"></div>
+
+  <div class="note" id="note-result"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  // Formula
+  tex('\\text{2直線の方程式を連立して解く} \\Rightarrow \\text{交点の座標}', document.getElementById('formula-main'), true);
+
+  // Labels
+  tex('l_1: x+y-4=0', document.getElementById('l1-label'));
+  tex('l_2: 2x-y+1=0', document.getElementById('l2-label'));
+  tex('m', document.getElementById('m-const-label'));
+  tex('m', document.getElementById('m-slider-label'));
+  tex('l_3: mx - y + 2m + 1 = 0', document.getElementById('l3-slider-label'));
+  document.getElementById('lbl-m').innerHTML = T('m');
+
+  // Three lines equation
+  document.getElementById('three-lines-eq').innerHTML =
+    T('l_1: x+y-4=0') + '<br>' +
+    T('l_2: 2x-y+1=0') + '<br>' +
+    T('l_3: mx-y+2m+1=0');
+
+  drawGraph1();
+  initWalkthrough();
+  drawGraph2(2/3);
+  setupSlider();
+}
+
+/* ── Graph 1: Two lines intersection ── */
+function drawGraph1(){
+  const svg = document.getElementById('graph1');
+  const W = 600, H = 500;
+  const ox = 300, oy = 300; // origin pixel coords
+  const scale = 40; // pixels per unit
+
+  function px(x){ return ox + x * scale; }
+  function py(y){ return oy - y * scale; }
+
+  let html = '';
+  // Grid
+  for(let i = -7; i <= 7; i++){
+    const x = px(i);
+    html += `<line x1="${x}" y1="20" x2="${x}" y2="${H-20}" stroke="#eee" stroke-width="1"/>`;
+  }
+  for(let j = -4; j <= 10; j++){
+    const y = py(j);
+    html += `<line x1="20" y1="${y}" x2="${W-20}" y2="${y}" stroke="#eee" stroke-width="1"/>`;
+  }
+  // Axes
+  html += `<line x1="20" y1="${oy}" x2="${W-20}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-20}" x2="${ox}" y2="20" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<foreignObject x="${Math.min(W-15, W-26)}" y="${oy-24}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(16, 2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  // Tick labels
+  for(let i = -7; i <= 7; i++){
+    if(i===0) continue;
+    html += `<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  }
+  for(let j = -4; j <= 10; j++){
+    if(j===0) continue;
+    html += `<text x="${ox-12}" y="${py(j)+4}" text-anchor="end" font-size="11" fill="#aaa">${j}</text>`;
+  }
+
+  // l1: x+y-4=0 => y = 4-x
+  const l1x1 = -3, l1y1 = 7, l1x2 = 7, l1y2 = -3;
+  html += `<line x1="${px(l1x1)}" y1="${py(l1y1)}" x2="${px(l1x2)}" y2="${py(l1y2)}" stroke="${'var(--c-red)'}" stroke-width="2.5"/>`;
+  html += `<foreignObject x="${px(l1x1)+5}" y="${py(l1y1)-24}" width="200" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:600;white-space:nowrap"><span style="font-family:serif">l&#x2081;: </span>${T('x+y-4=0')}</div></foreignObject>`;
+
+  // l2: 2x-y+1=0 => y = 2x+1
+  const l2x1 = -2, l2y1 = -3, l2x2 = 4, l2y2 = 9;
+  html += `<line x1="${px(l2x1)}" y1="${py(l2y1)}" x2="${px(l2x2)}" y2="${py(l2y2)}" stroke="${'var(--c-blue)'}" stroke-width="2.5"/>`;
+  html += `<foreignObject x="${px(l2x2)-5}" y="${py(l2y2)-24}" width="200" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600;white-space:nowrap"><span style="font-family:serif">l&#x2082;: </span>${T('2x-y+1=0')}</div></foreignObject>`;
+
+  // Intersection (1,3)
+  html += `<circle cx="${px(1)}" cy="${py(3)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2">`;
+  html += `<animate attributeName="r" values="7;10;7" dur="2s" repeatCount="indefinite"/></circle>`;
+  html += `<text x="${px(1)+12}" y="${py(3)-10}" font-size="14" font-weight="700" fill="var(--c-green)">(1, 3)</text>`;
+
+  svg.innerHTML = html;
+
+  // Live calc
+  document.getElementById('live-calc1').innerHTML =
+    T('x+y=4,\\quad 2x-y=-1') + '<br>' +
+    T('\\Rightarrow\\quad 3x = 3 \\quad\\Rightarrow\\quad x=1,\\; y=3') + '<br>' +
+    '<span style="color:var(--c-green);font-weight:700">交点 ' + T('(1,\\,3)') + '</span>';
+}
+
+/* ── Walkthrough ── */
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: l₁ と l₂ の交点を求める', formula: 'l_1:\\; x+y-4=0,\\quad l_2:\\; 2x-y+1=0' },
+    { label: 'Step 2: 連立方程式を解く', formula: '\\begin{cases} x+y=4 \\\\ 2x-y=-1 \\end{cases}' },
+    { label: 'Step 3: 辺々を加える', formula: '(x+y)+(2x-y)=4+(-1) \\;\\Rightarrow\\; 3x=3 \\;\\Rightarrow\\; x=1' },
+    { label: 'Step 4: y を求める', formula: 'y = 4 - x = 4 - 1 = 3' },
+    { label: 'Step 5: 交点', formula: '\\text{交点は}\\;(1,\\;3)' },
+    { label: 'Step 6: l₃ が交点を通る条件', formula: 'l_3:\\; mx - y + 2m + 1 = 0 \\;\\text{に}\\;(1,3)\\;\\text{を代入}' },
+    { label: 'Step 7: 代入して計算', formula: 'm \\cdot 1 - 3 + 2m + 1 = 0 \\;\\Rightarrow\\; 3m - 2 = 0' },
+    { label: 'Step 8: m の値', formula: 'm = \\dfrac{2}{3}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-container');
+  const counter = document.getElementById('wt-counter');
+  const prevBtn = document.getElementById('wt-prev');
+  const nextBtn = document.getElementById('wt-next');
+
+  function render(){
+    let html = '';
+    for(let i = 0; i <= cur; i++){
+      html += `<div class="step ${i===cur?'current':''}">`;
+      html += `<div class="label">${steps[i].label}</div>`;
+      html += `<div class="formula-line">${T(steps[i].formula)}</div>`;
+      html += `</div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === steps.length - 1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* ── Graph 2: Three lines with m slider ── */
+function drawGraph2(m){
+  const svg = document.getElementById('graph2');
+  const W = 600, H = 500;
+  const ox = 300, oy = 300;
+  const scale = 40;
+
+  function px(x){ return ox + x * scale; }
+  function py(y){ return oy - y * scale; }
+
+  let html = '';
+  // Grid
+  for(let i = -7; i <= 7; i++){
+    html += `<line x1="${px(i)}" y1="20" x2="${px(i)}" y2="${H-20}" stroke="#eee" stroke-width="1"/>`;
+  }
+  for(let j = -4; j <= 10; j++){
+    html += `<line x1="20" y1="${py(j)}" x2="${W-20}" y2="${py(j)}" stroke="#eee" stroke-width="1"/>`;
+  }
+  // Axes
+  html += `<defs><marker id="arr2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="20" y1="${oy}" x2="${W-20}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr2)"/>`;
+  html += `<line x1="${ox}" y1="${H-20}" x2="${ox}" y2="20" stroke="#999" stroke-width="1.5" marker-end="url(#arr2)"/>`;
+  html += `<foreignObject x="${Math.min(W-15, W-26)}" y="${oy-24}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(16, 2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  for(let i = -7; i <= 7; i++){
+    if(i===0) continue;
+    html += `<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  }
+  for(let j = -4; j <= 10; j++){
+    if(j===0) continue;
+    html += `<text x="${ox-12}" y="${py(j)+4}" text-anchor="end" font-size="11" fill="#aaa">${j}</text>`;
+  }
+
+  // l1: y = 4-x
+  html += `<line x1="${px(-3)}" y1="${py(7)}" x2="${px(7)}" y2="${py(-3)}" stroke="var(--c-red)" stroke-width="2" opacity="0.6"/>`;
+  html += `<text x="${px(-3)+5}" y="${py(7)-8}" font-size="12" fill="var(--c-red)">l₁</text>`;
+
+  // l2: y = 2x+1
+  html += `<line x1="${px(-2)}" y1="${py(-3)}" x2="${px(4)}" y2="${py(9)}" stroke="var(--c-blue)" stroke-width="2" opacity="0.6"/>`;
+  html += `<text x="${px(4)-5}" y="${py(9)-8}" font-size="12" fill="var(--c-blue)">l₂</text>`;
+
+  // l3: mx - y + 2m + 1 = 0 => y = mx + 2m + 1 = m(x+2) + 1
+  // Always passes through (-2, 1)
+  // At m=2/3: y = (2/3)x + 4/3 + 1 = (2/3)x + 7/3
+  // Check: at x=1, y = 2/3 + 7/3 = 9/3 = 3 ✓
+  const l3_y = (x) => m * x + 2 * m + 1;
+  // Find line endpoints within view
+  let l3x1 = -7, l3x2 = 7;
+  let l3y1 = l3_y(l3x1), l3y2 = l3_y(l3x2);
+
+  html += `<line x1="${px(l3x1)}" y1="${py(l3y1)}" x2="${px(l3x2)}" y2="${py(l3y2)}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  html += `<text x="${px(5)}" y="${py(l3_y(5))-10}" font-size="13" font-weight="600" fill="var(--c-orange)">l₃</text>`;
+
+  // Intersection (1,3)
+  html += `<circle cx="${px(1)}" cy="${py(3)}" r="6" fill="var(--c-green)" stroke="#fff" stroke-width="2" opacity="0.5"/>`;
+  html += `<text x="${px(1)+12}" y="${py(3)-8}" font-size="12" fill="var(--c-green)">(1, 3)</text>`;
+
+  // Fixed point (-2, 1) that l3 always passes through
+  html += `<circle cx="${px(-2)}" cy="${py(1)}" r="5" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>`;
+  html += `<text x="${px(-2)+10}" y="${py(1)-8}" font-size="12" fill="var(--c-purple)">(-2, 1)</text>`;
+
+  // Check if l3 passes through (1,3)
+  const l3at1 = l3_y(1);
+  const passesThrough = Math.abs(l3at1 - 3) < 0.05;
+
+  if(passesThrough){
+    html += `<circle cx="${px(1)}" cy="${py(3)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2">`;
+    html += `<animate attributeName="r" values="7;12;7" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  }
+
+  svg.innerHTML = html;
+
+  // Live calc 2
+  const mStr = m.toFixed(2);
+  const yAt1 = l3_y(1).toFixed(2);
+  document.getElementById('live-calc2').innerHTML =
+    T(`m = ${mStr}`) + '<br>' +
+    T(`l_3:\\; ${mStr}x - y + ${(2*m).toFixed(2)} + 1 = 0`) + '<br>' +
+    T(`x=1 \\text{ のとき } y = ${yAt1}`) +
+    (passesThrough ? '<br><span style="color:var(--c-green);font-weight:700">3直線が1点 (1, 3) で交わる！</span>' : '');
+
+  // Note
+  const noteEl = document.getElementById('note-result');
+  if(passesThrough){
+    noteEl.innerHTML = '<strong>ポイント：</strong>' + T('m = \\dfrac{2}{3}') + ' のとき、3直線は点 ' + T('(1,\\,3)') + ' で交わります。また、直線 ' + T('l_3') + ' は常に点 ' + T('(-2,\\,1)') + ' を通ります（' + T('l_3: m(x+2) - (y-1) = 0') + ' と変形）。';
+  } else {
+    noteEl.innerHTML = '<strong>ポイント：</strong>直線 ' + T('l_3: mx - y + 2m + 1 = 0') + ' は ' + T('m(x+2)-(y-1)=0') + ' と変形でき、' + T('m') + ' の値によらず必ず点 ' + T('(-2,\\,1)') + ' を通ります。スライダーで ' + T('m = \\frac{2}{3} \\approx 0.67') + ' にすると3直線が1点で交わります。';
+  }
+}
+
+function setupSlider(){
+  const slider = document.getElementById('m-slider');
+  const valEl = document.getElementById('m-val');
+  slider.addEventListener('input', ()=>{
+    const m = parseFloat(slider.value);
+    valEl.textContent = m.toFixed(2);
+    drawGraph2(m);
+  });
+}
+</script>
+</body>
+</html>

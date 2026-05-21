@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>連立不等式の表す領域</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-c: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+    position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center;
+    overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  .legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0;
+    font-size: .9rem; align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; }
+  .legend-swatch {
+    display: inline-block; width: 18px; height: 18px; border-radius: 4px;
+  }
+
+  .test-result {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .test-result .check { color: #5cb85c; font-weight: 700; }
+  .test-result .cross { color: #d9534f; font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<main>
+  <h1>連立不等式の表す領域</h1>
+  <p class="subtitle">連立不等式が表す領域は、各不等式の表す領域の共通部分（積集合）です。</p>
+
+  <h2>考え方</h2>
+  <div class="formula-box" id="formula-concept"></div>
+  <p>各不等式の表す領域をそれぞれ求め、それらの共通部分が連立不等式の表す領域になります。</p>
+
+  <h2>例3</h2>
+  <div class="formula-box" id="formula-system"></div>
+
+  <h2>ステップ解説</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>グラフ</h2>
+  <p>各領域がアニメーションで表示されます。テストポイント（赤い点）をドラッグして、各不等式を満たすか確認しましょう。</p>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(42,109,244,0.25);"></span>領域 A（①の領域）</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(217,83,79,0.25);"></span>領域 B（②の領域）</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:rgba(120,70,180,0.35);"></span>A∩B（共通部分）</div>
+  </div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="coordplane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="test-result" id="test-result"></div>
+
+  <div class="note">
+    <strong>ポイント：</strong>連立不等式の領域は、各不等式の表す領域の<strong>共通部分</strong>です。境界線が含まれるかどうかは、不等号の種類（&lt; と ≤ など）によって決まります。
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const W = 600, H = 600;
+const OX = 300, OY = 300; // origin pixel
+const SCALE = 60; // pixels per unit
+
+function toSVG(x,y){ return [OX + x*SCALE, OY - y*SCALE]; }
+function fromSVG(px,py){ return [(px - OX)/SCALE, (OY - py)/SCALE]; }
+
+/* Steps data */
+const steps = [
+  {
+    label: "ステップ 1",
+    html: () => `① の表す領域を A、② の表す領域を B とする。求める領域は ${T("\\mathrm{A} \\cap \\mathrm{B}")}`
+  },
+  {
+    label: "ステップ 2",
+    html: () => `① ${T("x - 2y > -1")} より ${T("y < \\dfrac{1}{2}x + \\dfrac{1}{2}")}<br>→ 直線 ${T("y = \\dfrac{1}{2}x + \\dfrac{1}{2}")} の<strong>下側</strong>（境界含まず）`
+  },
+  {
+    label: "ステップ 3",
+    html: () => `② ${T("x + y > 2")} より ${T("y > -x + 2")}<br>→ 直線 ${T("y = -x + 2")} の<strong>上側</strong>（境界含まず）`
+  },
+  {
+    label: "ステップ 4",
+    html: () => `${T("\\mathrm{A} \\cap \\mathrm{B}")} は、直線 ${T("y = \\dfrac{1}{2}x + \\dfrac{1}{2}")} の下側 かつ 直線 ${T("y = -x + 2")} の上側`
+  },
+  {
+    label: "ステップ 5",
+    html: () => `境界線はいずれも含まない（${T(">")} であり ${T("\\geq")} ではないため、破線で表す）`
+  }
+];
+
+let curStep = 0;
+
+function renderSteps(){
+  const wt = document.getElementById("walkthrough");
+  let h = "";
+  steps.forEach((s,i) => {
+    const cls = i === curStep ? "step current" : "step";
+    const vis = i <= curStep ? "" : ' style="display:none"';
+    h += `<div class="${cls}"${vis}><div class="label">${s.label}</div><div class="formula-line">${s.html()}</div></div>`;
+  });
+  wt.innerHTML = h;
+  document.getElementById("step-cur").textContent = curStep + 1;
+  document.getElementById("step-tot").textContent = steps.length;
+  document.getElementById("prev").disabled = curStep === 0;
+  document.getElementById("next").disabled = curStep === steps.length - 1;
+  updateSVG();
+}
+
+document.getElementById("prev").addEventListener("click", () => { if(curStep>0){curStep--;renderSteps();} });
+document.getElementById("next").addEventListener("click", () => { if(curStep<steps.length-1){curStep++;renderSteps();} });
+
+/* SVG drawing */
+let testPt = {x: 3, y: 0};
+let dragging = false;
+
+function buildGrid(svg){
+  // Grid lines
+  for(let x=-4; x<=4; x++){
+    const [sx] = toSVG(x,0);
+    const line = document.createElementNS(SVG_NS,"line");
+    line.setAttribute("x1",sx); line.setAttribute("y1",0);
+    line.setAttribute("x2",sx); line.setAttribute("y2",H);
+    line.setAttribute("stroke", x===0 ? "#555" : "#e0e0e0");
+    line.setAttribute("stroke-width", x===0 ? 1.5 : 0.8);
+    svg.appendChild(line);
+  }
+  for(let y=-4; y<=4; y++){
+    const [,sy] = toSVG(0,y);
+    const line = document.createElementNS(SVG_NS,"line");
+    line.setAttribute("x1",0); line.setAttribute("y1",sy);
+    line.setAttribute("x2",W); line.setAttribute("y2",sy);
+    line.setAttribute("stroke", y===0 ? "#555" : "#e0e0e0");
+    line.setAttribute("stroke-width", y===0 ? 1.5 : 0.8);
+    svg.appendChild(line);
+  }
+  // Axis labels
+  for(let v=-4; v<=4; v++){
+    if(v===0) continue;
+    // x-axis
+    const [sx,sy] = toSVG(v,0);
+    const tx = document.createElementNS(SVG_NS,"text");
+    tx.setAttribute("x",sx); tx.setAttribute("y",sy+18);
+    tx.setAttribute("text-anchor","middle"); tx.setAttribute("font-size","12"); tx.setAttribute("fill","#888");
+    tx.textContent = v;
+    svg.appendChild(tx);
+    // y-axis
+    const [sx2,sy2] = toSVG(0,v);
+    const ty = document.createElementNS(SVG_NS,"text");
+    ty.setAttribute("x",sx2-12); ty.setAttribute("y",sy2+4);
+    ty.setAttribute("text-anchor","middle"); ty.setAttribute("font-size","12"); ty.setAttribute("fill","#888");
+    ty.textContent = v;
+    svg.appendChild(ty);
+  }
+  // O label
+  const [ox,oy] = toSVG(0,0);
+  const oLabel = document.createElementNS(SVG_NS,"text");
+  oLabel.setAttribute("x",ox-12); oLabel.setAttribute("y",oy+16);
+  oLabel.setAttribute("font-size","13"); oLabel.setAttribute("fill","#888");
+  oLabel.textContent = "O";
+  svg.appendChild(oLabel);
+}
+
+function clipPoints(yFn, below){
+  // Generate polygon points for a half-plane
+  const pts = [];
+  const xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+  // Line from left to right
+  for(let x = xMin; x <= xMax; x += 0.1){
+    const y = yFn(x);
+    const cy = Math.max(yMin, Math.min(yMax, y));
+    pts.push(toSVG(x, cy));
+  }
+  // Close along boundary
+  if(below){
+    pts.push(toSVG(xMax, yMin));
+    pts.push(toSVG(xMin, yMin));
+  } else {
+    pts.push(toSVG(xMax, yMax));
+    pts.push(toSVG(xMin, yMax));
+  }
+  return pts.map(p => p[0]+","+p[1]).join(" ");
+}
+
+function intersectionPoints(){
+  // Clip intersection polygon using Sutherland-Hodgman or just compute directly
+  // Region A: y < 0.5x + 0.5 (below line1)
+  // Region B: y > -x + 2 (above line2)
+  // Intersection line1 and line2: 0.5x + 0.5 = -x + 2 → 1.5x = 1.5 → x = 1, y = 1
+  // So the wedge-shaped region opens to the right
+  const xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+  const pts = [];
+  // Trace along line2 (y = -x + 2) from right to intersection
+  // Then along line1 (y = 0.5x + 0.5) from intersection to right
+  // Fill between
+
+  // Compute polygon vertices for the intersection region
+  // We'll sample the boundary carefully
+  const res = [];
+
+  // The intersection point of the two lines
+  const ix = 1, iy = 1;
+
+  // Along line2 (y = -x + 2, above): going from far right boundary
+  // At x=5: line2 y = -3 (but we also need y < line1: 0.5*5+0.5=3)
+  // At x=5: y must be > -3 (line2) AND < 3 (line1), so range -3 to 3
+  // At bottom-right corner if line2 goes below yMin
+  // Let's trace the boundary properly
+
+  // Right edge of viewport where applicable
+  for(let x = xMax; x >= xMin; x -= 0.05){
+    const y2 = -x + 2; // line2
+    if(y2 >= yMax) continue;
+    if(y2 <= yMin){
+      res.push(toSVG(x, yMin));
+      continue;
+    }
+    res.push(toSVG(x, Math.max(y2, yMin)));
+    if(x <= ix + 0.05 && x >= ix - 0.05) break;
+  }
+
+  // From intersection along line1 going right
+  for(let x = ix; x <= xMax; x += 0.05){
+    const y1 = 0.5*x + 0.5; // line1
+    if(y1 >= yMax){
+      res.push(toSVG(x, yMax));
+      continue;
+    }
+    if(y1 <= yMin) continue;
+    res.push(toSVG(x, Math.min(y1, yMax)));
+  }
+
+  // Close: right edge top to right edge bottom
+  // The region extends to the right. Close along viewport edges.
+  // Top-right if line1 reached yMax before xMax
+  const xLine1AtYMax = (yMax - 0.5)/0.5; // x = (y-0.5)/0.5 = 2*y - 1 = 9
+  const xLine2AtYMin = -(yMin - 2); // x = -(y-2) = 2 - y = 7
+  // At x=5: line1 gives y=3, line2 gives y=-3. Both within bounds.
+
+  return res.map(p => p[0]+","+p[1]).join(" ");
+}
+
+function buildIntersectionPoly(){
+  // More robust: trace the boundary of intersection region
+  // A ∩ B: y < 0.5x + 0.5 AND y > -x + 2
+  // Within viewport [-5,5] x [-5,5]
+  const yMin = -5, yMax = 5, xMin = -5, xMax = 5;
+  const pts = [];
+
+  // Intersection point: x=1, y=1
+  // The wedge opens to the right
+
+  // Bottom boundary = line2: y = -x + 2 (we go above this)
+  // Top boundary = line1: y = 0.5x + 0.5 (we go below this)
+
+  // Trace line2 from intersection to right (or until hitting viewport edge)
+  const startX = 1;
+  // Along line2 going right
+  for(let x = startX; x <= xMax; x += 0.1){
+    let y = -x + 2;
+    if(y < yMin){ pts.push(toSVG(x, yMin)); continue; }
+    pts.push(toSVG(x, y));
+  }
+  // line2 at x=5: y=-3 (in bounds)
+  // Now go along right edge from line2's y to line1's y
+  const yBot = Math.max(-xMax + 2, yMin);
+  const yTop = Math.min(0.5*xMax + 0.5, yMax);
+  pts.push(toSVG(xMax, yTop));
+
+  // Along line1 going left back to intersection
+  for(let x = xMax; x >= startX; x -= 0.1){
+    let y = 0.5*x + 0.5;
+    if(y > yMax){ pts.push(toSVG(x, yMax)); continue; }
+    pts.push(toSVG(x, y));
+  }
+
+  return pts.map(p => p[0]+","+p[1]).join(" ");
+}
+
+function updateSVG(){
+  const svg = document.getElementById("coordplane");
+  svg.innerHTML = "";
+  buildGrid(svg);
+
+  const showA = curStep >= 1;
+  const showB = curStep >= 2;
+  const showIntersection = curStep >= 3;
+
+  // Defs for clipping
+  const defs = document.createElementNS(SVG_NS, "defs");
+  svg.appendChild(defs);
+
+  // Region A: y < 0.5x + 0.5 (below line1) — blue
+  if(showA && !showIntersection){
+    const poly = document.createElementNS(SVG_NS,"polygon");
+    poly.setAttribute("points", clipPoints(x => 0.5*x + 0.5, true));
+    poly.setAttribute("fill","rgba(42,109,244,0.15)");
+    poly.setAttribute("stroke","none");
+    poly.style.animation = "fadeIn 0.6s ease";
+    svg.appendChild(poly);
+  }
+
+  // Region B: y > -x + 2 (above line2) — red
+  if(showB && !showIntersection){
+    const poly = document.createElementNS(SVG_NS,"polygon");
+    poly.setAttribute("points", clipPoints(x => -x + 2, false));
+    poly.setAttribute("fill","rgba(217,83,79,0.15)");
+    poly.setAttribute("stroke","none");
+    poly.style.animation = "fadeIn 0.6s ease";
+    svg.appendChild(poly);
+  }
+
+  // Intersection A∩B — purple
+  if(showIntersection){
+    // Show A lightly
+    const polyA = document.createElementNS(SVG_NS,"polygon");
+    polyA.setAttribute("points", clipPoints(x => 0.5*x + 0.5, true));
+    polyA.setAttribute("fill","rgba(42,109,244,0.07)");
+    polyA.setAttribute("stroke","none");
+    svg.appendChild(polyA);
+
+    const polyB = document.createElementNS(SVG_NS,"polygon");
+    polyB.setAttribute("points", clipPoints(x => -x + 2, false));
+    polyB.setAttribute("fill","rgba(217,83,79,0.07)");
+    polyB.setAttribute("stroke","none");
+    svg.appendChild(polyB);
+
+    const polyI = document.createElementNS(SVG_NS,"polygon");
+    polyI.setAttribute("points", buildIntersectionPoly());
+    polyI.setAttribute("fill","rgba(120,70,180,0.25)");
+    polyI.setAttribute("stroke","none");
+    polyI.style.animation = "fadeIn 0.6s ease";
+    svg.appendChild(polyI);
+  }
+
+  // Line 1: y = 0.5x + 0.5 (dashed since strict)
+  if(curStep >= 1){
+    drawLine(svg, x => 0.5*x + 0.5, "var(--c-b)", true, "①");
+  }
+  // Line 2: y = -x + 2 (dashed since strict)
+  if(curStep >= 2){
+    drawLine(svg, x => -x + 2, "var(--c-a)", true, "②");
+  }
+
+  // Intersection point label at (1,1)
+  if(curStep >= 3){
+    const [cx,cy] = toSVG(1,1);
+    const dot = document.createElementNS(SVG_NS,"circle");
+    dot.setAttribute("cx",cx); dot.setAttribute("cy",cy); dot.setAttribute("r",4);
+    dot.setAttribute("fill","#555");
+    svg.appendChild(dot);
+    const lbl = document.createElementNS(SVG_NS,"text");
+    lbl.setAttribute("x",cx+10); lbl.setAttribute("y",cy-10);
+    lbl.setAttribute("font-size","13"); lbl.setAttribute("fill","#555");
+    lbl.textContent = "(1, 1)";
+    svg.appendChild(lbl);
+  }
+
+  // Test point
+  drawTestPoint(svg);
+}
+
+function drawLine(svg, yFn, color, dashed, label){
+  const pts = [];
+  for(let x = -5; x <= 5; x += 0.1){
+    const y = yFn(x);
+    if(y < -5 || y > 5) continue;
+    pts.push(toSVG(x,y));
+  }
+  if(pts.length < 2) return;
+  const polyline = document.createElementNS(SVG_NS,"polyline");
+  polyline.setAttribute("points", pts.map(p=>p[0]+","+p[1]).join(" "));
+  polyline.setAttribute("fill","none");
+  polyline.setAttribute("stroke",color);
+  polyline.setAttribute("stroke-width","2.5");
+  if(dashed) polyline.setAttribute("stroke-dasharray","8,5");
+  svg.appendChild(polyline);
+
+  // Label
+  if(label){
+    const mid = pts[Math.floor(pts.length*0.2)];
+    if(mid){
+      const lbl = document.createElementNS(SVG_NS,"text");
+      lbl.setAttribute("x",mid[0]-20); lbl.setAttribute("y",mid[1]-10);
+      lbl.setAttribute("font-size","14"); lbl.setAttribute("font-weight","600");
+      lbl.setAttribute("fill",color);
+      lbl.textContent = label;
+      svg.appendChild(lbl);
+    }
+  }
+}
+
+function drawTestPoint(svg){
+  const [px,py] = toSVG(testPt.x, testPt.y);
+  // Circle
+  const c = document.createElementNS(SVG_NS,"circle");
+  c.setAttribute("cx",px); c.setAttribute("cy",py); c.setAttribute("r",10);
+  c.setAttribute("fill","rgba(217,83,79,0.8)");
+  c.setAttribute("stroke","#fff"); c.setAttribute("stroke-width","2");
+  c.setAttribute("style","cursor:grab;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
+  c.id = "test-dot";
+  svg.appendChild(c);
+
+  // Label
+  const lbl = document.createElementNS(SVG_NS,"text");
+  lbl.setAttribute("x",px+14); lbl.setAttribute("y",py-10);
+  lbl.setAttribute("font-size","12"); lbl.setAttribute("font-weight","600"); lbl.setAttribute("fill","#d9534f");
+  lbl.textContent = `(${testPt.x.toFixed(1)}, ${testPt.y.toFixed(1)})`;
+  svg.appendChild(lbl);
+
+  updateTestResult();
+}
+
+function updateTestResult(){
+  const el = document.getElementById("test-result");
+  const x = testPt.x, y = testPt.y;
+  const check1 = x - 2*y > -1;
+  const check2 = x + y > 2;
+  const v1 = (x - 2*y).toFixed(2);
+  const v2 = (x + y).toFixed(2);
+  el.innerHTML = `<strong>テストポイント</strong> ${T(`(${x.toFixed(1)},\\;${y.toFixed(1)})`)}<br>`
+    + `① ${T(`x - 2y = ${v1}`)} ${check1 ? `${T(`> -1`)} <span class="check">✓</span>` : `${T(`\\leq -1`)} <span class="cross">✗</span>`}<br>`
+    + `② ${T(`x + y = ${v2}`)} ${check2 ? `${T(`> 2`)} <span class="check">✓</span>` : `${T(`\\leq 2`)} <span class="cross">✗</span>`}<br>`
+    + (check1 && check2 ? `→ 領域 ${T("\\mathrm{A} \\cap \\mathrm{B}")} に<strong>含まれる</strong> <span class="check">✓</span>` : `→ 領域 ${T("\\mathrm{A} \\cap \\mathrm{B}")} に<strong>含まれない</strong> <span class="cross">✗</span>`);
+}
+
+/* Drag handling */
+const svgEl = document.getElementById("coordplane");
+const svgWrap = document.getElementById("svg-wrap");
+
+function getPos(e){
+  const rect = svgEl.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  const touch = e.touches ? e.touches[0] : e;
+  return [
+    (touch.clientX - rect.left) * scaleX,
+    (touch.clientY - rect.top) * scaleY
+  ];
+}
+
+function onStart(e){
+  const [px,py] = getPos(e);
+  const [tx,ty] = toSVG(testPt.x, testPt.y);
+  if(Math.hypot(px-tx, py-ty) < 25){
+    dragging = true;
+    e.preventDefault();
+  }
+}
+function onMove(e){
+  if(!dragging) return;
+  e.preventDefault();
+  const [px,py] = getPos(e);
+  const [mx,my] = fromSVG(px,py);
+  testPt.x = Math.round(mx*10)/10;
+  testPt.y = Math.round(my*10)/10;
+  testPt.x = Math.max(-4.5, Math.min(4.5, testPt.x));
+  testPt.y = Math.max(-4.5, Math.min(4.5, testPt.y));
+  updateSVG();
+}
+function onEnd(){ dragging = false; }
+
+svgWrap.addEventListener("mousedown", onStart);
+svgWrap.addEventListener("mousemove", onMove);
+svgWrap.addEventListener("mouseup", onEnd);
+svgWrap.addEventListener("touchstart", onStart, {passive:false});
+svgWrap.addEventListener("touchmove", onMove, {passive:false});
+svgWrap.addEventListener("touchend", onEnd);
+
+function init(){
+  tex("\\text{連立不等式の表す領域} = \\text{各不等式の領域の共通部分（}\\mathrm{A} \\cap \\mathrm{B}\\text{）}", document.getElementById("formula-concept"), true);
+  tex("\\begin{cases} x - 2y > -1 & \\cdots \\text{①} \\\\ x + y > 2 & \\cdots \\text{②} \\end{cases}", document.getElementById("formula-system"), true);
+  renderSteps();
+}
+
+if(window.katex) init(); else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex) init();
+  else { const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30); }
+});
+</script>
+</body>
+</html>

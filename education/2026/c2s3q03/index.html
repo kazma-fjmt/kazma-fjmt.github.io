@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>円上を動く点で定まる軌跡</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>円上を動く点で定まる軌跡</h1>
+  <p class="subtitle">動点が円上を動くとき、中点の軌跡を求めましょう。</p>
+
+  <h2>問題</h2>
+  <p>円 <span id="f-circle"></span> 上を動く点 P と定点 <span id="f-A"></span> に対して、線分 AP の中点 Q の軌跡を求めよ。</p>
+
+  <h2>解法</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="formula-box" id="result-box"></div>
+
+  <h2>軌跡を観察しよう</h2>
+  <p>点 P が円 C 上をアニメーションで移動し、中点 Q が小さい円を描く様子を観察しましょう。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="note" id="note-method"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600,ox=250,oy=320,scale=50;
+const GRID_MIN=-3,GRID_MAX=7;
+
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+let animAngle = 0;
+let animFrame = null;
+/* Store trail of Q points */
+const trail = [];
+const MAX_TRAIL = 200;
+
+function init(){
+  document.getElementById('f-circle').innerHTML = T('x^2 + y^2 = 4');
+  document.getElementById('f-A').innerHTML = T('\\mathrm{A}(4,\\,4)');
+
+  tex('(x-2)^2 + (y-2)^2 = 1 \\quad\\text{（中心}(2,2)\\text{、半径}1\\text{）}', document.getElementById('result-box'), true);
+
+  document.getElementById('note-method').innerHTML =
+    '<strong>解法のポイント：</strong><br>' +
+    '(1) 中点 Q の座標を P の座標で表す<br>' +
+    '(2) P の座標を Q の座標で逆に表す<br>' +
+    '(3) P が満たす条件（円の方程式）に代入する<br>' +
+    'この「<strong>パラメータ消去</strong>」の手法は、軌跡の問題で頻出です。';
+
+  initWalkthrough();
+  drawGraph();
+  animate();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 座標の設定', formula: '\\text{円 C: }x^2+y^2=4\\text{ 上の点を }\\mathrm{P}(s,t),\\;\\text{中点を }\\mathrm{Q}(x,y)\\text{ とおく}' },
+    { label: 'Step 2: 中点の公式', formula: 'x = \\frac{s+4}{2},\\quad y = \\frac{t+4}{2}' },
+    { label: 'Step 3: s, t を x, y で表す', formula: 's = 2x - 4,\\quad t = 2y - 4' },
+    { label: 'Step 4: 円の方程式に代入', formula: 's^2 + t^2 = 4 \\;\\Longrightarrow\\; (2x-4)^2 + (2y-4)^2 = 4' },
+    { label: 'Step 5: 展開', formula: '4(x-2)^2 + 4(y-2)^2 = 4' },
+    { label: 'Step 6: 整理', formula: '(x-2)^2 + (y-2)^2 = 1' },
+    { label: 'Step 7: 結論', formula: '\\text{Q の軌跡は中心}(2,\\,2)\\text{、半径}1\\text{の円}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Grid */
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    const xi=px(i), yi=py(i);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX)}" x2="${xi}" y2="${py(GRID_MIN)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+    s+=`<line x1="${px(GRID_MIN)}" y1="${yi}" x2="${px(GRID_MAX)}" y2="${yi}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+
+  s+=`<foreignObject x="${Math.min(px(GRID_MAX)+2,W-26)}" y="${oy-20}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="${Math.max(py(GRID_MAX)-18,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    if(i===0) continue;
+    s+=`<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+    s+=`<text x="${ox-10}" y="${py(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+  }
+
+  /* Big circle: x²+y²=4, center (0,0), radius 2 */
+  s+=`<circle cx="${px(0)}" cy="${py(0)}" r="${2*scale}" fill="rgba(42,109,244,0.06)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  s+=`<foreignObject x="${px(-1.8)}" y="${py(-1.8)-28}" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-blue);font-weight:600;white-space:nowrap">C: ${T('x^2+y^2=4')}</div></foreignObject>`;
+
+  /* Small circle: (x-2)²+(y-2)²=1, center (2,2), radius 1 */
+  s+=`<circle cx="${px(2)}" cy="${py(2)}" r="${1*scale}" fill="rgba(40,167,69,0.08)" stroke="var(--c-green)" stroke-width="2.5" stroke-dasharray="6 3"/>`;
+  s+=`<text x="${px(2)+1*scale+8}" y="${py(2)-5}" font-size="12" fill="var(--c-green)" font-weight="600">Q の軌跡</text>`;
+
+  /* Center of small circle */
+  s+=`<circle cx="${px(2)}" cy="${py(2)}" r="4" fill="var(--c-green)" stroke="#fff" stroke-width="1.5"/>`;
+
+  /* Point A(4,4) */
+  const Ax=4, Ay=4;
+  s+=`<circle cx="${px(Ax)}" cy="${py(Ay)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Ax)+12}" y="${py(Ay)-10}" font-size="14" font-weight="700" fill="var(--c-red)">A(4, 4)</text>`;
+
+  /* Point P on big circle */
+  const Ppx = 2*Math.cos(animAngle);
+  const Ppy = 2*Math.sin(animAngle);
+
+  /* Midpoint Q */
+  const Qx = (Ppx + Ax) / 2;
+  const Qy = (Ppy + Ay) / 2;
+
+  /* Trail */
+  trail.push({x: Qx, y: Qy});
+  if(trail.length > MAX_TRAIL) trail.shift();
+
+  /* Draw trail */
+  if(trail.length > 1){
+    let pathD = `M ${px(trail[0].x)} ${py(trail[0].y)}`;
+    for(let i=1;i<trail.length;i++){
+      pathD += ` L ${px(trail[i].x)} ${py(trail[i].y)}`;
+    }
+    s+=`<path d="${pathD}" fill="none" stroke="var(--c-green)" stroke-width="2" opacity="0.4"/>`;
+  }
+
+  /* Line AP */
+  s+=`<line x1="${px(Ax)}" y1="${py(Ay)}" x2="${px(Ppx)}" y2="${py(Ppy)}" stroke="var(--c-orange)" stroke-width="1.5" opacity="0.6"/>`;
+
+  /* Point P */
+  s+=`<circle cx="${px(Ppx)}" cy="${py(Ppy)}" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Ppx)-25}" y="${py(Ppy)-12}" font-size="13" font-weight="700" fill="var(--c-blue)">P</text>`;
+
+  /* Point Q (midpoint) */
+  s+=`<circle cx="${px(Qx)}" cy="${py(Qy)}" r="8" fill="var(--c-green)" stroke="#fff" stroke-width="2.5">`;
+  s+=`<animate attributeName="r" values="8;11;8" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${px(Qx)+12}" y="${py(Qy)-10}" font-size="13" font-weight="700" fill="var(--c-green)">Q</text>`;
+
+  /* Midpoint tick mark */
+  const mx = (px(Ax)+px(Ppx))/2, my = (py(Ay)+py(Ppy))/2;
+  const dx = px(Ppx)-px(Ax), dy = py(Ppy)-py(Ay);
+  const len = Math.sqrt(dx*dx+dy*dy)||1;
+  const nx = -dy/len*6, ny = dx/len*6;
+  s+=`<line x1="${mx-nx}" y1="${my-ny}" x2="${mx+nx}" y2="${my+ny}" stroke="var(--c-orange)" stroke-width="2"/>`;
+
+  svg.innerHTML = s;
+
+  /* Live calc */
+  const distQCenter = Math.sqrt((Qx-2)**2 + (Qy-2)**2);
+  const lcEl = document.getElementById('live-calc');
+  lcEl.innerHTML =
+    T(`\\mathrm{P}(${Ppx.toFixed(2)},\\;${Ppy.toFixed(2)})`) + '&emsp;' +
+    T(`\\mathrm{Q}(${Qx.toFixed(2)},\\;${Qy.toFixed(2)})`) + '<br>' +
+    T(`(Q_x - 2)^2 + (Q_y - 2)^2 = ${distQCenter.toFixed(4)} \\approx 1`);
+}
+
+function animate(){
+  animAngle += 0.012;
+  if(animAngle > 2*Math.PI) animAngle -= 2*Math.PI;
+  drawGraph();
+  animFrame = requestAnimationFrame(animate);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

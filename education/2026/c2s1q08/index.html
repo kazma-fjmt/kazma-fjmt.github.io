@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>外分点の座標公式の導出</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745;
+    --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; margin: 1rem 0; overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .nl-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem 1rem; margin: 1rem 0; overflow-x: auto;
+  }
+  canvas { display: block; margin: 0 auto; }
+
+  .ctrl-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: .6rem; margin: .75rem 0;
+  }
+  .ctrl-row label { font-weight: 600; font-size: .95rem; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 44px; border: none; border-radius: 8px;
+    font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; transition: opacity .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { opacity: .7; }
+  .btn-sm { min-width: 36px; height: 36px; font-size: .95rem; border-radius: 6px; }
+  .btn-outline {
+    background: #fff; color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .val-display {
+    min-width: 32px; text-align: center; font-size: 1.1rem; font-weight: 700;
+    color: var(--accent);
+  }
+
+  .step-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem; margin: 1rem 0; min-height: 130px;
+  }
+  .step-title {
+    font-size: .85rem; color: var(--muted); margin-bottom: .5rem; font-weight: 600;
+  }
+  .step-content { font-size: 1rem; }
+  .step-content .katex { font-size: 1.15rem; }
+  .step-math { text-align: center; margin: .75rem 0; overflow-x: auto; }
+  .step-math .katex { font-size: 1.25rem; }
+
+  .nav-row {
+    display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 1rem 0;
+  }
+  .nav-row .btn { min-width: 100px; }
+  .step-indicator { font-size: .9rem; color: var(--muted); font-weight: 600; }
+
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0;
+  }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    border-radius: 10px; padding: .75rem 1rem; text-align: center;
+  }
+  .compare-card.internal { background: #e8f5e9; border: 1.5px solid var(--c-green); }
+  .compare-card.external { background: #fff3e0; border: 1.5px solid var(--c-orange); }
+  .compare-card .label { font-size: .85rem; font-weight: 600; margin-bottom: .4rem; }
+
+  .highlight { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>外分点の座標公式の導出</h1>
+  <p class="subtitle">数直線上の外分点の座標を求める公式を導きます</p>
+
+  <h2>設定</h2>
+  <p><span id="settingText"></span></p>
+
+  <div class="nl-wrap">
+    <canvas id="nlCanvas" width="720" height="150"></canvas>
+  </div>
+
+  <div class="ctrl-row">
+    <label><span id="lbl-m"></span> :</label>
+    <button class="btn btn-sm" id="mDec">−</button>
+    <span class="val-display" id="mVal">3</span>
+    <button class="btn btn-sm" id="mInc">＋</button>
+    <span style="width:1rem"></span>
+    <label><span id="lbl-n"></span> :</label>
+    <button class="btn btn-sm" id="nDec">−</button>
+    <span class="val-display" id="nVal">1</span>
+    <button class="btn btn-sm" id="nInc">＋</button>
+  </div>
+  <p style="text-align:center;font-size:.85rem;color:var(--muted);">※ <span id="f-mneq"></span>（外分のため）</p>
+
+  <h2>導出ステップ</h2>
+
+  <div class="step-container" id="stepBox">
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-content" id="stepContent"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" id="prevBtn">← 前へ</button>
+    <span class="step-indicator" id="stepInd"></span>
+    <button class="btn" id="nextBtn">次へ →</button>
+  </div>
+
+  <h2>内分と外分の公式比較</h2>
+  <div class="compare-grid">
+    <div class="compare-card internal">
+      <div class="label" style="color:#28a745;">内分（m:n）</div>
+      <div id="cmpInt"></div>
+    </div>
+    <div class="compare-card external">
+      <div class="label" style="color:#e67e22;">外分（m:n）</div>
+      <div id="cmpExt"></div>
+    </div>
+  </div>
+  <p style="font-size:.9rem;">内分の公式で <span id="replaceNote"></span> とすれば外分の公式になります。</p>
+
+  <h2>公式まとめ</h2>
+  <div class="formula-box" id="formulaSummary"></div>
+</main>
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+let m=3, n=1, step=0;
+const A_VAL=1, B_VAL=5;
+
+const steps=[
+  ()=>{
+    const gt=m>n;
+    return {
+      title:'ステップ 1／6：外分点の位置',
+      html:`<p>${gt?`${T('m > n')} なので、Pは<strong>Bの右側</strong>にあります。`:`${T('m < n')} なので、Pは<strong>Aの左側</strong>にあります。`}</p>
+      <p>数直線上の順序：</p>
+      <div class="step-math" id="s1m"></div>`,
+      after:()=>{
+        const e=document.getElementById('s1m');
+        if(e) tex(m>n?`a < b < x`:`x < a < b`,e,true);
+      }
+    };
+  },
+  ()=>({
+    title:'ステップ 2／6：PA と PB の長さ',
+    html:`<p>${m>n?T('a < b < x'):T('x < a < b')} のとき：</p>
+    <div class="step-math" id="s2m1"></div>
+    <div class="step-math" id="s2m2"></div>`,
+    after:()=>{
+      if(m>n){
+        tex('\\mathrm{PA} = x - a',document.getElementById('s2m1'),true);
+        tex('\\mathrm{PB} = x - b',document.getElementById('s2m2'),true);
+      } else {
+        tex('\\mathrm{PA} = a - x',document.getElementById('s2m1'),true);
+        tex('\\mathrm{PB} = b - x',document.getElementById('s2m2'),true);
+      }
+    }
+  }),
+  ()=>({
+    title:'ステップ 3／6：比の条件を立式',
+    html:`<p>AP:PB = ${T(`${m}:${n}`)} より（${m>n?T('m > n'):T('m < n')} の場合）：</p>
+    <div class="step-math" id="s3m"></div>`,
+    after:()=>{
+      if(m>n){
+        tex(`(x - a):(x - b) = ${m}:${n}`,document.getElementById('s3m'),true);
+      } else {
+        tex(`(a - x):(b - x) = ${m}:${n}`,document.getElementById('s3m'),true);
+      }
+    }
+  }),
+  ()=>({
+    title:'ステップ 4／6：比の性質で方程式に変換',
+    html:`<p>内項の積＝外項の積：</p>
+    <div class="step-math" id="s4m"></div>`,
+    after:()=>{
+      if(m>n){
+        tex(`${n}(x - a) = ${m}(x - b)`,document.getElementById('s4m'),true);
+      } else {
+        tex(`${n}(a - x) = ${m}(b - x)`,document.getElementById('s4m'),true);
+      }
+    }
+  }),
+  ()=>({
+    title:'ステップ 5／6：xについて解く',
+    html:`<div class="step-math" id="s5m1"></div>
+    <div class="step-math" id="s5m2"></div>
+    <div class="step-math" id="s5m3"></div>`,
+    after:()=>{
+      if(m>n){
+        tex(`${n}x - ${n}a = ${m}x - ${m}b`,document.getElementById('s5m1'),true);
+        tex(`${m}b - ${n}a = ${m}x - ${n}x`,document.getElementById('s5m2'),true);
+        tex(`(${m}-${n})x = -${n}a + ${m}b`,document.getElementById('s5m3'),true);
+      } else {
+        tex(`${n}a - ${n}x = ${m}b - ${m}x`,document.getElementById('s5m1'),true);
+        tex(`${m}x - ${n}x = ${m}b - ${n}a`,document.getElementById('s5m2'),true);
+        tex(`(${m}-${n})x = -${n}a + ${m}b`,document.getElementById('s5m3'),true);
+      }
+    }
+  }),
+  ()=>{
+    const xNum=-n*A_VAL+m*B_VAL;
+    const xDen=m-n;
+    const xFrac=xNum%xDen===0?`${xNum/xDen}`:`\\dfrac{${xNum}}{${xDen}}`;
+    return {
+      title:'ステップ 6／6：公式の完成',
+      html:`<div class="step-math" id="s6m1"></div>
+      <p>具体的な値（${T(`a=${A_VAL},\\,b=${B_VAL},\\,m=${m},\\,n=${n}`)}）：</p>
+      <div class="step-math" id="s6m2"></div>`,
+      after:()=>{
+        tex(`x = \\dfrac{-na + mb}{m - n}`,document.getElementById('s6m1'),true);
+        tex(`x = \\dfrac{-${n}\\cdot${A_VAL}+${m}\\cdot${B_VAL}}{${m}-${n}} = ${xFrac}`,document.getElementById('s6m2'),true);
+      }
+    };
+  }
+];
+
+function drawNL(){
+  const c=document.getElementById('nlCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(720,c.parentElement.clientWidth-20);
+  c.style.width=cw+'px'; c.style.height='150px';
+  c.width=cw*dpr; c.height=150*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,150);
+
+  const xNum=-n*A_VAL+m*B_VAL;
+  const xDen=m-n;
+  const px_val=xNum/xDen;
+
+  const allVals=[A_VAL,B_VAL,px_val];
+  const minV=Math.min(...allVals)-1.5;
+  const maxV=Math.max(...allVals)+1.5;
+  const pad=50, y=65, w=cw-2*pad;
+  const toX=v=>pad+(v-minV)/(maxV-minV)*w;
+
+  // axis
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad-20,y); ctx.lineTo(cw-pad+20,y); ctx.stroke();
+
+  // AB solid
+  ctx.strokeStyle='#333'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(toX(A_VAL),y); ctx.lineTo(toX(B_VAL),y); ctx.stroke();
+
+  // extension dashed
+  ctx.setLineDash([5,4]); ctx.strokeStyle='#e67e22'; ctx.lineWidth=2;
+  if(m>n){
+    ctx.beginPath(); ctx.moveTo(toX(B_VAL),y); ctx.lineTo(toX(px_val),y); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(toX(A_VAL),y); ctx.lineTo(toX(px_val),y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // AP bracket
+  const apX=toX(A_VAL), ppX=toX(px_val), bpX=toX(B_VAL);
+  ctx.strokeStyle='#d9534f'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(apX,y-22); ctx.lineTo(ppX,y-22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(apX,y-27); ctx.lineTo(apX,y-17); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ppX,y-27); ctx.lineTo(ppX,y-17); ctx.stroke();
+  ctx.fillStyle='#d9534f'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('AP',(apX+ppX)/2,y-30);
+
+  // PB bracket
+  ctx.strokeStyle='#2a6df4'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ppX,y+22); ctx.lineTo(bpX,y+22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ppX,y+17); ctx.lineTo(ppX,y+27); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bpX,y+17); ctx.lineTo(bpX,y+27); ctx.stroke();
+  ctx.fillStyle='#2a6df4'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('PB',(ppX+bpX)/2,y+38);
+
+  // ratio
+  ctx.fillStyle='#333'; ctx.font='bold 13px sans-serif';
+  ctx.fillText(`${m} : ${n}`,(apX+ppX)/2,y-44);
+
+  // dots
+  function dot(xx,col,label,below){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(xx,y,7,0,Math.PI*2); ctx.fill();
+    ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,xx,below?y+55:y-8);
+  }
+  dot(apX,'#d9534f',`A(${A_VAL})`,true);
+  dot(bpX,'#2a6df4',`B(${B_VAL})`,true);
+
+  const pRound=Math.round(px_val*100)/100;
+  const pLabel=Number.isInteger(px_val)?`P(${px_val})`:`P(${pRound})`;
+  dot(ppX,'#e67e22',pLabel,false);
+}
+
+function showStep(){
+  const data=steps[step]();
+  document.getElementById('stepTitle').textContent=data.title;
+  document.getElementById('stepContent').innerHTML=data.html;
+  document.getElementById('stepInd').textContent=`${step+1} / ${steps.length}`;
+  document.getElementById('prevBtn').disabled=step===0;
+  document.getElementById('prevBtn').style.opacity=step===0?'.4':'1';
+  document.getElementById('nextBtn').textContent=step===steps.length-1?'完了 ✓':'次へ →';
+  if(data.after) requestAnimationFrame(data.after);
+}
+
+function updateAll(){
+  if(m===n) { if(m<9) n=m+1; else m=n-1; }
+  document.getElementById('mVal').textContent=m;
+  document.getElementById('nVal').textContent=n;
+  document.getElementById('settingText').innerHTML=
+    `数直線上に ${T(`\\mathrm{A}(${A_VAL})`)}、${T(`\\mathrm{B}(${B_VAL})`)} がある。線分ABを ${T(`${m}:${n}`)} に外分する点Pの座標 ${T('x')} を求める。`;
+  drawNL();
+  showStep();
+
+  tex(`x = \\dfrac{-na + mb}{m - n}`,document.getElementById('cmpExt'),true);
+  tex(`x = \\dfrac{na + mb}{m + n}`,document.getElementById('cmpInt'),true);
+  document.getElementById('replaceNote').innerHTML=T('n \\to -n');
+  tex(`x = \\dfrac{-na + mb}{m - n}`,document.getElementById('formulaSummary'),true);
+}
+
+function init(){
+  tex('m', document.getElementById('lbl-m'));
+  tex('n', document.getElementById('lbl-n'));
+  document.getElementById('f-mneq').innerHTML=T('m \\neq n');
+  document.getElementById('mDec').addEventListener('click',()=>{if(m>1){m--;updateAll();}});
+  document.getElementById('mInc').addEventListener('click',()=>{if(m<9){m++;updateAll();}});
+  document.getElementById('nDec').addEventListener('click',()=>{if(n>1){n--;updateAll();}});
+  document.getElementById('nInc').addEventListener('click',()=>{if(n<9){n++;updateAll();}});
+  document.getElementById('prevBtn').addEventListener('click',()=>{if(step>0){step--;showStep();}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{if(step<steps.length-1){step++;showStep();}});
+  updateAll();
+  window.addEventListener('resize',drawNL);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>内分点の座標公式の導出</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745;
+    --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; margin: 1rem 0; overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .nl-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem 1rem; margin: 1rem 0; overflow-x: auto;
+  }
+  canvas { display: block; margin: 0 auto; }
+
+  .ctrl-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: .6rem; margin: .75rem 0;
+  }
+  .ctrl-row label { font-weight: 600; font-size: .95rem; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 44px; border: none; border-radius: 8px;
+    font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; transition: opacity .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { opacity: .7; }
+  .btn-sm { min-width: 36px; height: 36px; font-size: .95rem; border-radius: 6px; }
+  .btn-outline {
+    background: #fff; color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .val-display {
+    min-width: 32px; text-align: center; font-size: 1.1rem; font-weight: 700;
+    color: var(--accent);
+  }
+
+  .step-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem; margin: 1rem 0; min-height: 120px;
+  }
+  .step-title {
+    font-size: .85rem; color: var(--muted); margin-bottom: .5rem;
+    font-weight: 600;
+  }
+  .step-content { font-size: 1rem; }
+  .step-content .katex { font-size: 1.15rem; }
+  .step-math {
+    text-align: center; margin: .75rem 0; overflow-x: auto;
+  }
+  .step-math .katex { font-size: 1.25rem; }
+
+  .nav-row {
+    display: flex; justify-content: center; align-items: center; gap: 1rem;
+    margin: 1rem 0;
+  }
+  .nav-row .btn { min-width: 100px; }
+  .step-indicator { font-size: .9rem; color: var(--muted); font-weight: 600; }
+
+  .highlight { color: var(--accent); font-weight: 600; }
+  .hl-red { color: var(--c-red); }
+  .hl-green { color: var(--c-green); }
+
+  .special-box {
+    background: #eef4ff; border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; text-align: center;
+  }
+  .special-box .katex { font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>内分点の座標公式の導出</h1>
+  <p class="subtitle">数直線上の内分点の座標を求める公式を導きます</p>
+
+  <h2>設定</h2>
+  <p>数直線上に2点 <span id="settingA"></span>、<span id="settingB"></span> がある。
+  線分ABを <span id="settingRatio"></span> に内分する点Pの座標 <span id="settingX"></span> を求める。</p>
+
+  <div class="nl-wrap">
+    <canvas id="nlCanvas" width="720" height="140"></canvas>
+  </div>
+
+  <div class="ctrl-row">
+    <label><span id="lbl-m"></span> :</label>
+    <button class="btn btn-sm" id="mDec">−</button>
+    <span class="val-display" id="mVal">2</span>
+    <button class="btn btn-sm" id="mInc">＋</button>
+    <span style="width:1rem"></span>
+    <label><span id="lbl-n"></span> :</label>
+    <button class="btn btn-sm" id="nDec">−</button>
+    <span class="val-display" id="nVal">1</span>
+    <button class="btn btn-sm" id="nInc">＋</button>
+  </div>
+
+  <h2>導出ステップ</h2>
+
+  <div class="step-container" id="stepBox">
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-content" id="stepContent"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" id="prevBtn">← 前へ</button>
+    <span class="step-indicator" id="stepInd"></span>
+    <button class="btn" id="nextBtn">次へ →</button>
+  </div>
+
+  <h2>公式まとめ</h2>
+  <div class="formula-box" id="formulaSummary"></div>
+
+  <h2>中点の特別な場合</h2>
+  <p><span id="midDesc"></span></p>
+  <div class="special-box" id="midFormula"></div>
+</main>
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+let m=2, n=1, step=0;
+const A_VAL=1, B_VAL=7;
+
+const steps=[
+  ()=>({
+    title:'ステップ 1／6：内分点の位置',
+    html:`<p>点Pは線分ABの<span class="highlight">内側</span>にあるので、${T('a < x < b')} です。</p>
+    <div class="step-math" id="s1m"></div>`,
+    after:()=>{const e=document.getElementById('s1m');if(e)tex(`${A_VAL} < x < ${B_VAL}`,e,true);}
+  }),
+  ()=>({
+    title:'ステップ 2／6：AP と PB の長さ',
+    html:`<p>${T('a < x < b')} のとき：</p>
+    <div class="step-math" id="s2m1"></div>
+    <div class="step-math" id="s2m2"></div>`,
+    after:()=>{
+      tex('\\mathrm{AP} = x - a',document.getElementById('s2m1'),true);
+      tex('\\mathrm{PB} = b - x',document.getElementById('s2m2'),true);
+    }
+  }),
+  ()=>({
+    title:'ステップ 3／6：比の条件を立式',
+    html:`<p>AP:PB = ${T(`${m}:${n}`)} より：</p>
+    <div class="step-math" id="s3m"></div>`,
+    after:()=>{tex(`(x - a):(b - x) = ${m}:${n}`,document.getElementById('s3m'),true);}
+  }),
+  ()=>({
+    title:'ステップ 4／6：比の性質で方程式に変換',
+    html:`<p>内項の積＝外項の積：</p>
+    <div class="step-math" id="s4m"></div>`,
+    after:()=>{tex(`${n}(x - a) = ${m}(b - x)`,document.getElementById('s4m'),true);}
+  }),
+  ()=>({
+    title:'ステップ 5／6：xについて解く',
+    html:`<div class="step-math" id="s5m1"></div>
+    <div class="step-math" id="s5m2"></div>
+    <div class="step-math" id="s5m3"></div>`,
+    after:()=>{
+      tex(`${n}x - ${n}a = ${m}b - ${m}x`,document.getElementById('s5m1'),true);
+      tex(`${n}x + ${m}x = ${m}b + ${n}a`,document.getElementById('s5m2'),true);
+      tex(`(${m}+${n})x = ${n}a + ${m}b`,document.getElementById('s5m3'),true);
+    }
+  }),
+  ()=>{
+    const xNum=n*A_VAL+m*B_VAL, xDen=m+n;
+    const xStr=xNum%xDen===0?`${xNum/xDen}`:`\\dfrac{${xNum}}{${xDen}}`;
+    return {
+      title:'ステップ 6／6：公式の完成',
+      html:`<div class="step-math" id="s6m1"></div>
+      <p>具体的な値（${T(`a=${A_VAL},\\,b=${B_VAL},\\,m=${m},\\,n=${n}`)}）：</p>
+      <div class="step-math" id="s6m2"></div>`,
+      after:()=>{
+        tex(`x = \\dfrac{na + mb}{m+n}`,document.getElementById('s6m1'),true);
+        tex(`x = \\dfrac{${n}\\cdot${A_VAL}+${m}\\cdot${B_VAL}}{${m}+${n}} = ${xStr}`,document.getElementById('s6m2'),true);
+      }
+    };
+  }
+];
+
+function drawNL(){
+  const c=document.getElementById('nlCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(720,c.parentElement.clientWidth-20);
+  c.style.width=cw+'px'; c.style.height='140px';
+  c.width=cw*dpr; c.height=140*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,140);
+
+  const pad=50, y=60, w=cw-2*pad;
+  const mn=m+n;
+  const px_val=(n*A_VAL+m*B_VAL)/mn;
+
+  const toX=v=>pad+(v-A_VAL)/(B_VAL-A_VAL)*w;
+
+  // axis
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad-20,y); ctx.lineTo(cw-pad+20,y); ctx.stroke();
+
+  // ticks
+  for(let v=A_VAL;v<=B_VAL;v++){
+    const xx=toX(v);
+    ctx.beginPath(); ctx.moveTo(xx,y-5); ctx.lineTo(xx,y+5); ctx.stroke();
+    ctx.fillStyle='#999'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(v,xx,y+20);
+  }
+
+  // segment AB
+  ctx.strokeStyle='#333'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(toX(A_VAL),y); ctx.lineTo(toX(B_VAL),y); ctx.stroke();
+
+  // AP bracket
+  const apX=toX(A_VAL), ppX=toX(px_val), bpX=toX(B_VAL);
+  ctx.strokeStyle='#d9534f'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(apX,y-20); ctx.lineTo(ppX,y-20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(apX,y-25); ctx.lineTo(apX,y-15); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ppX,y-25); ctx.lineTo(ppX,y-15); ctx.stroke();
+  ctx.fillStyle='#d9534f'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('AP',( apX+ppX)/2,y-28);
+
+  // PB bracket
+  ctx.strokeStyle='#2a6df4'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ppX,y-20); ctx.lineTo(bpX,y-20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ppX,y-25); ctx.lineTo(ppX,y-15); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bpX,y-25); ctx.lineTo(bpX,y-15); ctx.stroke();
+  ctx.fillStyle='#2a6df4'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('PB',(ppX+bpX)/2,y-28);
+
+  // ratio text
+  ctx.fillStyle='#333'; ctx.font='bold 14px sans-serif';
+  ctx.fillText(`${m} : ${n}`,(apX+bpX)/2,y-42);
+
+  // Points
+  function dot(x,yy,col,label,below){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,yy,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=col; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,x,below?yy+30:yy+30);
+  }
+
+  dot(apX,y,'#d9534f',`A(${A_VAL})`,true);
+  dot(bpX,y,'#2a6df4',`B(${B_VAL})`,true);
+
+  // P
+  const pxRound=Math.round(px_val*100)/100;
+  const pLabel=Number.isInteger(px_val)?`P(${px_val})`:`P(${pxRound})`;
+  ctx.fillStyle='#28a745'; ctx.beginPath(); ctx.arc(ppX,y,7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#28a745'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(pLabel,ppX,y-48);
+
+  // dashed line from P label
+  ctx.setLineDash([3,3]); ctx.strokeStyle='#28a745'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ppX,y-38); ctx.lineTo(ppX,y-8); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function showStep(){
+  const data=steps[step]();
+  document.getElementById('stepTitle').textContent=data.title;
+  document.getElementById('stepContent').innerHTML=data.html;
+  document.getElementById('stepInd').textContent=`${step+1} / ${steps.length}`;
+  document.getElementById('prevBtn').disabled=step===0;
+  document.getElementById('prevBtn').style.opacity=step===0?'.4':'1';
+  document.getElementById('nextBtn').textContent=step===steps.length-1?'完了 ✓':'次へ →';
+  if(data.after) requestAnimationFrame(data.after);
+}
+
+function updateAll(){
+  const mn=m+n, px_val=(n*A_VAL+m*B_VAL)/mn;
+  document.getElementById('mVal').textContent=m;
+  document.getElementById('nVal').textContent=n;
+  document.getElementById('settingA').innerHTML=T(`\\mathrm{A}(${A_VAL})`);
+  document.getElementById('settingB').innerHTML=T(`\\mathrm{B}(${B_VAL})`);
+  document.getElementById('settingRatio').innerHTML=T(`${m}:${n}`);
+  document.getElementById('settingX').innerHTML=T('x');
+  drawNL();
+  showStep();
+
+  tex(`x = \\dfrac{na + mb}{m+n}`,document.getElementById('formulaSummary'),true);
+
+  document.getElementById('midDesc').innerHTML=
+    `${T('m = n')} のとき、つまり中点のとき：`;
+  tex(`x = \\dfrac{a + b}{2}`,document.getElementById('midFormula'),true);
+}
+
+function init(){
+  tex('m', document.getElementById('lbl-m'));
+  tex('n', document.getElementById('lbl-n'));
+  document.getElementById('mDec').addEventListener('click',()=>{if(m>1){m--;updateAll();}});
+  document.getElementById('mInc').addEventListener('click',()=>{if(m<9){m++;updateAll();}});
+  document.getElementById('nDec').addEventListener('click',()=>{if(n>1){n--;updateAll();}});
+  document.getElementById('nInc').addEventListener('click',()=>{if(n<9){n++;updateAll();}});
+  document.getElementById('prevBtn').addEventListener('click',()=>{if(step>0){step--;showStep();}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{if(step<steps.length-1){step++;showStep();}});
+  updateAll();
+  window.addEventListener('resize',drawNL);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>対称な点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745;
+    --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .concept-box {
+    background: #eef4ff; border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; text-align: center;
+  }
+  .concept-box .katex { font-size: 1.15rem; }
+
+  .graph-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1rem; margin: 1rem 0; overflow: hidden;
+  }
+  canvas { display: block; margin: 0 auto; touch-action: none; }
+
+  .drag-hint {
+    text-align: center; font-size: .85rem; color: var(--muted); margin: .5rem 0;
+  }
+
+  .coord-display {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem; margin: .75rem 0;
+  }
+  @media (max-width: 500px) { .coord-display { grid-template-columns: 1fr; } }
+  .coord-card {
+    border-radius: 8px; padding: .5rem .75rem; text-align: center;
+    font-size: .9rem; font-weight: 600;
+  }
+  .coord-card.p-card { background: #fde8e8; color: var(--c-red); }
+  .coord-card.a-card { background: #eef4ff; color: var(--accent); }
+  .coord-card.q-card { background: #e8f5e9; color: var(--c-green); }
+
+  .step-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 1.25rem; margin: 1rem 0; min-height: 100px;
+  }
+  .step-title {
+    font-size: .85rem; color: var(--muted); margin-bottom: .5rem; font-weight: 600;
+  }
+  .step-math { text-align: center; margin: .75rem 0; overflow-x: auto; }
+  .step-math .katex { font-size: 1.2rem; }
+
+  .nav-row {
+    display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 1rem 0;
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 44px; border: none; border-radius: 8px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; transition: opacity .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { opacity: .7; }
+  .btn-outline {
+    background: #fff; color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .nav-row .btn { min-width: 100px; }
+  .step-indicator { font-size: .9rem; color: var(--muted); font-weight: 600; }
+
+  .summary-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: 1rem 0; text-align: center; overflow-x: auto;
+  }
+  .summary-box .katex { font-size: 1.15rem; }
+
+  .highlight { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>対称な点</h1>
+  <p class="subtitle">点Aに関して点Pと対称な点Qを求める（中点条件）</p>
+
+  <h2>考え方</h2>
+  <p>点Pに関して点Aが<span class="highlight">中点</span>になるような点Qを求めます。つまり、PQの中点がAです。</p>
+
+  <div class="concept-box">
+    <p>Aは線分PQの中点</p>
+    <div id="conceptFormula"></div>
+  </div>
+
+  <h2>座標平面で確認</h2>
+  <p class="drag-hint">Pをドラッグして動かすと、Qが自動的に更新されます</p>
+
+  <div class="graph-wrap">
+    <canvas id="graphCanvas" width="700" height="500"></canvas>
+  </div>
+
+  <div class="coord-display">
+    <div class="coord-card p-card" id="coordP">P(-1, 2)</div>
+    <div class="coord-card a-card" id="coordA">A(2, 3)</div>
+    <div class="coord-card q-card" id="coordQ">Q(5, 4)</div>
+  </div>
+
+  <h2>例題のステップ解説</h2>
+  <p><span id="exProblem"></span></p>
+
+  <div class="step-container" id="stepBox">
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-content" id="stepContent"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" id="prevBtn">← 前へ</button>
+    <span class="step-indicator" id="stepInd"></span>
+    <button class="btn" id="nextBtn">次へ →</button>
+  </div>
+
+  <h2>一般公式</h2>
+  <p>点 <span id="genP"></span> に関して点 <span id="genA"></span> と対称な点 <span id="genQ"></span> は：</p>
+  <div class="summary-box" id="genFormula"></div>
+</main>
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+// Default: P(-1,2), A(2,3) → Q(5,4)
+let Px=-1, Py=2;
+const Acx=2, Acy=3;
+let step=0;
+let dragging=false;
+
+function Qx(){ return 2*Acx-Px; }
+function Qy(){ return 2*Acy-Py; }
+
+function drawGraph(){
+  const c=document.getElementById('graphCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.min(700,c.parentElement.clientWidth-20);
+  const ch=Math.min(500,cw*0.72);
+  c.style.width=cw+'px'; c.style.height=ch+'px';
+  c.width=cw*dpr; c.height=ch*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cw,ch);
+
+  const qx=Qx(), qy=Qy();
+  const allX=[Px,Acx,qx], allY=[Py,Acy,qy];
+  let minX=Math.min(...allX)-2, maxX=Math.max(...allX)+2;
+  let minY=Math.min(...allY)-2, maxY=Math.max(...allY)+2;
+
+  // Ensure minimum range
+  if(maxX-minX<6){const mid=(minX+maxX)/2;minX=mid-3;maxX=mid+3;}
+  if(maxY-minY<6){const mid=(minY+maxY)/2;minY=mid-3;maxY=mid+3;}
+
+  const rangeX=maxX-minX, rangeY=maxY-minY;
+  const scale=Math.min((cw-80)/rangeX,(ch-80)/rangeY);
+  const ox=40+(cw-80-rangeX*scale)/2;
+  const oy=ch-40-(ch-80-rangeY*scale)/2;
+
+  const toSX=v=>ox+(v-minX)*scale;
+  const toSY=v=>oy-(v-minY)*scale;
+
+  // Store for hit-testing
+  c._toSX=toSX; c._toSY=toSY; c._scale=scale; c._minX=minX; c._minY=minY;
+
+  // grid
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  for(let gx=Math.ceil(minX);gx<=Math.floor(maxX);gx++){
+    ctx.beginPath(); ctx.moveTo(toSX(gx),toSY(minY)); ctx.lineTo(toSX(gx),toSY(maxY)); ctx.stroke();
+  }
+  for(let gy=Math.ceil(minY);gy<=Math.floor(maxY);gy++){
+    ctx.beginPath(); ctx.moveTo(toSX(minX),toSY(gy)); ctx.lineTo(toSX(maxX),toSY(gy)); ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5;
+  if(minY<=0&&maxY>=0){
+    ctx.beginPath(); ctx.moveTo(toSX(minX),toSY(0)); ctx.lineTo(toSX(maxX),toSY(0)); ctx.stroke();
+  }
+  if(minX<=0&&maxX>=0){
+    ctx.beginPath(); ctx.moveTo(toSX(0),toSY(minY)); ctx.lineTo(toSX(0),toSY(maxY)); ctx.stroke();
+  }
+
+  // axis labels
+  ctx.fillStyle='#999'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  for(let gx=Math.ceil(minX);gx<=Math.floor(maxX);gx++){
+    if(gx===0) continue;
+    const sy0=minY<=0&&maxY>=0?toSY(0):ch-35;
+    ctx.fillText(gx,toSX(gx),sy0+15);
+  }
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(minY);gy<=Math.floor(maxY);gy++){
+    if(gy===0) continue;
+    const sx0=minX<=0&&maxX>=0?toSX(0):35;
+    ctx.fillText(gy,sx0-6,toSY(gy)+4);
+  }
+
+  // PQ line
+  ctx.setLineDash([6,4]); ctx.strokeStyle='#bbb'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(toSX(Px),toSY(Py)); ctx.lineTo(toSX(qx),toSY(qy)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // midpoint marker (small cross at A)
+  ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
+  const ax=toSX(Acx), ay=toSY(Acy);
+
+  // Equal-length marks on PA and AQ
+  const pmx=(Px+Acx)/2, pmy=(Py+Acy)/2;
+  const qmx=(qx+Acx)/2, qmy=(qy+Acy)/2;
+  const dx=qx-Px, dy=qy-Py;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if(len>0.01){
+    const nx=-dy/len*8, ny=dx/len*8;
+    ctx.strokeStyle='#e67e22'; ctx.lineWidth=2;
+    // mark on PA
+    ctx.beginPath(); ctx.moveTo(toSX(pmx)+nx,toSY(pmy)-ny); ctx.lineTo(toSX(pmx)-nx,toSY(pmy)+ny); ctx.stroke();
+    // mark on AQ
+    ctx.beginPath(); ctx.moveTo(toSX(qmx)+nx,toSY(qmy)-ny); ctx.lineTo(toSX(qmx)-nx,toSY(qmy)+ny); ctx.stroke();
+  }
+
+  // dots
+  function dot(x,y,col,label,offX,offY,r){
+    r=r||7;
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(toSX(x),toSY(y),r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(toSX(x),toSY(y),r,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle=col; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,toSX(x)+(offX||0),toSY(y)+(offY||-14));
+  }
+
+  const prx=Math.round(Px), pry=Math.round(Py);
+  const qrx=Math.round(qx), qry=Math.round(qy);
+  dot(Px,Py,'#d9534f',`P(${prx},${pry})`,-20,-14,9);
+  dot(Acx,Acy,'#2a6df4',`A(${Acx},${Acy})`,0,20);
+  dot(qx,qy,'#28a745',`Q(${qrx},${qry})`,20,-14,9);
+
+  // "midpoint" label near A
+  ctx.fillStyle='var(--accent)'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('中点',ax,ay+32);
+}
+
+function updateCoords(){
+  const qx=Qx(), qy=Qy();
+  const prx=Math.round(Px), pry=Math.round(Py);
+  const qrx=Math.round(qx), qry=Math.round(qy);
+  document.getElementById('coordP').textContent=`P(${prx}, ${pry})`;
+  document.getElementById('coordA').textContent=`A(${Acx}, ${Acy})`;
+  document.getElementById('coordQ').textContent=`Q(${qrx}, ${qry})`;
+}
+
+const stepData=[
+  {
+    title:'ステップ 1／4：問題の設定',
+    render(box){
+      box.innerHTML=`<p>${T('\\mathrm{P}(-1,\\,2)')}, ${T('\\mathrm{A}(2,\\,3)')} のとき、点Aに関してPと対称な点 ${T('\\mathrm{Q}(a,\\,b)')} を求める。</p>
+      <p>「Aに関して対称」＝<strong>AがPQの中点</strong></p>`;
+    }
+  },
+  {
+    title:'ステップ 2／4：中点条件（x座標）',
+    render(box){
+      box.innerHTML=`<p>PQの中点の${T('x')}座標がAの${T('x')}座標に等しい：</p>
+      <div class="step-math" id="s2m1"></div>
+      <div class="step-math" id="s2m2"></div>`;
+      requestAnimationFrame(()=>{
+        tex(`\\frac{-1 + a}{2} = 2`,document.getElementById('s2m1'),true);
+        tex(`-1 + a = 4 \\quad\\Rightarrow\\quad a = 5`,document.getElementById('s2m2'),true);
+      });
+    }
+  },
+  {
+    title:'ステップ 3／4：中点条件（y座標）',
+    render(box){
+      box.innerHTML=`<p>PQの中点の${T('y')}座標がAの${T('y')}座標に等しい：</p>
+      <div class="step-math" id="s3m1"></div>
+      <div class="step-math" id="s3m2"></div>`;
+      requestAnimationFrame(()=>{
+        tex(`\\frac{2 + b}{2} = 3`,document.getElementById('s3m1'),true);
+        tex(`2 + b = 6 \\quad\\Rightarrow\\quad b = 4`,document.getElementById('s3m2'),true);
+      });
+    }
+  },
+  {
+    title:'ステップ 4／4：答え',
+    render(box){
+      box.innerHTML=`<div class="step-math" id="s4m"></div>
+      <p style="text-align:center;">AはPQの中点であることが確認できます。</p>`;
+      requestAnimationFrame(()=>{
+        tex(`\\therefore\\; \\mathrm{Q}(5,\\,4)`,document.getElementById('s4m'),true);
+      });
+    }
+  }
+];
+
+function showStep(){
+  const box=document.getElementById('stepBox');
+  document.getElementById('stepTitle').textContent=stepData[step].title;
+  const content=document.createElement('div');
+  content.className='step-content';
+  stepData[step].render(content);
+  // Replace old content
+  const old=box.querySelector('.step-content');
+  if(old) box.replaceChild(content,old);
+  else box.appendChild(content);
+
+  document.getElementById('stepInd').textContent=`${step+1} / ${stepData.length}`;
+  document.getElementById('prevBtn').disabled=step===0;
+  document.getElementById('prevBtn').style.opacity=step===0?'.4':'1';
+  document.getElementById('nextBtn').textContent=step===stepData.length-1?'完了 ✓':'次へ →';
+}
+
+function setupDrag(){
+  const c=document.getElementById('graphCanvas');
+
+  function getCoords(e){
+    const rect=c.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    const cy=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+    return {cx,cy};
+  }
+
+  function isNearP(cx,cy){
+    if(!c._toSX) return false;
+    const sx=c._toSX(Px), sy=c._toSY(Py);
+    const dx=cx-sx, dy=cy-sy;
+    return dx*dx+dy*dy<900; // 30px radius
+  }
+
+  function toData(cx,cy){
+    return {
+      x:c._minX+cx/c._scale-((40+(parseFloat(c.style.width)-80-((Math.max(Px,Qx(),Acx)+2)-(Math.min(Px,Qx(),Acx)-2))*c._scale)/2)/c._scale),
+      y:0
+    };
+  }
+
+  function onStart(e){
+    const {cx,cy}=getCoords(e);
+    if(isNearP(cx,cy)){
+      dragging=true;
+      e.preventDefault();
+    }
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const rect=c.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    const cy=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+    // Convert screen to data
+    const scaleW=parseFloat(c.style.width);
+    const scaleH=parseFloat(c.style.height);
+    // inverse of toSX/toSY
+    const dataX=c._minX+(cx-40)/c._scale;
+    const dataY=c._minY+(scaleH-40-cy)/c._scale;
+    Px=Math.round(dataX);
+    Py=Math.round(dataY);
+    drawGraph();
+    updateCoords();
+  }
+
+  function onEnd(){
+    dragging=false;
+  }
+
+  c.addEventListener('mousedown',onStart);
+  c.addEventListener('mousemove',onMove);
+  c.addEventListener('mouseup',onEnd);
+  c.addEventListener('mouseleave',onEnd);
+  c.addEventListener('touchstart',onStart,{passive:false});
+  c.addEventListener('touchmove',onMove,{passive:false});
+  c.addEventListener('touchend',onEnd);
+}
+
+function init(){
+  tex(`\\frac{x_\\mathrm{P} + x_\\mathrm{Q}}{2} = x_\\mathrm{A},\\quad \\frac{y_\\mathrm{P} + y_\\mathrm{Q}}{2} = y_\\mathrm{A}`,document.getElementById('conceptFormula'),true);
+
+  document.getElementById('exProblem').innerHTML=
+    `${T('\\mathrm{P}(-1,\\,2)')}, ${T('\\mathrm{A}(2,\\,3)')} のとき、点Aに関してPと対称な点Qを求めよ。`;
+
+  document.getElementById('genP').innerHTML=T('\\mathrm{P}(p,\\,q)');
+  document.getElementById('genA').innerHTML=T('\\mathrm{A}(a,\\,b)');
+  document.getElementById('genQ').innerHTML=T('\\mathrm{Q}');
+  tex(`\\mathrm{Q}(2a - p,\\; 2b - q)`,document.getElementById('genFormula'),true);
+
+  document.getElementById('prevBtn').addEventListener('click',()=>{if(step>0){step--;showStep();}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{if(step<stepData.length-1){step++;showStep();}});
+
+  drawGraph();
+  updateCoords();
+  showStep();
+  setupDrag();
+  window.addEventListener('resize',()=>{drawGraph();});
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+</script>
+</body>
+</html>

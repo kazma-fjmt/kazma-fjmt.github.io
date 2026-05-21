@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>領域における最大値・最小値</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3rem; text-align: center; }
+
+  .anim-btn-row {
+    display: flex; justify-content: center; margin: .5rem 0;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>領域における最大値・最小値</h1>
+  <p class="subtitle">線形計画法 — 領域内で一次式の最大・最小を求めましょう。</p>
+
+  <h2>例題8</h2>
+  <p>点 <span id="f-xy"></span> が次の領域 D を動くとき、<span id="f-obj"></span> の最大値と最小値を求めよ。</p>
+  <div class="formula-box" id="f-constraints"></div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>直線をスライドさせよう</h2>
+  <p>スライダーで <span id="f-k-label"></span> の値を変えて、直線 <span id="f-line-label"></span> が領域 D と共有点をもつ範囲を確認しましょう。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-k"></span> =</label>
+    <input type="range" id="k-slider" min="-1" max="7" step="0.1" value="2.5">
+    <span class="slider-val" id="k-value">2.5</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600,ox=80,oy=480,scale=80;
+const GRID_MIN_X=-0.5,GRID_MAX_X=6,GRID_MIN_Y=-0.5,GRID_MAX_Y=5;
+
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+let kVal = 2.5;
+let animId = null;
+
+/* Vertices of feasible region */
+const verts = [
+  {x:0, y:0, label:'O(0, 0)'},
+  {x:4, y:0, label:'A(4, 0)'},
+  {x:3, y:2, label:'B(3, 2)'},
+  {x:0, y:3, label:'C(0, 3)'},
+];
+
+function init(){
+  document.getElementById('f-xy').innerHTML = T('(x,\\,y)');
+  document.getElementById('f-obj').innerHTML = T('x + y');
+  document.getElementById('f-k-label').innerHTML = T('k');
+  document.getElementById('f-line-label').innerHTML = T('y = -x + k');
+  document.getElementById('lbl-k').innerHTML = T('k');
+
+  tex('D:\\; \\begin{cases} x + 3y \\leq 9 \\\\ 2x + y \\leq 8 \\\\ x \\geq 0 \\\\ y \\geq 0 \\end{cases}', document.getElementById('f-constraints'), true);
+
+  tex('\\text{最大値 } 5\\;\\text{（点 }\\mathrm{B}(3,2)\\text{）},\\quad \\text{最小値 } 0\\;\\text{（点 }\\mathrm{O}(0,0)\\text{）}', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  setupSlider();
+  setupAnimation();
+  drawGraph();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 領域 D を図示',
+      formula: 'D:\\; x+3y \\leq 9,\\; 2x+y \\leq 8,\\; x \\geq 0,\\; y \\geq 0' },
+    { label: 'Step 2: 頂点を求める',
+      formula: '\\mathrm{O}(0,0),\\; \\mathrm{A}(4,0),\\; \\mathrm{B}(3,2),\\; \\mathrm{C}(0,3)' },
+    { label: 'Step 3: 頂点 A の求め方',
+      formula: '2x+y=8,\\; y=0 \\;\\Rightarrow\\; x=4 \\;\\therefore\\; \\mathrm{A}(4,0)' },
+    { label: 'Step 4: 頂点 B の求め方',
+      formula: 'x+3y=9,\\; 2x+y=8 \\;\\Rightarrow\\; x=3,\\;y=2 \\;\\therefore\\; \\mathrm{B}(3,2)' },
+    { label: 'Step 5: 頂点 C の求め方',
+      formula: 'x+3y=9,\\; x=0 \\;\\Rightarrow\\; y=3 \\;\\therefore\\; \\mathrm{C}(0,3)' },
+    { label: 'Step 6: 目的関数を直線で表す',
+      formula: 'k = x + y \\;\\Longleftrightarrow\\; y = -x + k\\;\\text{（傾き }-1\\text{, }y\\text{ 切片 }k\\text{）}' },
+    { label: 'Step 7: k の最大・最小',
+      formula: 'k\\text{ が最大}\\Leftrightarrow\\text{直線が }\\mathrm{B}(3,2)\\text{ を通るとき: }k=5' },
+    { label: 'Step 8: 結論',
+      formula: '\\text{最大値 }5\\;(\\mathrm{B}(3,2)),\\;\\text{最小値 }0\\;(\\mathrm{O}(0,0))' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Grid */
+  for(let i=Math.ceil(GRID_MIN_X);i<=Math.floor(GRID_MAX_X);i++){
+    const xi=px(i);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX_Y)}" x2="${xi}" y2="${py(GRID_MIN_Y)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+  for(let i=Math.ceil(GRID_MIN_Y);i<=Math.floor(GRID_MAX_Y);i++){
+    const yi=py(i);
+    s+=`<line x1="${px(GRID_MIN_X)}" y1="${yi}" x2="${px(GRID_MAX_X)}" y2="${yi}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+
+  /* Axis labels */
+  s+=`<foreignObject x="${Math.min(px(GRID_MAX_X)-8,W-26)}" y="${oy-20}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="${Math.max(py(GRID_MAX_Y)+2,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+
+  /* Tick labels */
+  for(let i=Math.ceil(GRID_MIN_X);i<=Math.floor(GRID_MAX_X);i++){
+    if(i<0) continue;
+    s+=`<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  }
+  for(let i=Math.ceil(GRID_MIN_Y);i<=Math.floor(GRID_MAX_Y);i++){
+    if(i<=0) continue;
+    s+=`<text x="${ox-10}" y="${py(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+  }
+
+  /* Feasible region (shaded polygon) */
+  let polyPath = '';
+  for(let i=0;i<verts.length;i++){
+    polyPath += (i===0?'M':'L') + ` ${px(verts[i].x)} ${py(verts[i].y)}`;
+  }
+  polyPath += ' Z';
+  s+=`<path d="${polyPath}" fill="rgba(42,109,244,0.12)" stroke="none"/>`;
+
+  /* Constraint lines */
+  /* x + 3y = 9 → y = (9-x)/3 */
+  const line1x1 = 0, line1y1 = 3, line1x2 = GRID_MAX_X, line1y2 = (9-GRID_MAX_X)/3;
+  s+=`<line x1="${px(line1x1)}" y1="${py(line1y1)}" x2="${px(line1x2)}" y2="${py(line1y2)}" stroke="var(--c-green)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${px(4.5)}" y="${py((9-4.5)/3)-28}" width="140" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-green);font-weight:600;white-space:nowrap">${T('x+3y=9')}</div></foreignObject>`;
+
+  /* 2x + y = 8 → y = 8-2x */
+  const line2x1 = 0, line2y1 = Math.min(8, GRID_MAX_Y), line2x2 = 4, line2y2 = 0;
+  s+=`<line x1="${px(line2x1)}" y1="${py(line2y1)}" x2="${px(line2x2+0.5)}" y2="${py(Math.max(8-2*(line2x2+0.5), GRID_MIN_Y))}" stroke="var(--c-red)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${px(1.5)}" y="${py(8-2*1.5)-28}" width="140" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-red);font-weight:600;white-space:nowrap">${T('2x+y=8')}</div></foreignObject>`;
+
+  /* Boundary edges of feasible region */
+  for(let i=0;i<verts.length;i++){
+    const j=(i+1)%verts.length;
+    s+=`<line x1="${px(verts[i].x)}" y1="${py(verts[i].y)}" x2="${px(verts[j].x)}" y2="${py(verts[j].y)}" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  }
+
+  /* Objective line y = -x + k */
+  const k = kVal;
+  const olx1 = Math.max(GRID_MIN_X, k - GRID_MAX_Y);
+  const olx2 = Math.min(GRID_MAX_X, k - GRID_MIN_Y);
+  const oly1 = -olx1 + k;
+  const oly2 = -olx2 + k;
+  s+=`<line x1="${px(olx1)}" y1="${py(oly1)}" x2="${px(olx2)}" y2="${py(oly2)}" stroke="var(--c-orange)" stroke-width="3" stroke-dasharray="10 5" opacity="0.8"/>`;
+  s+=`<foreignObject x="${px(olx2)+5}" y="${py(oly2)-28}" width="200" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:600;white-space:nowrap">${T('y = -x + '+k.toFixed(1))}</div></foreignObject>`;
+
+  /* Highlight intersection of line with feasible region */
+  /* Find intersection segment of y=-x+k with the polygon */
+  const clipPts = clipLineWithPolygon(k);
+  if(clipPts.length >= 2){
+    s+=`<line x1="${px(clipPts[0].x)}" y1="${py(clipPts[0].y)}" x2="${px(clipPts[1].x)}" y2="${py(clipPts[1].y)}" stroke="var(--c-orange)" stroke-width="5" opacity="0.5"/>`;
+  } else if(clipPts.length === 1){
+    s+=`<circle cx="${px(clipPts[0].x)}" cy="${py(clipPts[0].y)}" r="6" fill="var(--c-orange)" opacity="0.7"/>`;
+  }
+
+  /* Vertices */
+  const vertColors = ['#666', 'var(--c-red)', 'var(--c-purple)', 'var(--c-green)'];
+  const labelOffsets = [{dx:8,dy:18},{dx:8,dy:18},{dx:10,dy:-10},{dx:-65,dy:-10}];
+  for(let i=0;i<verts.length;i++){
+    const v = verts[i];
+    const isMax = (Math.abs(k - 5) < 0.15 && i === 2);
+    const isMin = (Math.abs(k) < 0.15 && i === 0);
+    const highlight = isMax || isMin;
+    const r = highlight ? 10 : 7;
+    const col = vertColors[i];
+    s+=`<circle cx="${px(v.x)}" cy="${py(v.y)}" r="${r}" fill="${col}" stroke="#fff" stroke-width="2.5"/>`;
+    if(highlight){
+      s+=`<circle cx="${px(v.x)}" cy="${py(v.y)}" r="${r}" fill="none" stroke="var(--c-orange)" stroke-width="3">`;
+      s+=`<animate attributeName="r" values="${r};${r+6};${r}" dur="1s" repeatCount="indefinite"/></circle>`;
+    }
+    s+=`<text x="${px(v.x)+labelOffsets[i].dx}" y="${py(v.y)+labelOffsets[i].dy}" font-size="13" fill="${col}" font-weight="700">${v.label}</text>`;
+  }
+
+  /* k value display on graph */
+  s+=`<foreignObject x="${px(5)-60}" y="${py(4.5)-14}" width="120" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;color:var(--c-orange);font-weight:700;text-align:center">${T('k = '+k.toFixed(1))}</div></foreignObject>`;
+
+  svg.innerHTML = s;
+
+  /* Live calc */
+  const lcEl = document.getElementById('live-calc');
+  let statusText = '';
+  if(k >= 0 && k <= 5){
+    statusText = `<span style="color:var(--c-orange);font-weight:600;">直線は領域 D と共有点をもつ</span>`;
+  } else {
+    statusText = `<span style="color:#999;">直線は領域 D と共有点をもたない</span>`;
+  }
+
+  let specialText = '';
+  if(Math.abs(k - 5) < 0.15){
+    specialText = '<br><span style="color:var(--c-purple);font-weight:600;">最大値 k = 5 （頂点 B(3, 2) を通過）</span>';
+  } else if(Math.abs(k) < 0.15){
+    specialText = '<br><span style="color:#666;font-weight:600;">最小値 k = 0 （頂点 O(0, 0) を通過）</span>';
+  }
+
+  lcEl.innerHTML =
+    T(`k = x + y = ${k.toFixed(1)}`) + '<br>' +
+    T(`y = -x + ${k.toFixed(1)}`) + '<br>' +
+    statusText + specialText;
+}
+
+/* Clip line y=-x+k with the feasible polygon, return intersection points */
+function clipLineWithPolygon(k){
+  const pts = [];
+  for(let i=0;i<verts.length;i++){
+    const j=(i+1)%verts.length;
+    const x1=verts[i].x, y1=verts[i].y, x2=verts[j].x, y2=verts[j].y;
+    /* Line segment: P = (1-t)*v[i] + t*v[j], t in [0,1] */
+    /* On objective line: y = -x + k  =>  (1-t)*y1 + t*y2 = -((1-t)*x1 + t*x2) + k */
+    /* y1 + t*(y2-y1) = -x1 - t*(x2-x1) + k */
+    /* t*(y2-y1+x2-x1) = k - x1 - y1 */
+    const denom = (y2-y1)+(x2-x1);
+    if(Math.abs(denom) < 1e-10){
+      /* Parallel: check if on line */
+      if(Math.abs(x1+y1-k) < 1e-10){
+        pts.push({x:x1,y:y1});
+        pts.push({x:x2,y:y2});
+      }
+      continue;
+    }
+    const t = (k - x1 - y1) / denom;
+    if(t >= -1e-10 && t <= 1+1e-10){
+      const ix = x1 + t*(x2-x1);
+      const iy = y1 + t*(y2-y1);
+      pts.push({x:ix, y:iy});
+    }
+  }
+  /* Remove duplicates */
+  const unique = [];
+  for(const p of pts){
+    let dup = false;
+    for(const u of unique){
+      if(Math.abs(p.x-u.x)<1e-6 && Math.abs(p.y-u.y)<1e-6){ dup=true; break; }
+    }
+    if(!dup) unique.push(p);
+  }
+  return unique;
+}
+
+function setupSlider(){
+  const slider = document.getElementById('k-slider');
+  const valDisplay = document.getElementById('k-value');
+  slider.addEventListener('input', ()=>{
+    kVal = parseFloat(slider.value);
+    valDisplay.textContent = kVal.toFixed(1);
+    drawGraph();
+  });
+}
+
+function setupAnimation(){
+  const btn = document.getElementById('anim-btn');
+  btn.addEventListener('click', ()=>{
+    if(animId) { cancelAnimationFrame(animId); animId = null; }
+    const slider = document.getElementById('k-slider');
+    const valDisplay = document.getElementById('k-value');
+    let startK = -0.5;
+    let endK = 6;
+    let duration = 3000; // ms
+    let startTime = null;
+
+    function animate(ts){
+      if(!startTime) startTime = ts;
+      const elapsed = ts - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      /* Ease in-out */
+      const eased = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      kVal = startK + (endK - startK) * eased;
+      slider.value = kVal;
+      valDisplay.textContent = kVal.toFixed(1);
+      drawGraph();
+      if(progress < 1){
+        animId = requestAnimationFrame(animate);
+      } else {
+        animId = null;
+      }
+    }
+    animId = requestAnimationFrame(animate);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

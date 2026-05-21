@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>等距離にある軸上の点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-p: #ff9800;
+    --c-ok: #4caf50;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc .row { margin: .3rem 0; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .badge {
+    display: inline-block; padding: .35rem .8rem; border-radius: 8px;
+    font-weight: 600; font-size: .95rem; margin: .5rem 0;
+  }
+  .badge.found { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .badge.searching { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+  @keyframes glow {
+    0%,100% { filter: drop-shadow(0 0 4px var(--c-ok)); } 50% { filter: drop-shadow(0 0 10px var(--c-ok)); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>等距離にある軸上の点</h1>
+  <p class="subtitle"><span id="f-xaxis-sub"></span>軸上で2点からの距離が等しい点を見つけましょう。</p>
+
+  <h2>考え方</h2>
+  <p>2点 A、B から等しい距離にある <span id="f-xaxis1"></span> 軸上の点 P(<span id="f-x"></span>, 0) を求めるには、AP = BP（または AP<sup>2</sup> = BP<sup>2</sup>）を解きます。</p>
+  <div class="formula-box" id="formula-main"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p><span id="f-xaxis2"></span>軸上の点 P をドラッグして動かしてみましょう。AP = BP となる位置を探してください。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="coordplane" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題 4</h2>
+  <p>A(&minus;1, 2)、B(4, 3) から等距離にある <span id="f-xaxis3"></span> 軸上の点 P を求めます。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="note" id="note-perp"></div>
+</main>
+
+<script>
+  function tex(latex, el, dm) { katex.render(latex, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  /* state */
+  const fixA = { x: -1, y: 2 }, fixB = { x: 4, y: 3 };
+  let pX = 0; /* P on x-axis */
+  const ANSWER_X = 4;
+  const GRID_MIN_X = -5, GRID_MAX_X = 8;
+  const GRID_MIN_Y = -2, GRID_MAX_Y = 6;
+  const SVG_W = 600, SVG_H = 500, MARGIN = 40;
+  const usableW = SVG_W - 2*MARGIN, usableH = SVG_H - 2*MARGIN;
+
+  function toSVG(vx, vy) {
+    return {
+      x: MARGIN + (vx - GRID_MIN_X) / (GRID_MAX_X - GRID_MIN_X) * usableW,
+      y: MARGIN + (GRID_MAX_Y - vy) / (GRID_MAX_Y - GRID_MIN_Y) * usableH
+    };
+  }
+  function toValX(sx) {
+    return GRID_MIN_X + (sx - MARGIN) / usableW * (GRID_MAX_X - GRID_MIN_X);
+  }
+
+  function distPt(ax, ay, bx, by) {
+    return Math.sqrt((bx-ax)*(bx-ax) + (by-ay)*(by-ay));
+  }
+
+  function drawSVG() {
+    const svg = document.getElementById('coordplane');
+    let s = '';
+    /* grid */
+    for (let i = GRID_MIN_X; i <= GRID_MAX_X; i++) {
+      const p1 = toSVG(i, GRID_MIN_Y), p2 = toSVG(i, GRID_MAX_Y);
+      const c = i === 0 ? '#aaa' : '#eee';
+      const w = i === 0 ? 1.5 : 0.8;
+      s += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${c}" stroke-width="${w}"/>`;
+    }
+    for (let i = GRID_MIN_Y; i <= GRID_MAX_Y; i++) {
+      const q1 = toSVG(GRID_MIN_X, i), q2 = toSVG(GRID_MAX_X, i);
+      const c = i === 0 ? '#aaa' : '#eee';
+      const w = i === 0 ? 1.5 : 0.8;
+      s += `<line x1="${q1.x}" y1="${q1.y}" x2="${q2.x}" y2="${q2.y}" stroke="${c}" stroke-width="${w}"/>`;
+    }
+    /* tick labels */
+    for (let i = GRID_MIN_X; i <= GRID_MAX_X; i++) {
+      if (i === 0) continue;
+      const t = toSVG(i, 0);
+      s += `<text x="${t.x}" y="${t.y+16}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+    }
+    for (let i = GRID_MIN_Y; i <= GRID_MAX_Y; i++) {
+      if (i === 0) continue;
+      const t = toSVG(0, i);
+      s += `<text x="${t.x-10}" y="${t.y+4}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+    }
+    const ox = toSVG(0,0);
+    s += `<text x="${ox.x-10}" y="${ox.y+16}" text-anchor="middle" font-size="11" fill="#999">O</text>`;
+
+    const a = toSVG(fixA.x, fixA.y), b = toSVG(fixB.x, fixB.y);
+    const p = toSVG(pX, 0);
+
+    /* distance lines AP, BP */
+    const ap = distPt(fixA.x, fixA.y, pX, 0);
+    const bp = distPt(fixB.x, fixB.y, pX, 0);
+    const isEqual = Math.abs(ap - bp) < 0.01;
+
+    s += `<line x1="${a.x}" y1="${a.y}" x2="${p.x}" y2="${p.y}" stroke="var(--c-a)" stroke-width="2" stroke-dasharray="${isEqual ? 'none' : '6 3'}"/>`;
+    s += `<line x1="${b.x}" y1="${b.y}" x2="${p.x}" y2="${p.y}" stroke="var(--c-b)" stroke-width="2" stroke-dasharray="${isEqual ? 'none' : '6 3'}"/>`;
+
+    /* AP label */
+    const midAP = { x: (a.x+p.x)/2, y: (a.y+p.y)/2 };
+    s += `<text x="${midAP.x-16}" y="${midAP.y}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-a)">AP</text>`;
+    /* BP label */
+    const midBP = { x: (b.x+p.x)/2, y: (b.y+p.y)/2 };
+    s += `<text x="${midBP.x+16}" y="${midBP.y}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-b)">BP</text>`;
+
+    /* highlight x-axis near answer */
+    if (isEqual) {
+      s += `<circle cx="${p.x}" cy="${p.y}" r="14" fill="none" stroke="var(--c-ok)" stroke-width="2.5" style="animation: glow 1.5s ease infinite"/>`;
+    }
+
+    /* point A */
+    s += `<circle cx="${a.x}" cy="${a.y}" r="8" fill="var(--c-a)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${a.x}" y="${a.y-14}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-a)">A(${fixA.x}, ${fixA.y})</text>`;
+    /* point B */
+    s += `<circle cx="${b.x}" cy="${b.y}" r="8" fill="var(--c-b)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${b.x}" y="${b.y-14}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-b)">B(${fixB.x}, ${fixB.y})</text>`;
+    /* point P */
+    s += `<circle cx="${p.x}" cy="${p.y}" r="9" fill="var(--c-p)" stroke="#fff" stroke-width="2" class="draggable" data-pt="P" style="cursor:grab"/>`;
+    s += `<text x="${p.x}" y="${p.y+26}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-p)">P(${pX}, 0)</text>`;
+
+    svg.innerHTML = s;
+    updateCalc(ap, bp, isEqual);
+  }
+
+  function updateCalc(ap, bp, isEqual) {
+    const el = document.getElementById('live-calc');
+    const apR = Math.round(ap * 100) / 100;
+    const bpR = Math.round(bp * 100) / 100;
+    const ap2 = (pX - fixA.x)*(pX - fixA.x) + fixA.y*fixA.y;
+    const bp2 = (pX - fixB.x)*(pX - fixB.x) + fixB.y*fixB.y;
+    let html = '';
+    html += `<div class="row">${T(`\\mathrm{AP}^2 = (${pX}-(${fixA.x}))^2 + ${fixA.y}^2 = ${ap2}`)}</div>`;
+    html += `<div class="row">${T(`\\mathrm{BP}^2 = (${pX}-${fixB.x})^2 + ${fixB.y}^2 = ${bp2}`)}</div>`;
+    if (isEqual) {
+      html += `<div class="badge found">AP = BP !</div>`;
+    } else {
+      const diff = Math.abs(ap2 - bp2);
+      const sign = ap2 > bp2 ? '>' : '<';
+      html += `<div class="badge searching">AP² ${sign} BP² (差: ${diff})</div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  /* drag */
+  let dragging = false;
+  function ptrDown(e) {
+    if (e.target.classList && e.target.classList.contains('draggable')) {
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+  function ptrMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const svg = document.getElementById('coordplane');
+    const rect = svg.getBoundingClientRect();
+    const scaleX = SVG_W / rect.width;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const sx = (cx - rect.left) * scaleX;
+    let v = Math.round(toValX(sx));
+    v = Math.max(GRID_MIN_X + 1, Math.min(GRID_MAX_X - 1, v));
+    pX = v;
+    drawSVG();
+  }
+  function ptrUp() { dragging = false; }
+
+  /* walkthrough */
+  const steps = [
+    { title: "問題設定", tex: "\\mathrm{A}(-1, 2),\\; \\mathrm{B}(4, 3),\\; \\mathrm{P}(x, 0) \\text{ で AP = BP を求める}" },
+    { title: "AP² を計算", tex: "\\mathrm{AP}^2 = (x-(-1))^2 + (0-2)^2 = (x+1)^2 + 4" },
+    { title: "BP² を計算", tex: "\\mathrm{BP}^2 = (x-4)^2 + (0-3)^2 = (x-4)^2 + 9" },
+    { title: "AP² = BP² とおく", tex: "(x+1)^2 + 4 = (x-4)^2 + 9" },
+    { title: "展開", tex: "x^2 + 2x + 1 + 4 = x^2 - 8x + 16 + 9" },
+    { title: "整理", tex: "2x + 5 = -8x + 25" },
+    { title: "x について解く", tex: "10x = 20 \\implies x = 2" },
+    { title: "答え", tex: "\\therefore\\; \\mathrm{P}(2, 0)" }
+  ];
+  let curStep = 0;
+
+  function renderWalk() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    document.getElementById('f-x').innerHTML = T("x");
+    document.getElementById('f-xaxis-sub').innerHTML = T("x");
+    document.getElementById('f-xaxis1').innerHTML = T("x");
+    document.getElementById('f-xaxis2').innerHTML = T("x");
+    document.getElementById('f-xaxis3').innerHTML = T("x");
+    tex("\\mathrm{AP}^2 = \\mathrm{BP}^2 \\text{ を解く}", document.getElementById('formula-main'), true);
+
+    document.getElementById('note-perp').innerHTML =
+      "2点から等距離にある点の集まりは、2点を結ぶ線分の<strong>垂直二等分線</strong>です。" +
+      T('x') + " 軸上で等距離な点は、垂直二等分線と " + T('x') + " 軸の交点になります。";
+
+    pX = 0;
+    drawSVG();
+
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalk(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < steps.length - 1) { curStep++; renderWalk(); }
+    });
+    renderWalk();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

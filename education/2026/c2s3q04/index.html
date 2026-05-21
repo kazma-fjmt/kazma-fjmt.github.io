@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>内分点の軌跡と分割比</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: .75rem;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: .75rem 0;
+  }
+  .slider-row label { font-weight: 600; min-width: fit-content; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .val { min-width: 3rem; text-align: right; font-weight: 600; color: var(--accent); }
+
+  .tab-row {
+    display: flex; gap: .5rem; margin: .75rem 0; flex-wrap: wrap;
+  }
+  .tab-btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: .9rem; font-weight: 600;
+    padding: .6rem 1rem; border-radius: 10px; cursor: pointer;
+    min-height: 44px; font-family: inherit; user-select: none;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab-btn:active { transform: scale(.97); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>内分点の軌跡と分割比</h1>
+  <p class="subtitle">分割比を変えると軌跡の円がどう変化するか、探究しましょう。</p>
+
+  <h2>一般化された問題</h2>
+  <p>円 <span id="f-circle"></span> 上を動く点 P と定点 <span id="f-A"></span> がある。線分 AP を <span id="f-ratio"></span> に内分する点 Q の軌跡を求めよ。</p>
+
+  <h2>一般的な解法</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="formula-box" id="result-box"></div>
+
+  <h2>比を変えて軌跡を観察</h2>
+  <p>スライダーで内分比 <span id="f-mn"></span> を変え、Q の軌跡がどう変化するか確認しましょう。プリセットをタップすると代表的な比に切り替わります。</p>
+
+  <div class="tab-row" id="tab-row">
+    <button class="tab-btn" data-m="1" data-n="1">1:1（中点）</button>
+    <button class="tab-btn" data-m="1" data-n="2">1:2</button>
+    <button class="tab-btn" data-m="2" data-n="1">2:1</button>
+    <button class="tab-btn" data-m="1" data-n="3">1:3</button>
+    <button class="tab-btn" data-m="3" data-n="1">3:1</button>
+  </div>
+
+  <div class="slider-row">
+    <label><span id="lbl-m"></span></label>
+    <input type="range" id="slider-m" min="1" max="5" step="1" value="1">
+    <span class="val" id="val-m">1</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-n"></span></label>
+    <input type="range" id="slider-n" min="1" max="5" step="1" value="1">
+    <span class="val" id="val-n">1</span>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="formula-box" id="dynamic-result"></div>
+
+  <div class="note" id="note-general"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600,ox=250,oy=320,scale=50;
+const GRID_MIN=-3,GRID_MAX=7;
+
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+let mVal = 1, nVal = 1;
+let animAngle = 0;
+let animFrame = null;
+const trail = [];
+const MAX_TRAIL = 250;
+
+/* Locus circle for AP divided m:n internally, P on x²+y²=4, A(4,4) */
+/* Q = (n*P + m*A)/(m+n) */
+/* P = (s,t) on s²+t²=4 */
+/* Qx = (n*s + 4m)/(m+n), Qy = (n*t + 4m)/(m+n) */
+/* => s = ((m+n)*Qx - 4m)/n, t = ((m+n)*Qy - 4m)/n */
+/* s²+t²=4 => ((m+n)*Qx-4m)² + ((m+n)*Qy-4m)² = 4n² */
+/* => (Qx - 4m/(m+n))² + (Qy - 4m/(m+n))² = (2n/(m+n))² */
+/* Center: (4m/(m+n), 4m/(m+n)), Radius: 2n/(m+n) */
+
+function locusCenter(m,n){ const k=4*m/(m+n); return {x:k, y:k}; }
+function locusRadius(m,n){ return 2*n/(m+n); }
+
+function init(){
+  document.getElementById('f-circle').innerHTML = T('x^2+y^2=4');
+  document.getElementById('f-A').innerHTML = T('\\mathrm{A}(4,\\,4)');
+  document.getElementById('f-ratio').innerHTML = T('m:n');
+  document.getElementById('f-mn').innerHTML = T('m:n');
+  document.getElementById('lbl-m').innerHTML = T('m');
+  document.getElementById('lbl-n').innerHTML = T('n');
+
+  document.getElementById('note-general').innerHTML =
+    '<strong>一般法則：</strong><br>' +
+    '円 ' + T('x^2+y^2=R^2') + ' 上の点 P と定点 A を結ぶ線分を ' + T('m:n') + ' に内分する点 Q の軌跡は、' +
+    'A と原点を ' + T('m:n') + ' に内分した点を中心とし、半径 ' + T('\\frac{nR}{m+n}') + ' の円になります。<br><br>' +
+    '比が変わっても<strong>円になる</strong>という構造は同じで、中心と半径だけが変化します。';
+
+  initWalkthrough();
+  setupSliders();
+  setupTabs();
+  drawGraph();
+  animate();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 座標の設定', formula: '\\mathrm{P}(s,t)\\text{ は }s^2+t^2=4\\text{ 上、}\\mathrm{A}(4,4),\\;\\mathrm{Q}(x,y)\\text{ は AP を }m:n\\text{ に内分}' },
+    { label: 'Step 2: 内分点の公式', formula: 'x = \\frac{ns + 4m}{m+n},\\quad y = \\frac{nt + 4m}{m+n}' },
+    { label: 'Step 3: s, t を x, y で表す', formula: 's = \\frac{(m+n)x - 4m}{n},\\quad t = \\frac{(m+n)y - 4m}{n}' },
+    { label: 'Step 4: 円の方程式に代入', formula: '\\left(\\frac{(m+n)x-4m}{n}\\right)^2 + \\left(\\frac{(m+n)y-4m}{n}\\right)^2 = 4' },
+    { label: 'Step 5: 両辺を n² で整理', formula: '\\{(m+n)x - 4m\\}^2 + \\{(m+n)y - 4m\\}^2 = 4n^2' },
+    { label: 'Step 6: 標準形に変形', formula: '\\left(x - \\frac{4m}{m+n}\\right)^2 + \\left(y - \\frac{4m}{m+n}\\right)^2 = \\left(\\frac{2n}{m+n}\\right)^2' },
+    { label: 'Step 7: 結論', formula: '\\text{中心}\\left(\\frac{4m}{m+n},\\,\\frac{4m}{m+n}\\right),\\;\\text{半径}\\frac{2n}{m+n}\\text{の円}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function setupSliders(){
+  const sm = document.getElementById('slider-m');
+  const sn = document.getElementById('slider-n');
+  const vm = document.getElementById('val-m');
+  const vn = document.getElementById('val-n');
+
+  function update(){
+    mVal = parseInt(sm.value);
+    nVal = parseInt(sn.value);
+    vm.textContent = mVal;
+    vn.textContent = nVal;
+    trail.length = 0;
+    updateTabs();
+  }
+
+  sm.addEventListener('input', update);
+  sn.addEventListener('input', update);
+}
+
+function setupTabs(){
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const m = parseInt(tab.dataset.m);
+      const n = parseInt(tab.dataset.n);
+      mVal = m; nVal = n;
+      document.getElementById('slider-m').value = m;
+      document.getElementById('slider-n').value = n;
+      document.getElementById('val-m').textContent = m;
+      document.getElementById('val-n').textContent = n;
+      trail.length = 0;
+      updateTabs();
+    });
+  });
+  updateTabs();
+}
+
+function updateTabs(){
+  document.querySelectorAll('.tab-btn').forEach(tab => {
+    const m = parseInt(tab.dataset.m);
+    const n = parseInt(tab.dataset.n);
+    tab.classList.toggle('active', m===mVal && n===nVal);
+  });
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Grid */
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    const xi=px(i), yi=py(i);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX)}" x2="${xi}" y2="${py(GRID_MIN)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+    s+=`<line x1="${px(GRID_MIN)}" y1="${yi}" x2="${px(GRID_MAX)}" y2="${yi}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+
+  s+=`<foreignObject x="${Math.min(px(GRID_MAX)+2,W-26)}" y="${oy-20}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="${Math.max(py(GRID_MAX)-2,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  for(let i=GRID_MIN;i<=GRID_MAX;i++){
+    if(i===0) continue;
+    s+=`<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+    s+=`<text x="${ox-10}" y="${py(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+  }
+
+  /* Big circle: x²+y²=4, center (0,0), radius 2 */
+  s+=`<circle cx="${px(0)}" cy="${py(0)}" r="${2*scale}" fill="rgba(42,109,244,0.06)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  s+=`<foreignObject x="${px(-1.8)}" y="${py(-1.8)-22}" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-blue);font-weight:600;white-space:nowrap">C: ${T('x^2+y^2=4')}</div></foreignObject>`;
+
+  /* Locus circle */
+  const lc = locusCenter(mVal, nVal);
+  const lr = locusRadius(mVal, nVal);
+  s+=`<circle cx="${px(lc.x)}" cy="${py(lc.y)}" r="${lr*scale}" fill="rgba(40,167,69,0.08)" stroke="var(--c-green)" stroke-width="2.5" stroke-dasharray="6 3"/>`;
+  s+=`<circle cx="${px(lc.x)}" cy="${py(lc.y)}" r="4" fill="var(--c-green)" stroke="#fff" stroke-width="1.5"/>`;
+
+  /* Point A(4,4) */
+  const Ax=4, Ay=4;
+  s+=`<circle cx="${px(Ax)}" cy="${py(Ay)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Ax)+12}" y="${py(Ay)-10}" font-size="14" font-weight="700" fill="var(--c-red)">A(4, 4)</text>`;
+
+  /* Point P on big circle */
+  const Ppx = 2*Math.cos(animAngle);
+  const Ppy = 2*Math.sin(animAngle);
+
+  /* Q = internal division m:n of AP */
+  const Qx = (nVal*Ppx + mVal*Ax) / (mVal+nVal);
+  const Qy = (nVal*Ppy + mVal*Ay) / (mVal+nVal);
+
+  /* Trail */
+  trail.push({x: Qx, y: Qy});
+  if(trail.length > MAX_TRAIL) trail.shift();
+
+  if(trail.length > 1){
+    let pathD = `M ${px(trail[0].x)} ${py(trail[0].y)}`;
+    for(let i=1;i<trail.length;i++){
+      pathD += ` L ${px(trail[i].x)} ${py(trail[i].y)}`;
+    }
+    s+=`<path d="${pathD}" fill="none" stroke="var(--c-green)" stroke-width="2" opacity="0.4"/>`;
+  }
+
+  /* Line AP */
+  s+=`<line x1="${px(Ax)}" y1="${py(Ay)}" x2="${px(Ppx)}" y2="${py(Ppy)}" stroke="var(--c-orange)" stroke-width="1.5" opacity="0.6"/>`;
+
+  /* Division ratio marks on AP */
+  const total = mVal + nVal;
+  for(let k=1;k<total;k++){
+    const tx = Ppx + (Ax-Ppx)*k/total;
+    const ty = Ppy + (Ay-Ppy)*k/total;
+    const ddx = px(Ax)-px(Ppx), ddy = py(Ay)-py(Ppy);
+    const dlen = Math.sqrt(ddx*ddx+ddy*ddy)||1;
+    const nnx = -ddy/dlen*4, nny = ddx/dlen*4;
+    s+=`<line x1="${px(tx)-nnx}" y1="${py(ty)-nny}" x2="${px(tx)+nnx}" y2="${py(ty)+nny}" stroke="var(--c-orange)" stroke-width="1.5" opacity="0.5"/>`;
+  }
+
+  /* Point P */
+  s+=`<circle cx="${px(Ppx)}" cy="${py(Ppy)}" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<text x="${px(Ppx)-25}" y="${py(Ppy)-12}" font-size="13" font-weight="700" fill="var(--c-blue)">P</text>`;
+
+  /* Point Q */
+  s+=`<circle cx="${px(Qx)}" cy="${py(Qy)}" r="9" fill="var(--c-green)" stroke="#fff" stroke-width="2.5">`;
+  s+=`<animate attributeName="r" values="9;12;9" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${px(Qx)+14}" y="${py(Qy)-10}" font-size="13" font-weight="700" fill="var(--c-green)">Q</text>`;
+
+  svg.innerHTML = s;
+
+  /* Live calc */
+  const distQCenter = Math.sqrt((Qx-lc.x)**2 + (Qy-lc.y)**2);
+  const lcEl = document.getElementById('live-calc');
+  lcEl.innerHTML =
+    T(`m:n = ${mVal}:${nVal}`) + '&emsp;' +
+    T(`\\mathrm{P}(${Ppx.toFixed(2)},\\;${Ppy.toFixed(2)})`) + '&emsp;' +
+    T(`\\mathrm{Q}(${Qx.toFixed(2)},\\;${Qy.toFixed(2)})`) + '<br>' +
+    T(`\\text{Q から中心までの距離} = ${distQCenter.toFixed(4)} \\approx ${lr.toFixed(4)}`);
+
+  /* Dynamic result formula */
+  const cxFrac = simplifyFrac(4*mVal, mVal+nVal);
+  const cyFrac = simplifyFrac(4*mVal, mVal+nVal);
+  const rFrac = simplifyFrac(2*nVal, mVal+nVal);
+
+  const cxStr = cxFrac[1]===1 ? `${cxFrac[0]}` : `\\frac{${cxFrac[0]}}{${cxFrac[1]}}`;
+  const rStr = rFrac[1]===1 ? `${rFrac[0]}` : `\\frac{${rFrac[0]}}{${rFrac[1]}}`;
+
+  const drEl = document.getElementById('dynamic-result');
+  tex(`\\left(x - ${cxStr}\\right)^2 + \\left(y - ${cxStr}\\right)^2 = ${rStr === '1' ? '1' : `\\left(${rStr}\\right)^2`}`, drEl, true);
+}
+
+function simplifyFrac(a, b){
+  if(b===0) return [a,1];
+  const g = gcd(Math.abs(a), Math.abs(b));
+  return [a/g, b/g];
+}
+
+function gcd(a,b){ return b===0 ? a : gcd(b, a%b); }
+
+function animate(){
+  animAngle += 0.01;
+  if(animAngle > 2*Math.PI) animAngle -= 2*Math.PI;
+  drawGraph();
+  animFrame = requestAnimationFrame(animate);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

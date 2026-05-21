@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>弦の長さ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.35rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.1rem; }
+  .step.current .formula-line .katex { font-size: 1.25rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-width: 0; height: 36px; }
+  .slider-row .val { font-weight: 600; min-width: 4.5rem; text-align: center; font-size: 1.05rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>弦の長さ</h1>
+  <p class="subtitle">円の中心から弦（直線）への距離を利用して、弦の長さを求める方法を学びましょう。</p>
+
+  <h2>考え方</h2>
+  <p>円の中心 C から弦（直線）に垂線を下ろすと、垂線の足 M は弦の中点になります。</p>
+  <p>直角三角形 CMA（A は交点）に三平方の定理を適用すると：</p>
+  <div class="formula-box" id="formula-main"></div>
+  <p>よって弦の長さ <span id="lbl-chord"></span> は：</p>
+  <div class="formula-box" id="formula-chord"></div>
+
+  <h2>例題の解法ウォークスルー</h2>
+  <p>円 <span id="ex-circle"></span> と直線 <span id="ex-line"></span> の交わってできる弦の長さを求めよ。</p>
+  <div class="walkthrough" id="wt-ex"></div>
+  <div class="controls-row">
+    <button class="btn" id="we-prev" disabled>← 前へ</button>
+    <span class="step-counter" id="we-counter"></span>
+    <button class="btn primary" id="we-next">次へ →</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>スライダーで直線の位置を変えて、弦の長さがどう変化するか確認しましょう。</p>
+  <p class="drag-hint">スライダーで直線 <span id="hint-eq"></span> の <span id="hint-c"></span> を調整できます</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-c"></span> =</label>
+    <input type="range" id="slider-c" min="-3" max="3" step="0.1" value="-1">
+    <span class="val" id="slider-c-val">-1.0</span>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="note">
+    <strong>ポイント：</strong>弦の中点 M を通る中心からの垂線が弦を二等分する性質（弦の中点定理）を活用しています。直角三角形を見つけることがカギです。
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+let cVal = -1.0;
+
+function init(){
+  tex('\\left(\\frac{l}{2}\\right)^2 = r^2 - d^2', document.getElementById('formula-main'), true);
+  tex('l', document.getElementById('lbl-chord'));
+  tex('l = 2\\sqrt{r^2 - d^2}', document.getElementById('formula-chord'), true);
+
+  tex('x^2+y^2=2', document.getElementById('ex-circle'));
+  tex('x-y-1=0', document.getElementById('ex-line'));
+
+  document.getElementById('lbl-c').innerHTML = T('c');
+  document.getElementById('hint-eq').innerHTML = T('x - y + c = 0');
+  document.getElementById('hint-c').innerHTML = T('c');
+
+  initExample();
+  drawGraph();
+
+  const slider = document.getElementById('slider-c');
+  slider.addEventListener('input', ()=>{
+    cVal = parseFloat(slider.value);
+    document.getElementById('slider-c-val').textContent = cVal.toFixed(1);
+    drawGraph();
+  });
+}
+
+function initExample(){
+  const steps = [
+    { label: 'Step 1: 円と直線の情報を確認', formula: '\\text{円}:\\;x^2+y^2=2\\;\\;(\\text{中心}\\;C(0,0),\\;r=\\sqrt{2})' },
+    { label: 'Step 2: 直線を標準形にする', formula: '\\text{直線}\\;l:\\;x - y - 1 = 0\\;\\;(a=1,\\;b=-1,\\;c=-1)' },
+    { label: 'Step 3: 中心 C から直線 l への距離 d', formula: 'd = \\frac{|1 \\cdot 0 + (-1) \\cdot 0 + (-1)|}{\\sqrt{1^2+(-1)^2}} = \\frac{|-1|}{\\sqrt{2}} = \\frac{1}{\\sqrt{2}}' },
+    { label: 'Step 4: 弦の半分の長さを計算', formula: '\\frac{l}{2} = \\sqrt{r^2 - d^2} = \\sqrt{2 - \\frac{1}{2}} = \\sqrt{\\frac{3}{2}} = \\frac{\\sqrt{6}}{2}' },
+    { label: 'Step 5: 弦の長さ', formula: 'l = 2 \\times \\frac{\\sqrt{6}}{2} = \\sqrt{6}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-ex');
+  const counter = document.getElementById('we-counter');
+  const prevBtn = document.getElementById('we-prev');
+  const nextBtn = document.getElementById('we-next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 500, ox = 300, oy = 250, scale = 100;
+
+  function px(x){ return ox + x*scale; }
+  function py(y){ return oy - y*scale; }
+
+  // Circle x^2+y^2=2, center (0,0), r=sqrt(2)
+  const r = Math.sqrt(2);
+
+  // Line: x - y + c = 0 => y = x + c
+  const la = 1, lb = -1, lc = cVal;
+  const lineY = x => x + cVal;
+
+  // Distance from center to line
+  const d = Math.abs(la*0 + lb*0 + lc) / Math.sqrt(la*la + lb*lb); // |c|/sqrt(2)
+
+  // Foot of perpendicular
+  const denom = la*la + lb*lb; // 2
+  const kk = -(la*0 + lb*0 + lc)/denom; // -c/2
+  const hx = la*kk; // -c/2... wait: 1*(-c/2)
+  const hy = lb*kk; // (-1)*(-c/2) = c/2
+
+  // Chord length
+  const hasChord = d < r - 0.001;
+  const isTangent = Math.abs(d - r) < 0.02;
+  const halfChord = hasChord ? Math.sqrt(r*r - d*d) : 0;
+  const chordLen = 2 * halfChord;
+
+  // Intersection points (if any)
+  // x-y+cVal=0 => y=x+cVal, substitute: x^2+(x+cVal)^2=2 => 2x^2+2*cVal*x+cVal^2-2=0
+  // D = (2*cVal)^2 - 4*2*(cVal^2-2) = 4*cVal^2 - 8*cVal^2+16 = -4*cVal^2+16 = 4(4-cVal^2)
+  const D = 4*(4 - cVal*cVal);
+  let ix1, iy1, ix2, iy2;
+  if(D >= 0){
+    const sqD = Math.sqrt(D);
+    ix1 = (-2*cVal + sqD) / (2*2);
+    ix2 = (-2*cVal - sqD) / (2*2);
+    iy1 = ix1 + cVal;
+    iy2 = ix2 + cVal;
+  }
+
+  let html = '';
+
+  // Grid
+  for(let i=-3;i<=3;i++) html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee"/>`;
+  for(let j=-2;j<=2;j++) html += `<line x1="10" y1="${py(j)}" x2="${W-10}" y2="${py(j)}" stroke="#eee"/>`;
+
+  // Axes
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${W-26}" y="${oy-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(8,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+  for(let i=-3;i<=3;i++){ if(i===0)continue; html += `<text x="${px(i)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#bbb">${i}</text>`; }
+  for(let j=-2;j<=2;j++){ if(j===0)continue; html += `<text x="${ox-10}" y="${py(j)+4}" text-anchor="end" font-size="11" fill="#bbb">${j}</text>`; }
+
+  // Circle
+  html += `<circle cx="${px(0)}" cy="${py(0)}" r="${r*scale}" fill="rgba(42,109,244,0.05)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  // Line
+  const xL = -3, xR = 3;
+  const lineColor = (hasChord || isTangent) ? 'var(--c-green)' : 'var(--c-red)';
+  html += `<line x1="${px(xL)}" y1="${py(lineY(xL))}" x2="${px(xR)}" y2="${py(lineY(xR))}" stroke="${lineColor}" stroke-width="2.5"/>`;
+  html += `<foreignObject x="${px(xR)-5}" y="${py(lineY(xR))-28}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:${lineColor};font-weight:600">${T('\\ell')}</div></foreignObject>`;
+
+  // Chord (thick colored segment between intersection points)
+  if(D >= 0 && hasChord){
+    html += `<line x1="${px(ix1)}" y1="${py(iy1)}" x2="${px(ix2)}" y2="${py(iy2)}" stroke="var(--c-purple)" stroke-width="4" stroke-linecap="round"/>`;
+
+    // Intersection points
+    html += `<circle cx="${px(ix1)}" cy="${py(iy1)}" r="6" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>`;
+    html += `<text x="${px(ix1)+10}" y="${py(iy1)-10}" font-size="12" font-weight="600" fill="var(--c-purple)">A</text>`;
+    html += `<circle cx="${px(ix2)}" cy="${py(iy2)}" r="6" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>`;
+    html += `<text x="${px(ix2)+10}" y="${py(iy2)+18}" font-size="12" font-weight="600" fill="var(--c-purple)">B</text>`;
+  }
+
+  // Perpendicular from C to line (distance d)
+  if(d > 0.03){
+    html += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(hx)}" y2="${py(hy)}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+
+    // Right angle marker at H (foot)
+    const len = 0.1;
+    const udx = -hx/(d||1), udy = -hy/(d||1); // unit vector from H to C
+    // direction along the line: (lb, -la)/sqrt(denom) = (-1,-1)/sqrt(2)
+    const vx2 = -lb/Math.sqrt(denom), vy2 = la/Math.sqrt(denom);
+    const rax = hx + udx*len, ray = hy + udy*len;
+    const rbx = hx + vx2*len, rby = hy + vy2*len;
+    const rcx = rax + vx2*len, rcy = ray + vy2*len;
+    html += `<polyline points="${px(rax)},${py(ray)} ${px(rcx)},${py(rcy)} ${px(rbx)},${py(rby)}" fill="none" stroke="var(--c-orange)" stroke-width="1.5"/>`;
+
+    // d label
+    const dmx = hx/2, dmy = hy/2;
+    html += `<foreignObject x="${px(dmx)+12}" y="${py(dmy)-14}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-orange);font-weight:700">${T('d')}</div></foreignObject>`;
+  }
+
+  // Foot M
+  html += `<circle cx="${px(hx)}" cy="${py(hy)}" r="5" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>`;
+  html += `<text x="${px(hx)+10}" y="${py(hy)+18}" font-size="12" font-weight="600" fill="var(--c-orange)">M</text>`;
+
+  // Radius to point A (showing the right triangle)
+  if(D >= 0 && hasChord){
+    html += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(ix1)}" y2="${py(iy1)}" stroke="var(--c-blue)" stroke-width="2" stroke-dasharray="6,3"/>`;
+    // r label
+    const rmx = ix1/2, rmy = iy1/2;
+    html += `<foreignObject x="${px(rmx)-22}" y="${py(rmy)-19}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:700">${T('r')}</div></foreignObject>`;
+
+    // l/2 label between M and A
+    const lmx = (hx+ix1)/2, lmy = (hy+iy1)/2;
+    html += `<foreignObject x="${px(lmx)}" y="${py(lmy)+8}" width="50" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-purple);font-weight:700">${T('\\ell/2')}</div></foreignObject>`;
+
+    // Show the right triangle fill
+    html += `<polygon points="${px(0)},${py(0)} ${px(hx)},${py(hy)} ${px(ix1)},${py(iy1)}" fill="rgba(42,109,244,0.08)" stroke="none"/>`;
+  }
+
+  // Center C
+  html += `<circle cx="${px(0)}" cy="${py(0)}" r="6" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>`;
+  html += `<text x="${px(0)+10}" y="${py(0)-10}" font-size="14" font-weight="700" fill="var(--c-blue)">C</text>`;
+
+  svg.innerHTML = html;
+
+  // Live calc
+  const fmt = v => Math.abs(v-Math.round(v))<0.05 ? Math.round(v).toString() : v.toFixed(3);
+  let calcHTML = '';
+  calcHTML += T(`\\text{直線}\\;l:\\;x - y + (${fmt(cVal)}) = 0`) + '<br>';
+  calcHTML += T(`d = \\frac{|${fmt(cVal)}|}{\\sqrt{2}} \\approx ${fmt(d)}`) + '<br>';
+  calcHTML += T(`r = \\sqrt{2} \\approx ${fmt(r)}`) + '<br>';
+  if(hasChord){
+    calcHTML += T(`\\frac{l}{2} = \\sqrt{r^2 - d^2} = \\sqrt{${fmt(r*r)} - ${fmt(d*d)}} \\approx ${fmt(halfChord)}`) + '<br>';
+    calcHTML += T(`l = ${fmt(chordLen)}`);
+  } else if(isTangent){
+    calcHTML += '<span style="color:var(--c-orange);font-weight:700;">接する（弦の長さ = 0）</span>';
+  } else {
+    calcHTML += '<span style="color:var(--c-red);font-weight:700;">共有点なし（d > r）</span>';
+  }
+  document.getElementById('live-calc').innerHTML = calcHTML;
+}
+</script>
+</body>
+</html>

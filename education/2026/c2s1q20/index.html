@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>直線に関して対称な点</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .problem-box {
+    background: #f0f5ff; border: 2px solid var(--accent); border-radius: 12px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }
+  .problem-box .label { font-weight: 700; color: var(--accent); margin-bottom: .5rem; }
+
+  .cond-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0;
+  }
+  @media (max-width: 550px){ .cond-grid { grid-template-columns: 1fr; } }
+  .cond-card {
+    background: #fff; border: 2px solid #e3e3e3; border-radius: 12px;
+    padding: .75rem 1rem; text-align: center;
+  }
+  .cond-card h3 { margin: 0 0 .4rem; font-size: .95rem; }
+
+  .derivation {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0;
+  }
+  .deriv-step {
+    padding: .6rem .25rem; border-bottom: 1px dashed #eee;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .deriv-step:last-child { border-bottom: none; }
+  .deriv-step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: .6rem 1.5rem;
+    font-size: .95rem; cursor: pointer; margin: .5rem .25rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .step-btn:active { transform: scale(.97); }
+  .step-btn:disabled { background: #ccc; }
+
+  .answer-box {
+    background: #e8f5e9; border: 2px solid var(--c-green); border-radius: 10px;
+    padding: .75rem 1rem; text-align: center; margin: .75rem 0;
+    display: none;
+  }
+  .answer-box.show { display: block; }
+  .answer-box .katex { font-size: 1.3rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  .right-angle { fill: none; stroke: var(--c-green); stroke-width: 2; }
+</style>
+</head>
+<body>
+<main>
+  <h1>直線に関して対称な点</h1>
+  <p class="subtitle">例題3：直線を軸とした点の対称移動</p>
+
+  <h2>対称な点の条件</h2>
+  <p id="desc1"></p>
+
+  <div class="cond-grid">
+    <div class="cond-card" id="card-cond1">
+      <h3 style="color:var(--c-red);">条件 [1]</h3>
+      <div id="cond1-tex"></div>
+      <p style="font-size:.85rem;color:var(--muted);margin:.25rem 0;">ABは直線lに垂直</p>
+    </div>
+    <div class="cond-card" id="card-cond2">
+      <h3 style="color:var(--c-blue);">条件 [2]</h3>
+      <div id="cond2-tex"></div>
+      <p style="font-size:.85rem;color:var(--muted);margin:.25rem 0;">ABの中点Mはl上にある</p>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="label">例題3</div>
+    <p id="problem-text"></p>
+  </div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>点 <span style="color:var(--c-red);font-weight:600;">A</span> をドラッグして動かしてみましょう。対称な点 <span style="color:var(--c-blue);font-weight:600;">B</span> が自動で更新されます。</p>
+  <div class="drag-hint">点 A をタップ＆ドラッグ</div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="formula-box" id="live-result"></div>
+
+  <h2>解法のステップ</h2>
+  <div class="derivation" id="derivation"></div>
+  <div style="text-align:center;">
+    <button class="step-btn" id="btn-prev" disabled>← 戻る</button>
+    <button class="step-btn" id="btn-next">次のステップ →</button>
+  </div>
+  <div class="answer-box" id="answer-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+function init(){
+  document.getElementById('desc1').innerHTML =
+    '点 '+T('\\mathrm{A}')+' の直線 '+T('l')+' に関する対称な点 '+T('\\mathrm{B}')+' は、次の2つの条件を同時に満たします。';
+  tex('\\mathrm{AB} \\perp l', document.getElementById('cond1-tex'), true);
+  tex('\\text{ABの中点M} \\in l', document.getElementById('cond2-tex'), true);
+  document.getElementById('problem-text').innerHTML =
+    '直線 '+T('l: x+2y-10=0')+' に関して、点 '+T('\\mathrm{A}(1,\\,2)')+' と対称な点 '+T('\\mathrm{B}')+' を求めよ。';
+
+  // Line l: x + 2y - 10 = 0, slope = -1/2
+  // Symmetric point computation:
+  // For A(ax, ay), reflect across l: x + 2y - 10 = 0
+  // Normal direction: (1, 2), unit: (1/sqrt5, 2/sqrt5)
+  // d = (ax + 2*ay - 10) / sqrt(5)
+  // B = A - 2*d*(1/sqrt5, 2/sqrt5) = A - 2*(ax+2ay-10)/5 * (1, 2)
+  let ax = 1, ay = 2;
+  let dragging = false;
+
+  const svg = document.getElementById('graph');
+  const svgWrap = document.getElementById('svg-wrap');
+
+  function reflect(px, py){
+    const d = (px + 2*py - 10) / 5;
+    return [px - 2*d, py - 4*d];
+  }
+
+  function frac(n){
+    const r = Math.round(n*10)/10;
+    if(r===Math.round(r)) return String(Math.round(r));
+    return String(r);
+  }
+
+  function drawGraph(){
+    const W=500,H=500;
+    const ox=30, oy=430, sc=50; // origin offset
+    function tx(x){return ox+x*sc;}
+    function ty(y){return oy-y*sc;}
+
+    const [bx, by] = reflect(ax, ay);
+    const mx = (ax+bx)/2, my = (ay+by)/2;
+
+    let html='';
+    // grid
+    for(let i=0;i<=9;i++){
+      html+='<line x1="'+tx(i)+'" y1="0" x2="'+tx(i)+'" y2="'+H+'" stroke="#eee" stroke-width="1"/>';
+      html+='<line x1="0" y1="'+ty(i)+'" x2="'+W+'" y2="'+ty(i)+'" stroke="#eee" stroke-width="1"/>';
+    }
+    // axes
+    html+='<line x1="'+tx(0)+'" y1="0" x2="'+tx(0)+'" y2="'+H+'" stroke="#999" stroke-width="1.5"/>';
+    html+='<line x1="0" y1="'+ty(0)+'" x2="'+W+'" y2="'+ty(0)+'" stroke="#999" stroke-width="1.5"/>';
+    for(let i=1;i<=8;i++){
+      html+='<text x="'+tx(i)+'" y="'+(ty(0)+16)+'" text-anchor="middle" font-size="11" fill="#999">'+i+'</text>';
+      html+='<text x="'+(tx(0)-8)+'" y="'+(ty(i)+4)+'" text-anchor="end" font-size="11" fill="#999">'+i+'</text>';
+    }
+    html+='<foreignObject x="'+(Math.min(W-8,W-26))+'" y="'+(ty(0)-22)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('x')+'</div></foreignObject>';
+    html+='<foreignObject x="'+(tx(0)+6)+'" y="'+Math.max(2,2)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999">'+T('y')+'</div></foreignObject>';
+    html+='<text x="'+(tx(0)-8)+'" y="'+(ty(0)+16)+'" font-size="11" fill="#999">O</text>';
+
+    // line l: x+2y-10=0 → y = (10-x)/2 = 5 - x/2
+    const pts=[];
+    for(let sx=-1;sx<=11;sx+=0.1){
+      const sy=5-sx/2;
+      if(sy>=-1&&sy<=9) pts.push([tx(sx),ty(sy)]);
+    }
+    if(pts.length>1){
+      let d='M'+pts[0][0]+','+pts[0][1];
+      for(let i=1;i<pts.length;i++) d+=' L'+pts[i][0]+','+pts[i][1];
+      html+='<path d="'+d+'" stroke="#666" stroke-width="2.5" fill="none"/>';
+    }
+    html+='<text x="'+(tx(8.5)+8)+'" y="'+(ty(5-8.5/2)-8)+'" font-size="14" font-weight="600" fill="#666">l</text>';
+
+    // AB line (dashed)
+    html+='<line x1="'+tx(ax)+'" y1="'+ty(ay)+'" x2="'+tx(bx)+'" y2="'+ty(by)+'" stroke="var(--c-purple)" stroke-width="1.5" stroke-dasharray="6,4"/>';
+
+    // right angle at foot
+    // foot = midpoint M (which is on l since it's the reflection midpoint)
+    const sz=0.3;
+    const ldir = Math.sqrt(1+0.25); // direction along l: (1, -1/2), magnitude
+    const ldx=1/ldir, ldy=-0.5/ldir;
+    const ndx=1/Math.sqrt(5), ndy=2/Math.sqrt(5);
+    html+='<path d="M'+tx(mx+ldx*sz)+','+ty(my+ldy*sz)+' L'+tx(mx+ldx*sz+ndx*sz)+','+ty(my+ldy*sz+ndy*sz)+' L'+tx(mx+ndx*sz)+','+ty(my+ndy*sz)+'" class="right-angle"/>';
+
+    // midpoint M
+    html+='<circle cx="'+tx(mx)+'" cy="'+ty(my)+'" r="5" fill="var(--c-purple)" stroke="#fff" stroke-width="1.5"/>';
+    html+='<text x="'+(tx(mx)+10)+'" y="'+(ty(my)-8)+'" font-size="13" font-weight="600" fill="var(--c-purple)">M('+frac(mx)+', '+frac(my)+')</text>';
+
+    // point A (draggable)
+    const apx=tx(ax), apy=ty(ay);
+    html+='<circle cx="'+apx+'" cy="'+apy+'" r="10" fill="var(--c-red)" stroke="#fff" stroke-width="2.5" style="cursor:grab;" id="point-a"/>';
+    html+='<text x="'+(apx-14)+'" y="'+(apy-14)+'" font-size="15" font-weight="700" fill="var(--c-red)">A('+frac(ax)+', '+frac(ay)+')</text>';
+
+    // point B
+    const bpx=tx(bx), bpy=ty(by);
+    html+='<circle cx="'+bpx+'" cy="'+bpy+'" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>';
+    html+='<text x="'+(bpx+10)+'" y="'+(bpy-10)+'" font-size="15" font-weight="700" fill="var(--c-blue)">B('+frac(bx)+', '+frac(by)+')</text>';
+
+    // distance labels
+    const dAM = Math.sqrt((ax-mx)*(ax-mx)+(ay-my)*(ay-my));
+    const dBM = Math.sqrt((bx-mx)*(bx-mx)+(by-my)*(by-my));
+    html+='<text x="'+tx((ax+mx)/2-0.3)+'" y="'+ty((ay+my)/2+0.3)+'" font-size="11" fill="var(--c-red)">'+frac(Math.round(dAM*100)/100)+'</text>';
+    html+='<text x="'+tx((bx+mx)/2+0.2)+'" y="'+ty((by+my)/2-0.2)+'" font-size="11" fill="var(--c-blue)">'+frac(Math.round(dBM*100)/100)+'</text>';
+
+    svg.innerHTML = html;
+
+    // live result
+    document.getElementById('live-result').innerHTML =
+      T('\\mathrm{A}('+frac(ax)+',\\,'+frac(ay)+')')+' の対称点は '+T('\\mathrm{B}('+frac(bx)+',\\,'+frac(by)+')');
+  }
+
+  // Drag handling
+  function getCoords(e){
+    const rect = svgWrap.getBoundingClientRect();
+    const scaleX = 500 / rect.width;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const svgX = (clientX - rect.left) * scaleX;
+    const svgY = (clientY - rect.top) * scaleX;
+    const ox=30, oy=430, sc=50;
+    return [(svgX - ox)/sc, (oy - svgY)/sc];
+  }
+
+  function onStart(e){
+    const [x,y] = getCoords(e);
+    if(Math.sqrt((x-ax)*(x-ax)+(y-ay)*(y-ay)) < 0.6){
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const [x,y] = getCoords(e);
+    ax = Math.max(-0.5, Math.min(8.5, Math.round(x*4)/4));
+    ay = Math.max(-0.5, Math.min(8.5, Math.round(y*4)/4));
+    drawGraph();
+  }
+  function onEnd(){
+    dragging = false;
+  }
+
+  svgWrap.addEventListener('mousedown', onStart);
+  svgWrap.addEventListener('mousemove', onMove);
+  svgWrap.addEventListener('mouseup', onEnd);
+  svgWrap.addEventListener('mouseleave', onEnd);
+  svgWrap.addEventListener('touchstart', onStart, {passive:false});
+  svgWrap.addEventListener('touchmove', onMove, {passive:false});
+  svgWrap.addEventListener('touchend', onEnd);
+
+  drawGraph();
+
+  // Step-by-step derivation for the specific example
+  let currentStep = -1;
+  const derivSteps = [];
+  const cont = document.getElementById('derivation');
+  const steps = [
+    '対称な点を '+T('\\mathrm{B}(a,\\,b)')+' とおく。',
+    '<strong>条件 [1]</strong>：'+T('\\mathrm{AB} \\perp l')+'<br>'+
+    T('l')+' の傾き = '+T('-\\dfrac{1}{2}')+' なので、AB の傾き × '+T('(-\\dfrac{1}{2})')+' = '+T('-1'),
+    'AB の傾き：'+T('\\dfrac{b-2}{a-1}')+' より '+T('\\left(-\\dfrac{1}{2}\\right) \\cdot \\dfrac{b-2}{a-1} = -1'),
+    '整理すると：'+T('b - 2 = 2(a-1)')+' すなわち '+T('b = 2a')+' … ①',
+    '<strong>条件 [2]</strong>：AB の中点 M が '+T('l')+' 上にある<br>'+
+    '中点 '+T('\\mathrm{M}\\left(\\dfrac{a+1}{2},\\,\\dfrac{b+2}{2}\\right)')+' を '+T('l: x+2y-10=0')+' に代入',
+    T('\\dfrac{a+1}{2} + 2 \\cdot \\dfrac{b+2}{2} - 10 = 0'),
+    '整理：'+T('a + 1 + 2(b+2) - 20 = 0')+' → '+T('a + 2b - 15 = 0')+' … ②',
+    '① を ② に代入：'+T('a + 2(2a) - 15 = 0')+' → '+T('5a = 15')+' → '+T('a = 3'),
+    '① より '+T('b = 2 \\times 3 = 6'),
+    '<strong>答え：</strong>'+T('\\mathrm{B}(3,\\,6)')
+  ];
+  steps.forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'deriv-step';
+    div.innerHTML = s;
+    cont.appendChild(div);
+    derivSteps.push(div);
+  });
+
+  tex('\\mathrm{B}(3,\\,6)', document.getElementById('answer-box'), true);
+
+  function showStep(dir){
+    const next = currentStep+dir;
+    if(next<0||next>=derivSteps.length) return;
+    currentStep = next;
+    derivSteps.forEach((el,i)=>{
+      if(i<=currentStep) el.classList.add('visible');
+      else el.classList.remove('visible');
+    });
+    document.getElementById('btn-prev').disabled = currentStep<=0;
+    document.getElementById('btn-next').disabled = currentStep>=derivSteps.length-1;
+    if(currentStep>=derivSteps.length-1){
+      document.getElementById('answer-box').classList.add('show');
+    } else {
+      document.getElementById('answer-box').classList.remove('show');
+    }
+  }
+  document.getElementById('btn-next').addEventListener('click',()=>showStep(1));
+  document.getElementById('btn-prev').addEventListener('click',()=>showStep(-1));
+}
+</script>
+</body>
+</html>

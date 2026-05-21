@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>垂心（3本の垂線の交点）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  .special-note {
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>垂心（3本の垂線の交点）</h1>
+  <p class="subtitle">三角形の3本の垂線（高さ）が必ず1点で交わることを座標で証明しましょう。</p>
+
+  <h2>垂心とは</h2>
+  <p>三角形の各頂点から対辺に下ろした<strong>垂線</strong>（高さ）は、必ず1点で交わります。この交点を<strong>垂心</strong>（orthocenter）といいます。</p>
+
+  <div class="formula-box" id="formula-main"></div>
+
+  <h2>座標による証明</h2>
+  <div class="walkthrough" id="wt-proof"></div>
+  <div class="controls-row">
+    <button class="btn" id="wp-prev" disabled>← 前へ</button>
+    <span class="step-counter" id="wp-counter"></span>
+    <button class="btn primary" id="wp-next">次へ →</button>
+  </div>
+
+  <h2>垂心を観察しよう</h2>
+  <p>三角形の頂点をドラッグして、垂心がどのように移動するか観察しましょう。</p>
+  <p class="drag-hint">頂点をタップ＆ドラッグで移動できます</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 550" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div id="special-note-container"></div>
+
+  <div class="note" id="note-cases"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+let verts = { A: {x:1, y:4}, B: {x:-3, y:-1}, C: {x:4, y:-1} };
+
+function init(){
+  tex('\\text{3本の垂線}\\;\\mathrm{AL},\\;\\mathrm{BM},\\;\\mathrm{CN}\\;\\text{は1点（垂心 H）で交わる}', document.getElementById('formula-main'), true);
+
+  document.getElementById('note-cases').innerHTML =
+    '<strong>垂心の位置：</strong><br>' +
+    '・鋭角三角形 → 垂心は三角形の<strong>内部</strong><br>' +
+    '・直角三角形 → 垂心は<strong>直角の頂点</strong><br>' +
+    '・鈍角三角形 → 垂心は三角形の<strong>外部</strong>';
+
+  initProof();
+  drawGraph();
+  setupDrag();
+}
+
+function initProof(){
+  const steps = [
+    { label: 'Step 1: 座標の設定', formula: '\\text{BC を x 軸上、頂点 A からの垂線 AL を y 軸上に置く}' },
+    { label: 'Step 2: 各点の座標', formula: '\\mathrm{A}(0,\\,a),\\;\\mathrm{B}(b,\\,0),\\;\\mathrm{C}(c,\\,0)\\quad(a\\neq 0,\\;b\\neq 0,\\;c\\neq 0)' },
+    { label: 'Step 3: 垂線 AL', formula: '\\mathrm{AL}:\\;x = 0\\;\\text{（y 軸、BC に垂直）}' },
+    { label: 'Step 4: AC の傾き', formula: '\\text{AC の傾き} = \\frac{0-a}{c-0} = -\\frac{a}{c}' },
+    { label: 'Step 5: 垂線 BM（B から AC に垂直）', formula: '\\text{BM の傾き} = \\frac{c}{a}\\quad\\Rightarrow\\quad \\mathrm{BM}:\\;y = \\frac{c}{a}(x-b)' },
+    { label: 'Step 6: AB の傾き', formula: '\\text{AB の傾き} = \\frac{0-a}{b-0} = -\\frac{a}{b}' },
+    { label: 'Step 7: 垂線 CN（C から AB に垂直）', formula: '\\text{CN の傾き} = \\frac{b}{a}\\quad\\Rightarrow\\quad \\mathrm{CN}:\\;y = \\frac{b}{a}(x-c)' },
+    { label: 'Step 8: BM と y 軸の交点', formula: '\\mathrm{BM}:\\;x=0\\;\\text{のとき}\\;y = \\frac{c}{a}(0-b) = -\\frac{bc}{a}' },
+    { label: 'Step 9: CN と y 軸の交点', formula: '\\mathrm{CN}:\\;x=0\\;\\text{のとき}\\;y = \\frac{b}{a}(0-c) = -\\frac{bc}{a}' },
+    { label: 'Step 10: 結論', formula: '\\text{BM と CN は共に}\\;\\left(0,\\,-\\frac{bc}{a}\\right)\\;\\text{を通る → 3本の垂線は1点で交わる}\\;\\checkmark' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-proof');
+  const counter = document.getElementById('wp-counter');
+  const prevBtn = document.getElementById('wp-prev');
+  const nextBtn = document.getElementById('wp-next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+// Compute orthocenter
+function orthocenter(A, B, C){
+  // Altitude from A to BC: perpendicular to BC through A
+  // BC direction: (C.x-B.x, C.y-B.y)
+  // Altitude direction: (-(C.y-B.y), C.x-B.x)
+  // Parametric: P = A + t * (-(C.y-B.y), C.x-B.x)
+  //
+  // Altitude from B to AC: perpendicular to AC through B
+  // AC direction: (C.x-A.x, C.y-A.y)
+  // Altitude direction: (-(C.y-A.y), C.x-A.x)
+  // Parametric: P = B + s * (-(C.y-A.y), C.x-A.x)
+  //
+  // Solve for intersection
+  const d1x = -(C.y-B.y), d1y = C.x-B.x;
+  const d2x = -(C.y-A.y), d2y = C.x-A.x;
+
+  const det = d1x*d2y - d1y*d2x;
+  if(Math.abs(det) < 1e-9) return null; // degenerate
+
+  const dx = B.x-A.x, dy = B.y-A.y;
+  const t = (dx*d2y - dy*d2x) / det;
+
+  return { x: A.x + t*d1x, y: A.y + t*d1y };
+}
+
+// Foot of altitude from P to line through Q and R
+function footOfAltitude(P, Q, R){
+  const dx = R.x-Q.x, dy = R.y-Q.y;
+  const len2 = dx*dx + dy*dy;
+  if(len2 < 1e-12) return {x:Q.x, y:Q.y};
+  const t = ((P.x-Q.x)*dx + (P.y-Q.y)*dy) / len2;
+  return { x: Q.x + t*dx, y: Q.y + t*dy };
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 550, ox = 300, oy = 300, scale = 45;
+
+  function px(x){ return ox + x*scale; }
+  function py(y){ return oy - y*scale; }
+
+  const A = verts.A, B = verts.B, C = verts.C;
+  const Hpt = orthocenter(A, B, C);
+
+  // Feet of altitudes
+  const fA = footOfAltitude(A, B, C); // foot from A to BC
+  const fB = footOfAltitude(B, A, C); // foot from B to AC
+  const fC = footOfAltitude(C, A, B); // foot from C to AB
+
+  let html = '';
+
+  // Grid
+  for(let i=-6;i<=6;i++) html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee"/>`;
+  for(let j=-5;j<=5;j++) html += `<line x1="10" y1="${py(j)}" x2="${W-10}" y2="${py(j)}" stroke="#eee"/>`;
+
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${Math.min(W-15-12,W-26)}" y="${oy-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(py(5)-2,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  // Triangle fill
+  html += `<polygon points="${px(A.x)},${py(A.y)} ${px(B.x)},${py(B.y)} ${px(C.x)},${py(C.y)}" fill="rgba(42,109,244,0.06)" stroke="var(--c-blue)" stroke-width="2"/>`;
+
+  // Altitudes (extend beyond triangle for clarity)
+  function drawAltitude(P, foot, color, label){
+    // Extend the altitude line beyond both P and foot
+    const dx = foot.x - P.x, dy = foot.y - P.y;
+    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+    const ext = 8 / len; // extend by 8 units
+    const x1 = P.x - dx*ext, y1 = P.y - dy*ext;
+    const x2 = foot.x + dx*ext, y2 = foot.y + dy*ext;
+    html += `<line x1="${px(x1)}" y1="${py(y1)}" x2="${px(x2)}" y2="${py(y2)}" stroke="${color}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>`;
+    // Solid segment from vertex to foot
+    html += `<line x1="${px(P.x)}" y1="${py(P.y)}" x2="${px(foot.x)}" y2="${py(foot.y)}" stroke="${color}" stroke-width="2"/>`;
+
+    // Right angle mark at foot
+    const fdx = P.x - foot.x, fdy = P.y - foot.y;
+    const fl = Math.sqrt(fdx*fdx + fdy*fdy) || 1;
+    const ux = fdx/fl, uy = fdy/fl;
+    const vx = -uy, vy = ux;
+    const s = 0.25;
+    if(fl > 0.1){
+      html += `<polyline points="${px(foot.x+ux*s)},${py(foot.y+uy*s)} ${px(foot.x+ux*s+vx*s)},${py(foot.y+uy*s+vy*s)} ${px(foot.x+vx*s)},${py(foot.y+vy*s)}" fill="none" stroke="${color}" stroke-width="1.5"/>`;
+    }
+
+    // Foot dot
+    html += `<circle cx="${px(foot.x)}" cy="${py(foot.y)}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+  }
+
+  drawAltitude(A, fA, 'var(--c-red)', 'AL');
+  drawAltitude(B, fB, 'var(--c-green)', 'BM');
+  drawAltitude(C, fC, 'var(--c-purple)', 'CN');
+
+  // Orthocenter
+  if(Hpt){
+    html += `<circle cx="${px(Hpt.x)}" cy="${py(Hpt.y)}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5">`;
+    html += `<animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/></circle>`;
+    html += `<text x="${px(Hpt.x)+14}" y="${py(Hpt.y)-10}" font-size="15" font-weight="700" fill="var(--c-orange)">H（垂心）</text>`;
+  }
+
+  // Vertex dots
+  [{p:A,n:'A',c:'var(--c-red)',ox:0,oy:-15},
+   {p:B,n:'B',c:'var(--c-blue)',ox:-20,oy:15},
+   {p:C,n:'C',c:'var(--c-blue)',ox:10,oy:15}].forEach(({p,n,c,ox:offX,oy:offY})=>{
+    html += `<circle cx="${px(p.x)}" cy="${py(p.y)}" r="10" fill="${c}" stroke="#fff" stroke-width="2" style="cursor:grab"/>`;
+    html += `<text x="${px(p.x)+offX}" y="${py(p.y)+offY}" font-size="14" font-weight="700" fill="${c}">${n}</text>`;
+  });
+
+  svg.innerHTML = html;
+
+  // Live calc
+  const fmt = v => v.toFixed(2);
+  const lcEl = document.getElementById('live-calc');
+  if(Hpt){
+    lcEl.innerHTML =
+      T(`\\mathrm{A}(${fmt(A.x)},\\,${fmt(A.y)}),\\;\\mathrm{B}(${fmt(B.x)},\\,${fmt(B.y)}),\\;\\mathrm{C}(${fmt(C.x)},\\,${fmt(C.y)})`) + '<br>' +
+      T(`\\text{垂心}\\;\\mathrm{H}\\left(${fmt(Hpt.x)},\\;${fmt(Hpt.y)}\\right)`);
+  } else {
+    lcEl.innerHTML = '（三角形が退化しています）';
+  }
+
+  // Check for right angle or special cases
+  const noteEl = document.getElementById('special-note-container');
+  const dot = (u,v) => u.x*v.x + u.y*v.y;
+  const AB = {x:B.x-A.x, y:B.y-A.y};
+  const AC = {x:C.x-A.x, y:C.y-A.y};
+  const BA = {x:A.x-B.x, y:A.y-B.y};
+  const BC = {x:C.x-B.x, y:C.y-B.y};
+  const CA = {x:A.x-C.x, y:A.y-C.y};
+  const CB = {x:B.x-C.x, y:B.y-C.y};
+
+  const isRight = (u,v) => Math.abs(dot(u,v)) < 0.1;
+
+  if(isRight(AB,AC)){
+    noteEl.innerHTML = '<div class="special-note"><strong>直角三角形：</strong>角Aが直角のため、垂心は頂点Aと一致しています。</div>';
+  } else if(isRight(BA,BC)){
+    noteEl.innerHTML = '<div class="special-note"><strong>直角三角形：</strong>角Bが直角のため、垂心は頂点Bと一致しています。</div>';
+  } else if(isRight(CA,CB)){
+    noteEl.innerHTML = '<div class="special-note"><strong>直角三角形：</strong>角Cが直角のため、垂心は頂点Cと一致しています。</div>';
+  } else {
+    // Check if obtuse
+    const dAB = dot(AB,AC), dBA = dot(BA,BC), dCA = dot(CA,CB);
+    if(dAB < 0 || dBA < 0 || dCA < 0){
+      noteEl.innerHTML = '<div class="special-note"><strong>鈍角三角形：</strong>垂心は三角形の外部にあります。</div>';
+    } else {
+      noteEl.innerHTML = '<div class="special-note"><strong>鋭角三角形：</strong>垂心は三角形の内部にあります。</div>';
+    }
+  }
+}
+
+function setupDrag(){
+  const svg = document.getElementById('graph');
+  const wrap = document.getElementById('svg-wrap');
+  const W = 600, H = 550, ox = 300, oy = 300, scale = 45;
+
+  function toMath(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const svgX = (cx - rect.left) / rect.width * W;
+    const svgY = (cy - rect.top) / rect.height * H;
+    return { x: (svgX - ox)/scale, y: (oy - svgY)/scale };
+  }
+
+  let dragging = null;
+
+  function startDrag(cx, cy){
+    const m = toMath(cx, cy);
+    let best = null, bestD = 1.5;
+    ['A','B','C'].forEach(name => {
+      const d = Math.sqrt((m.x-verts[name].x)**2 + (m.y-verts[name].y)**2);
+      if(d < bestD){ bestD = d; best = name; }
+    });
+    dragging = best;
+  }
+
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    const m = toMath(cx, cy);
+    const snap = v => Math.round(v*2)/2;
+    verts[dragging] = { x: Math.max(-5.5,Math.min(5.5, snap(m.x))), y: Math.max(-4.5,Math.min(4.5, snap(m.y))) };
+    drawGraph();
+  }
+
+  function endDrag(){ dragging = null; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>座標平面上の2点間の距離</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-a: #d9534f;
+    --c-b: #2a6df4;
+    --c-c: #5cb85c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem; margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent); padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.3rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none;
+    position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center;
+    overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.15rem; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted); font-size: .9rem; text-align: center; flex: 1;
+  }
+
+  .tabs {
+    display: flex; gap: .5rem; margin: .75rem 0 1rem; flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1 1 200px; appearance: none; background: #fff;
+    border: 1.5px solid #d4dbeb; color: var(--fg); border-radius: 10px;
+    padding: 1rem .75rem; font-size: 1rem; font-family: inherit;
+    cursor: pointer; min-height: 56px; user-select: none;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .tab.active { border-color: var(--accent); background: #eef4ff; }
+  .tab:active { transform: scale(.98); }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<main>
+  <h1>座標平面上の2点間の距離</h1>
+  <p class="subtitle">三平方の定理から導かれる距離の公式を視覚的に理解しましょう。</p>
+
+  <h2>公式</h2>
+  <div class="formula-box" id="formula-main"></div>
+  <p>特に、原点 O から点 P(<span id="f-x"></span>, <span id="f-y"></span>) までの距離は：</p>
+  <div class="formula-box" id="formula-origin"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>点 A と点 B をドラッグして動かしてみましょう。直角三角形と各辺の長さが自動で表示されます。</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="coordplane" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>例題 2</h2>
+  <p>タップで例題を切り替え、「次へ」で1ステップずつ進みます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-idx="0">A(&minus;2, 4), B(2, 3)</button>
+    <button class="tab" data-idx="1">原点 O と P(5, 12)</button>
+  </div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">&larr; 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="note" id="note-pyth"></div>
+</main>
+
+<script>
+  function tex(latex, el, dm) { katex.render(latex, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  /* --- coordinate plane state --- */
+  let ptA = { x: -2, y: 4 }, ptB = { x: 2, y: 3 };
+  const GRID_MIN = -7, GRID_MAX = 7;
+  const SVG_SIZE = 600, MARGIN = 40;
+  const usable = SVG_SIZE - 2 * MARGIN;
+
+  function toSVG(vx, vy) {
+    return {
+      x: MARGIN + (vx - GRID_MIN) / (GRID_MAX - GRID_MIN) * usable,
+      y: MARGIN + (GRID_MAX - vy) / (GRID_MAX - GRID_MIN) * usable
+    };
+  }
+  function toVal(sx, sy) {
+    const vx = GRID_MIN + (sx - MARGIN) / usable * (GRID_MAX - GRID_MIN);
+    const vy = GRID_MAX - (sy - MARGIN) / usable * (GRID_MAX - GRID_MIN);
+    return { x: Math.round(vx), y: Math.round(vy) };
+  }
+
+  function drawSVG() {
+    const svg = document.getElementById('coordplane');
+    let s = '';
+    /* grid lines */
+    for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+      const p1 = toSVG(i, GRID_MIN), p2 = toSVG(i, GRID_MAX);
+      const q1 = toSVG(GRID_MIN, i), q2 = toSVG(GRID_MAX, i);
+      const c = i === 0 ? '#aaa' : '#eee';
+      const w = i === 0 ? 1.5 : 0.8;
+      s += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${c}" stroke-width="${w}"/>`;
+      s += `<line x1="${q1.x}" y1="${q1.y}" x2="${q2.x}" y2="${q2.y}" stroke="${c}" stroke-width="${w}"/>`;
+      if (i !== 0) {
+        const tx = toSVG(i, 0), ty = toSVG(0, i);
+        s += `<text x="${tx.x}" y="${tx.y+16}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+        s += `<text x="${ty.x-10}" y="${ty.y+4}" text-anchor="middle" font-size="11" fill="#999">${i}</text>`;
+      }
+    }
+    /* axis labels */
+    const ox = toSVG(0,0);
+    s += `<text x="${ox.x-10}" y="${ox.y+16}" text-anchor="middle" font-size="11" fill="#999">O</text>`;
+    const xEnd = toSVG(GRID_MAX, 0);
+    s += `<foreignObject x="${Math.min(xEnd.x+10, SVG_SIZE-26)}" y="${xEnd.y-12}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#666">${T('x')}</div></foreignObject>`;
+    const yEnd = toSVG(0, GRID_MAX);
+    s += `<foreignObject x="${yEnd.x+6}" y="${Math.max(yEnd.y-6, 2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#666">${T('y')}</div></foreignObject>`;
+
+    const a = toSVG(ptA.x, ptA.y), b = toSVG(ptB.x, ptB.y);
+    const c = toSVG(ptB.x, ptA.y); /* right angle vertex C */
+
+    /* right triangle fill */
+    s += `<polygon points="${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}" fill="var(--accent)" opacity=".08"/>`;
+
+    /* dashed lines for triangle sides */
+    s += `<line x1="${a.x}" y1="${a.y}" x2="${c.x}" y2="${c.y}" stroke="var(--c-a)" stroke-width="2" stroke-dasharray="6 3"/>`;
+    s += `<line x1="${c.x}" y1="${c.y}" x2="${b.x}" y2="${b.y}" stroke="var(--c-b)" stroke-width="2" stroke-dasharray="6 3"/>`;
+
+    /* distance line AB */
+    s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--accent)" stroke-width="2.5"/>`;
+
+    /* right angle marker */
+    const rSize = 10;
+    const dx = (a.x - c.x) > 0 ? rSize : -rSize;
+    const dy = (b.y - c.y) > 0 ? rSize : -rSize;
+    s += `<polyline points="${c.x+dx},${c.y} ${c.x+dx},${c.y+dy} ${c.x},${c.y+dy}" fill="none" stroke="#888" stroke-width="1.5"/>`;
+
+    /* side labels */
+    const midH = { x: (a.x + c.x) / 2, y: a.y };
+    const midV = { x: c.x, y: (c.y + b.y) / 2 };
+    const midAB = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const diffX = Math.abs(ptB.x - ptA.x), diffY = Math.abs(ptB.y - ptA.y);
+    const dist = Math.sqrt(diffX * diffX + diffY * diffY);
+    const distStr = Number.isInteger(dist) ? String(Math.round(dist)) : '\\sqrt{' + (diffX*diffX + diffY*diffY) + '}';
+
+    s += `<text x="${midH.x}" y="${midH.y + (ptA.y >= ptB.y ? 20 : -8)}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-a)">${diffX}</text>`;
+    s += `<text x="${midV.x + (ptB.x >= ptA.x ? 14 : -14)}" y="${midV.y + 4}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-b)">${diffY}</text>`;
+
+    /* point C label */
+    s += `<circle cx="${c.x}" cy="${c.y}" r="3" fill="var(--c-c)"/>`;
+    s += `<text x="${c.x}" y="${c.y + (ptA.y >= ptB.y ? 20 : -8)}" text-anchor="middle" font-size="12" fill="var(--c-c)">C(${ptB.x}, ${ptA.y})</text>`;
+
+    /* point A */
+    s += `<circle cx="${a.x}" cy="${a.y}" r="8" fill="var(--c-a)" stroke="#fff" stroke-width="2" class="draggable" data-pt="A" style="cursor:grab"/>`;
+    s += `<text x="${a.x-12}" y="${a.y-14}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-a)">A(${ptA.x}, ${ptA.y})</text>`;
+
+    /* point B */
+    s += `<circle cx="${b.x}" cy="${b.y}" r="8" fill="var(--c-b)" stroke="#fff" stroke-width="2" class="draggable" data-pt="B" style="cursor:grab"/>`;
+    s += `<text x="${b.x+12}" y="${b.y-14}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-b)">B(${ptB.x}, ${ptB.y})</text>`;
+
+    svg.innerHTML = s;
+    updateCalc();
+  }
+
+  function updateCalc() {
+    const el = document.getElementById('live-calc');
+    const dx = ptB.x - ptA.x, dy = ptB.y - ptA.y;
+    const sq = dx*dx + dy*dy;
+    const dist = Math.sqrt(sq);
+    const distStr = Number.isInteger(dist) ? String(Math.round(dist)) : `\\sqrt{${sq}}`;
+    el.innerHTML = T(`\\mathrm{AB} = \\sqrt{(${ptB.x}-(${ptA.x}))^2 + (${ptB.y}-(${ptA.y}))^2} = \\sqrt{${dx*dx}+${dy*dy}} = ${distStr}`);
+  }
+
+  /* drag */
+  let dragging = null;
+  function ptrDown(e) {
+    const tgt = e.target;
+    if (tgt.classList && tgt.classList.contains('draggable')) {
+      dragging = tgt.dataset.pt;
+      e.preventDefault();
+    }
+  }
+  function ptrMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const svg = document.getElementById('coordplane');
+    const rect = svg.getBoundingClientRect();
+    const scale = SVG_SIZE / rect.width;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    const sx = (cx - rect.left) * scale, sy = (cy - rect.top) * scale;
+    const v = toVal(sx, sy);
+    v.x = Math.max(GRID_MIN + 1, Math.min(GRID_MAX - 1, v.x));
+    v.y = Math.max(GRID_MIN + 1, Math.min(GRID_MAX - 1, v.y));
+    if (dragging === 'A') { ptA.x = v.x; ptA.y = v.y; }
+    else { ptB.x = v.x; ptB.y = v.y; }
+    drawSVG();
+  }
+  function ptrUp() { dragging = null; }
+
+  /* walkthrough */
+  const methods = [
+    [
+      { title: "問題", tex: "\\mathrm{A}(-2, 4),\\; \\mathrm{B}(2, 3) \\text{ のとき AB を求める}" },
+      { title: "公式を適用", tex: "\\mathrm{AB} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}" },
+      { title: "値を代入", tex: "= \\sqrt{(2-(-2))^2 + (3-4)^2}" },
+      { title: "計算", tex: "= \\sqrt{4^2 + (-1)^2} = \\sqrt{16 + 1}" },
+      { title: "答え", tex: "= \\sqrt{17}" }
+    ],
+    [
+      { title: "問題", tex: "\\text{原点 O から } \\mathrm{P}(5, 12) \\text{ までの距離を求める}" },
+      { title: "原点からの距離の公式", tex: "\\mathrm{OP} = \\sqrt{x^2 + y^2}" },
+      { title: "値を代入", tex: "= \\sqrt{5^2 + 12^2}" },
+      { title: "計算", tex: "= \\sqrt{25 + 144} = \\sqrt{169}" },
+      { title: "答え", tex: "= 13" }
+    ]
+  ];
+  let curMethod = 0, curStep = 0;
+
+  function renderWalk() {
+    const steps = methods[curMethod];
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = steps[i];
+      const cls = i === curStep ? 'current' : '';
+      html += `<div class="step ${cls}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function selectMethod(idx) {
+    curMethod = idx; curStep = 0;
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', parseInt(t.dataset.idx) === idx)
+    );
+    renderWalk();
+  }
+
+  function init() {
+    tex("\\mathrm{AB} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}", document.getElementById('formula-main'), true);
+    document.getElementById('f-x').innerHTML = T("x");
+    document.getElementById('f-y').innerHTML = T("y");
+    tex("\\mathrm{OP} = \\sqrt{x^2 + y^2}", document.getElementById('formula-origin'), true);
+
+    document.getElementById('note-pyth').innerHTML =
+      "この公式は<strong>三平方の定理</strong>（ピタゴラスの定理）から導かれます。" +
+      "2点を結ぶ線分を斜辺とし、" + T('x') + "軸方向・" + T('y') + "軸方向を2辺とする直角三角形を作ると、" +
+      T("\\mathrm{AB}^2 = |x_2 - x_1|^2 + |y_2 - y_1|^2") + " が成り立ちます。";
+
+    drawSVG();
+
+    const wrap = document.getElementById('svg-wrap');
+    wrap.addEventListener('mousedown', ptrDown);
+    wrap.addEventListener('mousemove', ptrMove);
+    wrap.addEventListener('mouseup', ptrUp);
+    wrap.addEventListener('mouseleave', ptrUp);
+    wrap.addEventListener('touchstart', ptrDown, { passive: false });
+    wrap.addEventListener('touchmove', ptrMove, { passive: false });
+    wrap.addEventListener('touchend', ptrUp);
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => selectMethod(parseInt(tab.dataset.idx)));
+    });
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalk(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < methods[curMethod].length - 1) { curStep++; renderWalk(); }
+    });
+    renderWalk();
+  }
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else { const w = setInterval(() => { if (window.katex) { clearInterval(w); init(); } }, 30); }
+  });
+</script>
+</body>
+</html>

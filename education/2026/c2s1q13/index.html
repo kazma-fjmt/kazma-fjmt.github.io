@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>直線の方程式（1点と傾き）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #333;
+    --muted: #888;
+    --accent: #2a6df4;
+    --c-red: #d9534f;
+    --c-blue: #2a6df4;
+    --c-green: #28a745;
+    --c-orange: #e67e22;
+    --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.25rem 0 .75rem;
+    border-left: 4px solid var(--accent);
+    padding-left: .6rem;
+  }
+  p { margin: .75rem 0; }
+
+  .formula {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  .formula .katex { font-size: 1.35rem; }
+
+  .canvas-container {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem;
+    margin: 1rem 0;
+    touch-action: none;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  .slider-group {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: .5rem 0;
+    flex-wrap: wrap;
+  }
+  .slider-row label {
+    min-width: 5rem;
+    font-weight: 600;
+    text-align: right;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    height: 36px;
+  }
+  .slider-row .val {
+    min-width: 3rem;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .eq-display {
+    text-align: center;
+    margin: 1rem 0;
+    padding: .75rem;
+    background: #eef4ff;
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .eq-display .katex { font-size: 1.3rem; }
+
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    margin: .5rem 0 0;
+  }
+
+  .walkthrough {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    margin: 0 0 .75rem;
+    min-height: 9rem;
+    overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem;
+    border-bottom: 1px dashed #eee;
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: .75rem;
+    margin: .25rem -.5rem;
+    border-bottom: none;
+  }
+  .step .label {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-bottom: .25rem;
+  }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.2rem; }
+  .step.current .formula-line .katex { font-size: 1.35rem; }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid #d4dbeb;
+    background: #fff;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 110px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    flex: 1;
+  }
+
+  .example-box {
+    background: #eef4ff;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .example-title {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: .95rem;
+    margin-bottom: .5rem;
+  }
+
+  .derivation-box {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>直線の方程式（1点と傾き）</h1>
+  <p class="subtitle">通る1点と傾きから直線の方程式を求めます。</p>
+
+  <h2>公式</h2>
+  <div class="formula" id="formula-main"></div>
+  <p id="formula-desc"></p>
+
+  <h2>公式の導出</h2>
+  <div class="derivation-box" id="derivation"></div>
+
+  <h2>座標平面で確かめよう</h2>
+  <p>点をドラッグして移動させ、スライダーで傾きを調整してみましょう。</p>
+
+  <div class="slider-group">
+    <div class="slider-row">
+      <label id="slope-label">傾き <span id="lbl-m"></span> =</label>
+      <input type="range" id="slider-m" min="-5" max="5" step="0.25" value="-4">
+      <span class="val" id="val-m">-4</span>
+    </div>
+  </div>
+
+  <div class="eq-display" id="live-eq"></div>
+
+  <div class="canvas-container">
+    <canvas id="plane" width="700" height="560"></canvas>
+  </div>
+  <p class="hint">点をドラッグして移動できます。スライダーで傾きを変更できます。</p>
+
+  <h2>例題 10</h2>
+  <div class="example-box">
+    <div class="example-title">例題</div>
+    <p id="ex-problem"></p>
+  </div>
+
+  <h2>例題の解法ステップ</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev">← 戻る</button>
+    <div class="step-counter">ステップ <span id="step-cur"></span> / <span id="step-tot"></span></div>
+    <button class="btn primary" id="next">次へ →</button>
+  </div>
+</main>
+
+<script>
+  function tex(l, el, dm) { katex.render(l, el, { throwOnError: false, displayMode: !!dm }); }
+  function T(l) { return katex.renderToString(l, { throwOnError: false }); }
+
+  const C_RED = "#d9534f";
+  const C_BLUE = "#2a6df4";
+  const C_GREEN = "#28a745";
+  const C_ORANGE = "#e67e22";
+
+  const gXmin = -8, gXmax = 8, gYmin = -8, gYmax = 8;
+  const canvas = document.getElementById('plane');
+  const ctx2d = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  let pt = { x: 2, y: -5 };
+  let dragging = false;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function toScreen(mx, my) {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    return [(mx - gXmin) / (gXmax - gXmin) * cw, (1 - (my - gYmin) / (gYmax - gYmin)) * ch];
+  }
+  function toMath(sx, sy) {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    return [sx / cw * (gXmax - gXmin) + gXmin, (1 - sy / ch) * (gYmax - gYmin) + gYmin];
+  }
+
+  function drawGrid() {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    const ctx = ctx2d;
+
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    for (let x = Math.ceil(gXmin); x <= Math.floor(gXmax); x++) {
+      const [sx] = toScreen(x, 0);
+      ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, ch); ctx.stroke();
+    }
+    for (let y = Math.ceil(gYmin); y <= Math.floor(gYmax); y++) {
+      const [, sy] = toScreen(0, y);
+      ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(cw, sy); ctx.stroke();
+    }
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1.5;
+    const [ox, oy] = toScreen(0, 0);
+    ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(cw, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, ch); ctx.stroke();
+
+    ctx.fillStyle = '#999';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let x = Math.ceil(gXmin); x <= Math.floor(gXmax); x++) {
+      if (x === 0) continue;
+      const [sx] = toScreen(x, 0);
+      ctx.fillText(x, sx, oy + 4);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(gYmin); y <= Math.floor(gYmax); y++) {
+      if (y === 0) continue;
+      const [, sy] = toScreen(0, y);
+      ctx.fillText(y, ox - 6, sy);
+    }
+    ctx.fillText('O', ox - 6, oy + 12);
+  }
+
+  function draw() {
+    const cw = canvas.getBoundingClientRect().width;
+    const ch = canvas.getBoundingClientRect().height;
+    const ctx = ctx2d;
+    ctx.clearRect(0, 0, cw, ch);
+    drawGrid();
+
+    const m = parseFloat(document.getElementById('slider-m').value);
+
+    // Draw line: y - pt.y = m(x - pt.x)
+    // y = m*x - m*pt.x + pt.y
+    const yAtXmin = m * gXmin - m * pt.x + pt.y;
+    const yAtXmax = m * gXmax - m * pt.x + pt.y;
+    const [sx1, sy1] = toScreen(gXmin, yAtXmin);
+    const [sx2, sy2] = toScreen(gXmax, yAtXmax);
+    ctx.strokeStyle = C_BLUE;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(sx1, sy1);
+    ctx.lineTo(sx2, sy2);
+    ctx.stroke();
+
+    // Slope triangle
+    const dx = 1;
+    const dy = m;
+    const p1 = { x: pt.x, y: pt.y };
+    const p2 = { x: pt.x + dx, y: pt.y };
+    const p3 = { x: pt.x + dx, y: pt.y + dy };
+
+    // Draw slope triangle
+    ctx.strokeStyle = C_ORANGE + '80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    const [tsx1, tsy1] = toScreen(p1.x, p1.y);
+    const [tsx2, tsy2] = toScreen(p2.x, p2.y);
+    const [tsx3, tsy3] = toScreen(p3.x, p3.y);
+    ctx.beginPath();
+    ctx.moveTo(tsx1, tsy1);
+    ctx.lineTo(tsx2, tsy2);
+    ctx.lineTo(tsx3, tsy3);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Labels for slope triangle
+    ctx.fillStyle = C_ORANGE;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('1', (tsx1 + tsx2) / 2, Math.max(tsy1, tsy2) + 4);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'italic 12px serif';
+    ctx.fillText('m', tsx2 + 6, (tsy2 + tsy3) / 2);
+    ctx.font = '12px sans-serif';
+
+    // Point
+    const [px, py] = toScreen(pt.x, pt.y);
+    ctx.beginPath();
+    ctx.arc(px, py, 8, 0, Math.PI * 2);
+    ctx.fillStyle = C_RED;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = C_RED;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    const fmt = (v) => { const r = Math.round(v * 4) / 4; return Number.isInteger(r) ? r.toString() : r.toFixed(2).replace(/0+$/, ''); };
+    ctx.fillText(`(${fmt(pt.x)}, ${fmt(pt.y)})`, px, py - 12);
+  }
+
+  function updateEquation() {
+    const m = parseFloat(document.getElementById('slider-m').value);
+    const fmt = (v) => { const r = Math.round(v * 100) / 100; return Number.isInteger(r) ? r.toString() : r.toFixed(2).replace(/0+$/, ''); };
+
+    const x1s = fmt(pt.x);
+    const y1s = fmt(pt.y);
+    const ms = fmt(m);
+    const b = m * (-pt.x) + pt.y;
+    const bs = fmt(b);
+
+    const y1neg = pt.y < 0 ? `+${fmt(-pt.y)}` : pt.y > 0 ? `-${y1s}` : '';
+    const x1neg = pt.x > 0 ? `-${x1s}` : pt.x < 0 ? `+${fmt(-pt.x)}` : '';
+
+    let eq;
+    if (Math.abs(pt.y) < 0.01) {
+      eq = `y = ${ms}(x ${x1neg})`;
+    } else {
+      eq = `y ${y1neg} = ${ms}(x ${x1neg})`;
+    }
+
+    // Simplified
+    let simplified;
+    if (Math.abs(b) < 0.01) {
+      simplified = `y = ${ms}x`;
+    } else if (b > 0) {
+      simplified = `y = ${ms}x + ${bs}`;
+    } else {
+      simplified = `y = ${ms}x - ${fmt(-b)}`;
+    }
+
+    const eqEl = document.getElementById('live-eq');
+    eqEl.innerHTML = T(eq) + '<br>' + T(`\\Longrightarrow \\quad ${simplified}`);
+  }
+
+  // Pointer events
+  function getPointerMath(e) {
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return toMath(cx, cy);
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const [mx, my] = getPointerMath(e);
+    const d = Math.hypot(pt.x - mx, pt.y - my);
+    const cw = canvas.getBoundingClientRect().width;
+    const threshold = (gXmax - gXmin) / cw * 30;
+    if (d < threshold) dragging = true;
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const [mx, my] = getPointerMath(e);
+    const snap = (v) => Math.round(v * 2) / 2;
+    pt.x = Math.max(gXmin + 1, Math.min(gXmax - 1, snap(mx)));
+    pt.y = Math.max(gYmin + 1, Math.min(gYmax - 1, snap(my)));
+    updateEquation();
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => { dragging = false; });
+  canvas.addEventListener('pointercancel', () => { dragging = false; });
+
+  /* --- Walkthrough --- */
+  const steps = [
+    {
+      title: "条件を確認する",
+      tex: `\\text{点}\\; (2,\\, -5) \\;\\text{を通り、傾き}\\; -4 \\;\\text{の直線}`
+    },
+    {
+      title: "公式に代入する",
+      tex: `y - (-5) = -4(x - 2)`
+    },
+    {
+      title: "左辺を整理する",
+      tex: `y + 5 = -4(x - 2)`
+    },
+    {
+      title: "右辺を展開する",
+      tex: `y + 5 = -4x + 8`
+    },
+    {
+      title: "答え",
+      tex: `\\textcolor{${C_BLUE}}{y = -4x + 3}`
+    }
+  ];
+
+  let curStep = 0;
+
+  function renderWalkthrough() {
+    const root = document.getElementById('walkthrough');
+    let html = '';
+    for (let i = 0; i <= curStep; i++) {
+      const s = steps[i];
+      const isCurrent = i === curStep;
+      html += `<div class="step ${isCurrent ? 'current' : ''}" style="animation-delay:${isCurrent ? '0.05s' : '0s'}">
+        <div class="label">${s.title}</div>
+        <div class="formula-line">${T(s.tex)}</div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    document.getElementById('step-cur').textContent = curStep + 1;
+    document.getElementById('step-tot').textContent = steps.length;
+    document.getElementById('prev').disabled = curStep === 0;
+    document.getElementById('next').disabled = curStep === steps.length - 1;
+  }
+
+  function init() {
+    tex('y - y_1 = m(x - x_1)', document.getElementById('formula-main'), true);
+    tex('m', document.getElementById('lbl-m'));
+    document.getElementById('formula-desc').innerHTML =
+      '点 ' + T('(x_1, y_1)') + ' を通り、傾き ' + T('m') + ' の直線の方程式です。';
+
+    // Derivation
+    const derivEl = document.getElementById('derivation');
+    derivEl.innerHTML =
+      '<p>直線上の任意の点 ' + T('(x, y)') + ' と通過点 ' + T('(x_1, y_1)') + ' について：</p>' +
+      '<div style="text-align:center; margin:.75rem 0;">' + T('\\text{傾き} = \\dfrac{y - y_1}{x - x_1} = m', true) + '</div>' +
+      '<p>両辺に ' + T('(x - x_1)') + ' をかけると：</p>' +
+      '<div style="text-align:center; margin:.75rem 0;">' + T('y - y_1 = m(x - x_1)', true) + '</div>' +
+      '<p style="color:var(--muted); font-size:.9rem;">※ ' + T('x = x_1') + ' のときも ' + T('y = y_1') + ' となり成立します。</p>';
+
+    document.getElementById('ex-problem').innerHTML =
+      '点 ' + T('(2, -5)') + ' を通り、傾きが ' + T('-4') + ' の直線の方程式を求めよ。';
+
+    const slider = document.getElementById('slider-m');
+    slider.addEventListener('input', () => {
+      document.getElementById('val-m').textContent = slider.value;
+      updateEquation();
+      draw();
+    });
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (curStep > 0) { curStep--; renderWalkthrough(); }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (curStep < steps.length - 1) { curStep++; renderWalkthrough(); }
+    });
+
+    resizeCanvas();
+    updateEquation();
+    draw();
+    renderWalkthrough();
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    draw();
+  });
+
+  if (window.katex) init();
+  else window.addEventListener("DOMContentLoaded", () => {
+    if (window.katex) init();
+    else {
+      const w = setInterval(() => {
+        if (window.katex) { clearInterval(w); init(); }
+      }, 30);
+    }
+  });
+</script>
+</body>
+</html>

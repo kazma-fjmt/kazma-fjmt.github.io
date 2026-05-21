@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>領域を利用した証明</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .75rem; justify-content: center;
+    margin: .5rem 0;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: .35rem; font-size: .85rem;
+  }
+  .legend-swatch {
+    width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0;
+  }
+
+  .anim-btn-row {
+    display: flex; justify-content: center; margin: .5rem 0;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>領域を利用した証明</h1>
+  <p class="subtitle">領域の包含関係を使って、命題の真偽を証明しましょう。</p>
+
+  <h2>考え方</h2>
+  <div class="note" id="note-key"></div>
+
+  <h2>例題7</h2>
+  <p><span id="f-problem"></span> を証明せよ。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>包含関係を確かめよう</h2>
+  <p>テスト点をドラッグして、領域 A の点が必ず領域 B にも含まれることを確認しましょう。</p>
+  <p class="drag-hint">テスト点をタップ＆ドラッグで移動できます</p>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(42,109,244,0.3);border:1px solid var(--c-blue);"></div>領域 A: x&sup2;+y&sup2; &lt; y</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(40,167,69,0.2);border:1px solid var(--c-green);"></div>領域 B: x&sup2;+y&sup2; &lt; 1</div>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600,ox=300,oy=300,scale=200;
+const GRID_MIN_X=-1.5,GRID_MAX_X=1.5,GRID_MIN_Y=-1.5,GRID_MAX_Y=1.5;
+
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+/* Draggable test point */
+let testX = 0.1, testY = 0.6;
+
+/* Animation state */
+let animPhase = 0; /* 0=idle, 1=draw A, 2=draw B, 3=highlight */
+let animTimer = null;
+
+function init(){
+  document.getElementById('note-key').innerHTML =
+    '<strong>ポイント：</strong>条件 ' + T('p') + ' の表す領域を ' + T('\\mathrm{P}') + '、条件 ' + T('q') + ' の表す領域を ' + T('\\mathrm{Q}') + ' とするとき：<br>' +
+    T('\\mathrm{P} \\subset \\mathrm{Q}') + ' ならば ' + T('p \\Longrightarrow q') + ' が成り立つ。<br>' +
+    'つまり、' + T('\\mathrm{P}') + ' のどの点も ' + T('\\mathrm{Q}') + ' に含まれるなら、' + T('p') + ' が真のとき必ず ' + T('q') + ' も真です。';
+
+  document.getElementById('f-problem').innerHTML = T('x^2 + y^2 < y \\;\\Longrightarrow\\; x^2 + y^2 < 1');
+
+  tex('\\mathrm{A} \\subset \\mathrm{B} \\;\\text{より}\\; x^2+y^2 < y \\Longrightarrow x^2+y^2 < 1 \\quad\\blacksquare', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  drawGraph();
+  setupDrag();
+  setupAnimation();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 領域 A の定義',
+      formula: '\\mathrm{A}:\\; x^2 + y^2 < y' },
+    { label: 'Step 2: A を変形（平方完成）',
+      formula: 'x^2 + y^2 - y < 0 \\;\\Rightarrow\\; x^2 + \\left(y - \\tfrac{1}{2}\\right)^2 < \\tfrac{1}{4}' },
+    { label: 'Step 3: A の図形的意味',
+      formula: '\\mathrm{A}\\text{ は中心 }\\left(0,\\,\\tfrac{1}{2}\\right)\\text{, 半径 }\\tfrac{1}{2}\\text{ の円の内部}' },
+    { label: 'Step 4: 領域 B の定義',
+      formula: '\\mathrm{B}:\\; x^2 + y^2 < 1 \\;\\text{（中心 }(0,0)\\text{, 半径 }1\\text{ の円の内部）}' },
+    { label: 'Step 5: 包含を確認',
+      formula: '\\text{小円の中心 }(0,\\tfrac{1}{2})\\text{ と大円の中心 }(0,0)\\text{ の距離} = \\tfrac{1}{2}' },
+    { label: 'Step 6: 包含の証明',
+      formula: '\\tfrac{1}{2} + \\tfrac{1}{2} = 1 \\leq 1 \\;\\text{（小円は大円の内部に完全に含まれる）}' },
+    { label: 'Step 7: 結論',
+      formula: '\\mathrm{A} \\subset \\mathrm{B} \\;\\therefore\\; x^2+y^2 < y \\Longrightarrow x^2+y^2 < 1 \\quad\\blacksquare' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Grid (fine for this scale) */
+  for(let v=-1;v<=1;v++){
+    const xi=px(v), yi=py(v);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX_Y)}" x2="${xi}" y2="${py(GRID_MIN_Y)}" stroke="${v===0?'#999':'#ddd'}" stroke-width="${v===0?1.5:1}"/>`;
+    s+=`<line x1="${px(GRID_MIN_X)}" y1="${yi}" x2="${px(GRID_MAX_X)}" y2="${yi}" stroke="${v===0?'#999':'#ddd'}" stroke-width="${v===0?1.5:1}"/>`;
+  }
+  /* 0.5 grid lines */
+  for(let v=-1;v<=1;v+=0.5){
+    if(Number.isInteger(v)) continue;
+    const xi=px(v), yi=py(v);
+    s+=`<line x1="${xi}" y1="${py(GRID_MAX_Y)}" x2="${xi}" y2="${py(GRID_MIN_Y)}" stroke="#f0f0f0" stroke-width="1"/>`;
+    s+=`<line x1="${px(GRID_MIN_X)}" y1="${yi}" x2="${px(GRID_MAX_X)}" y2="${yi}" stroke="#f0f0f0" stroke-width="1"/>`;
+  }
+
+  /* Axis labels */
+  s+=`<foreignObject x="${Math.min(px(GRID_MAX_X)-8,W-26)}" y="${oy-20}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="${Math.max(py(GRID_MAX_Y)+2,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  /* Tick labels */
+  for(let v=-1;v<=1;v++){
+    if(v===0) continue;
+    s+=`<text x="${px(v)}" y="${oy+18}" text-anchor="middle" font-size="11" fill="#aaa">${v}</text>`;
+    s+=`<text x="${ox-10}" y="${py(v)+4}" text-anchor="end" font-size="11" fill="#aaa">${v}</text>`;
+  }
+
+  /* Draw regions based on animation phase */
+  const showA = animPhase >= 1 || animPhase === 0;
+  const showB = animPhase >= 2 || animPhase === 0;
+  const highlight = animPhase >= 3;
+
+  /* Region B: circle center (0,0), radius 1 */
+  if(showB){
+    s+=`<circle cx="${px(0)}" cy="${py(0)}" r="${scale}" fill="rgba(40,167,69,0.15)" stroke="var(--c-green)" stroke-width="2.5" stroke-dasharray="${highlight?'none':'8 4'}"/>`;
+    s+=`<foreignObject x="${px(0.6)}" y="${py(-0.75)-18}" width="180" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-green);font-weight:600;white-space:nowrap">B: ${T('x^2+y^2 < 1')}</div></foreignObject>`;
+    /* Center of B */
+    s+=`<circle cx="${px(0)}" cy="${py(0)}" r="4" fill="var(--c-green)"/>`;
+  }
+
+  /* Region A: circle center (0, 0.5), radius 0.5 */
+  if(showA){
+    s+=`<circle cx="${px(0)}" cy="${py(0.5)}" r="${0.5*scale}" fill="rgba(42,109,244,0.25)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+    s+=`<text x="${px(0.05)}" y="${py(0.5)-5}" font-size="13" fill="var(--c-blue)" font-weight="600" text-anchor="middle">A</text>`;
+    /* Center of A */
+    s+=`<circle cx="${px(0)}" cy="${py(0.5)}" r="4" fill="var(--c-blue)"/>`;
+    s+=`<text x="${px(0)+10}" y="${py(0.5)+4}" font-size="11" fill="var(--c-blue)">(0, 1/2)</text>`;
+  }
+
+  /* Highlight A ⊂ B */
+  if(highlight){
+    s+=`<text x="${px(0)}" y="${py(1.35)}" font-size="16" fill="var(--c-orange)" font-weight="700" text-anchor="middle">A ⊂ B</text>`;
+    /* Arrow from A to B label */
+    s+=`<line x1="${px(0.35)}" y1="${py(0.5)}" x2="${px(0.55)}" y2="${py(-0.6)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrowhead)"/>`;
+    s+=`<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="var(--c-orange)"/></marker></defs>`;
+  }
+
+  /* Distance between centers */
+  if(showA && showB){
+    s+=`<line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(0.5)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="4 3"/>`;
+    s+=`<text x="${px(0)+12}" y="${py(0.25)+4}" font-size="11" fill="var(--c-orange)">1/2</text>`;
+  }
+
+  /* Test point */
+  const inA = testX*testX + (testY-0.5)*(testY-0.5) < 0.25;
+  const inB = testX*testX + testY*testY < 1;
+
+  const ptColor = inA ? 'var(--c-blue)' : (inB ? 'var(--c-green)' : '#999');
+  s+=`<circle cx="${px(testX)}" cy="${py(testY)}" r="10" fill="${ptColor}" stroke="#fff" stroke-width="3" style="cursor:grab">`;
+  s+=`<animate attributeName="r" values="10;13;10" dur="2s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${px(testX)+14}" y="${py(testY)-10}" font-size="12" font-weight="700" fill="${ptColor}">P(${testX.toFixed(2)}, ${testY.toFixed(2)})</text>`;
+
+  svg.innerHTML = s;
+
+  /* Live calc */
+  const lcEl = document.getElementById('live-calc');
+  const valA = testX*testX + testY*testY;
+  const valY = testY;
+  const valR2 = testX*testX + testY*testY;
+
+  let statusText = '';
+  if(inA && inB){
+    statusText = '<span style="color:var(--c-blue);font-weight:600;">A にも B にも含まれる (' + T('\\mathrm{A} \\subset \\mathrm{B}') + ' を確認)</span>';
+  } else if(!inA && inB){
+    statusText = '<span style="color:var(--c-green);font-weight:600;">B のみに含まれる（A の外）</span>';
+  } else {
+    statusText = '<span style="color:#999;">A にも B にも含まれない</span>';
+  }
+
+  lcEl.innerHTML =
+    T(`x^2 + y^2 = ${valR2.toFixed(3)}`) + '<br>' +
+    T(`y = ${testY.toFixed(3)}`) +
+    '&emsp;' + (valA < valY
+      ? T(`x^2+y^2 < y \\;\\checkmark\\;(\\text{A 内})`)
+      : T(`x^2+y^2 \\geq y \\;(\\text{A 外})`)) + '<br>' +
+    (valR2 < 1
+      ? T(`x^2+y^2 < 1 \\;\\checkmark\\;(\\text{B 内})`)
+      : T(`x^2+y^2 \\geq 1 \\;(\\text{B 外})`)) + '<br>' +
+    statusText;
+}
+
+function setupAnimation(){
+  const btn = document.getElementById('anim-btn');
+  btn.addEventListener('click', ()=>{
+    if(animTimer) { clearTimeout(animTimer); animTimer = null; }
+    animPhase = 0;
+    drawGraph();
+    animPhase = 1;
+    animTimer = setTimeout(()=>{
+      drawGraph();
+      animPhase = 2;
+      animTimer = setTimeout(()=>{
+        drawGraph();
+        animPhase = 3;
+        animTimer = setTimeout(()=>{
+          drawGraph();
+          animTimer = null;
+        }, 600);
+      }, 800);
+    }, 800);
+  });
+}
+
+function setupDrag(){
+  const svg = document.getElementById('graph');
+  const wrap = document.getElementById('svg-wrap');
+  let dragging = false;
+
+  function toMath(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const svgX = (cx - rect.left) / rect.width * W;
+    const svgY = (cy - rect.top) / rect.height * H;
+    return { x: (svgX - ox)/scale, y: (oy - svgY)/scale };
+  }
+
+  function startDrag(cx, cy){
+    const m = toMath(cx, cy);
+    const d = Math.sqrt((m.x - testX)**2 + (m.y - testY)**2);
+    if(d < 0.2) dragging = true;
+  }
+
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    const m = toMath(cx, cy);
+    testX = Math.max(GRID_MIN_X + 0.05, Math.min(GRID_MAX_X - 0.05, m.x));
+    testY = Math.max(GRID_MIN_Y + 0.05, Math.min(GRID_MAX_Y - 0.05, m.y));
+    testX = Math.round(testX * 100) / 100;
+    testY = Math.round(testY * 100) / 100;
+    /* Reset animation to show everything */
+    animPhase = 3;
+    drawGraph();
+  }
+
+  function endDrag(){ dragging = false; }
+
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

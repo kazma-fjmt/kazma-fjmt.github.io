@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>3点を通る円の方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step {
+    padding: .75rem .25rem; border-bottom: 1px dashed #eee;
+    transition: background .2s ease; animation: fadeIn .3s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.current {
+    background: #f0f5ff; border-radius: 8px; padding: .75rem;
+    margin: .25rem -.5rem; border-bottom: none;
+  }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem; margin: 1rem 0 0;
+  }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note {
+    background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .drag-hint {
+    text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0;
+  }
+
+  .special-note {
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>3点を通る円の方程式</h1>
+  <p class="subtitle">同一直線上にない3点を通る円（外接円）の方程式を求めましょう。</p>
+
+  <h2>考え方</h2>
+  <p>円の一般形の方程式に3点の座標を代入すると、未知数は3つ（<span id="f-lmn"></span>）なので、連立方程式を解いて求められます。</p>
+  <div class="formula-box" id="formula-general"></div>
+
+  <h2>例題の解法</h2>
+  <p><span id="f-example-pts"></span> を通る円の方程式を求めます。</p>
+  <div class="walkthrough" id="wt-example"></div>
+  <div class="controls-row">
+    <button class="btn" id="we-prev" disabled>&larr; 前へ</button>
+    <span class="step-counter" id="we-counter"></span>
+    <button class="btn primary" id="we-next">次へ &rarr;</button>
+  </div>
+
+  <div class="special-note" id="note-circumcircle"></div>
+
+  <h2>3点を動かして外接円を観察しよう</h2>
+  <p>3つの点をドラッグして、外接円がどのように変化するか確認しましょう。</p>
+  <p class="drag-hint">頂点をタップ＆ドラッグで移動できます</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div id="collinear-warn"></div>
+
+  <div class="note" id="note-info"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{if(window.katex)init();else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}});
+
+let pts = { A: {x:-7, y:5}, B: {x:-3, y:7}, C: {x:0, y:-2} };
+
+function init(){
+  tex('l,\\,m,\\,n', document.getElementById('f-lmn'));
+  tex('x^2 + y^2 + lx + my + n = 0 \\quad\\text{に3点を代入}', document.getElementById('formula-general'), true);
+  tex('A(-7,\\,5),\\;B(-3,\\,7),\\;C(0,\\,-2)', document.getElementById('f-example-pts'));
+
+  document.getElementById('note-circumcircle').innerHTML =
+    '<strong>外接円と外心：</strong><br>' +
+    '3点を通る円は、その3点でできる三角形の<strong>外接円</strong>（circumscribed circle）です。<br>' +
+    'その中心を<strong>外心</strong>（circumcenter）といい、3辺の垂直二等分線の交点に等しくなります。';
+
+  document.getElementById('note-info').innerHTML =
+    '<strong>注意：</strong>3点が<strong>同一直線上</strong>にある場合、円は存在しません。' +
+    '（3点が一直線に近づくと、円の半径は限りなく大きくなります。）';
+
+  initExample();
+  drawGraph();
+  setupDrag();
+}
+
+function initExample(){
+  const steps = [
+    { label: 'Step 1: 一般形を設定', formula: 'x^2 + y^2 + lx + my + n = 0' },
+    { label: 'Step 2: A(-7, 5) を代入', formula: '(-7)^2 + 5^2 + l(-7) + m(5) + n = 0' },
+    { label: 'Step 3: 式(1)を整理', formula: '-7l + 5m + n + 74 = 0 \\quad\\cdots\\;(1)' },
+    { label: 'Step 4: B(-3, 7) を代入', formula: '(-3)^2 + 7^2 + l(-3) + m(7) + n = 0' },
+    { label: 'Step 5: 式(2)を整理', formula: '-3l + 7m + n + 58 = 0 \\quad\\cdots\\;(2)' },
+    { label: 'Step 6: C(0, -2) を代入', formula: '0^2 + (-2)^2 + l(0) + m(-2) + n = 0' },
+    { label: 'Step 7: 式(3)を整理', formula: '-2m + n + 4 = 0 \\quad\\cdots\\;(3)' },
+    { label: 'Step 8: (1)-(2) で n を消去', formula: '-4l - 2m + 16 = 0 \\;\\Rightarrow\\; 2l + m = 8 \\quad\\cdots\\;(4)' },
+    { label: 'Step 9: (3) より', formula: 'n = 2m - 4 \\quad\\cdots\\;(3\')' },
+    { label: 'Step 10: (3\') を (2) に代入', formula: '-3l + 7m + (2m-4) + 58 = 0 \\;\\Rightarrow\\; -3l + 9m + 54 = 0' },
+    { label: 'Step 11: 整理', formula: 'l - 3m = 18 \\quad\\cdots\\;(5)' },
+    { label: 'Step 12: (4)と(5)の連立', formula: '\\begin{cases} 2l + m = 8 \\\\ l - 3m = 18 \\end{cases}' },
+    { label: 'Step 13: 解を求める', formula: 'l = 6,\\quad m = -4,\\quad n = 2(-4)-4 = -12' },
+    { label: 'Step 14: 一般形', formula: 'x^2 + y^2 + 6x - 4y - 12 = 0' },
+    { label: 'Step 15: 標準形に変換', formula: '(x+3)^2 + (y-2)^2 = 9 + 4 + 12 = 25' },
+    { label: 'Step 16: 結果', formula: '\\text{中心}\\;(-3,\\,2),\\quad \\text{半径}\\;r = 5' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('wt-example');
+  const counter = document.getElementById('we-counter');
+  const prevBtn = document.getElementById('we-prev');
+  const nextBtn = document.getElementById('we-next');
+
+  function render(){
+    let html = '';
+    for(let i = 0; i <= cur; i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === steps.length - 1;
+  }
+
+  prevBtn.addEventListener('click', () => { if(cur > 0){ cur--; render(); } });
+  nextBtn.addEventListener('click', () => { if(cur < steps.length - 1){ cur++; render(); } });
+  render();
+}
+
+// Circumscribed circle through 3 points
+function circumcircle(A, B, C){
+  const ax = A.x, ay = A.y;
+  const bx = B.x, by = B.y;
+  const cx = C.x, cy = C.y;
+
+  const D = 2 * (ax*(by-cy) + bx*(cy-ay) + cx*(ay-by));
+  if(Math.abs(D) < 1e-9) return null; // collinear
+
+  const ux = ((ax*ax + ay*ay)*(by-cy) + (bx*bx+by*by)*(cy-ay) + (cx*cx+cy*cy)*(ay-by)) / D;
+  const uy = ((ax*ax + ay*ay)*(cx-bx) + (bx*bx+by*by)*(ax-cx) + (cx*cx+cy*cy)*(bx-ax)) / D;
+  const r = Math.sqrt((ax-ux)*(ax-ux) + (ay-uy)*(ay-uy));
+
+  return { cx: ux, cy: uy, r: r };
+}
+
+function drawGraph(){
+  const svg = document.getElementById('graph');
+  const W = 600, H = 600, ox = 340, oy = 280, scale = 30;
+
+  function px(x){ return ox + x * scale; }
+  function py(y){ return oy - y * scale; }
+
+  const A = pts.A, B = pts.B, C = pts.C;
+  const circ = circumcircle(A, B, C);
+
+  let html = '';
+
+  // Grid
+  for(let i = -12; i <= 8; i++) html += `<line x1="${px(i)}" y1="10" x2="${px(i)}" y2="${H-10}" stroke="#eee"/>`;
+  for(let j = -8; j <= 10; j++) html += `<line x1="10" y1="${py(j)}" x2="${W-10}" y2="${py(j)}" stroke="#eee"/>`;
+
+  // Axes
+  html += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#999"/></marker></defs>`;
+  html += `<line x1="10" y1="${oy}" x2="${W-10}" y2="${oy}" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<line x1="${ox}" y1="${H-10}" x2="${ox}" y2="10" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>`;
+  html += `<foreignObject x="${W-26}" y="${oy-22}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  html += `<foreignObject x="${ox+6}" y="${Math.max(8,2)}" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  html += `<text x="${ox+5}" y="${oy+18}" font-size="12" fill="#999">O</text>`;
+
+  // Triangle
+  html += `<polygon points="${px(A.x)},${py(A.y)} ${px(B.x)},${py(B.y)} ${px(C.x)},${py(C.y)}" fill="rgba(42,109,244,0.05)" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+
+  if(circ){
+    // Circumscribed circle
+    const rPx = circ.r * scale;
+    html += `<circle cx="${px(circ.cx)}" cy="${py(circ.cy)}" r="${rPx}" fill="rgba(42,109,244,0.06)" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+    // Perpendicular bisectors (faint)
+    const midAB = {x:(A.x+B.x)/2, y:(A.y+B.y)/2};
+    const midBC = {x:(B.x+C.x)/2, y:(B.y+C.y)/2};
+    const midCA = {x:(C.x+A.x)/2, y:(A.y+C.y)/2};
+
+    function drawPerpBisector(P, Q, color){
+      const mx = (P.x+Q.x)/2, my = (P.y+Q.y)/2;
+      const dx = Q.x-P.x, dy = Q.y-P.y;
+      // Perpendicular direction: (-dy, dx)
+      const len = Math.sqrt(dx*dx+dy*dy)||1;
+      const nx = -dy/len, ny = dx/len;
+      const ext = 15;
+      html += `<line x1="${px(mx-nx*ext)}" y1="${py(my-ny*ext)}" x2="${px(mx+nx*ext)}" y2="${py(my+ny*ext)}" stroke="${color}" stroke-width="1" stroke-dasharray="4,4" opacity="0.4"/>`;
+    }
+
+    drawPerpBisector(A, B, 'var(--c-green)');
+    drawPerpBisector(B, C, 'var(--c-green)');
+    drawPerpBisector(C, A, 'var(--c-green)');
+
+    // Center (circumcenter)
+    html += `<circle cx="${px(circ.cx)}" cy="${py(circ.cy)}" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2">`;
+    html += `<animate attributeName="r" values="7;10;7" dur="2s" repeatCount="indefinite"/></circle>`;
+    html += `<text x="${px(circ.cx)+12}" y="${py(circ.cy)-12}" font-size="13" font-weight="700" fill="var(--c-orange)">外心</text>`;
+
+    // Radius lines to each point (faint)
+    [A,B,C].forEach(p => {
+      html += `<line x1="${px(circ.cx)}" y1="${py(circ.cy)}" x2="${px(p.x)}" y2="${py(p.y)}" stroke="var(--c-orange)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>`;
+    });
+  }
+
+  // Points
+  const ptData = [
+    {p:A, n:'A', c:'var(--c-red)', ox:-18, oy:-12},
+    {p:B, n:'B', c:'var(--c-green)', ox:10, oy:-12},
+    {p:C, n:'C', c:'var(--c-purple)', ox:10, oy:18}
+  ];
+
+  ptData.forEach(({p, n, c, ox:offX, oy:offY}) => {
+    html += `<circle cx="${px(p.x)}" cy="${py(p.y)}" r="10" fill="${c}" stroke="#fff" stroke-width="2" style="cursor:grab"/>`;
+    html += `<text x="${px(p.x)+offX}" y="${py(p.y)+offY}" font-size="14" font-weight="700" fill="${c}">${n}(${p.x},${p.y})</text>`;
+  });
+
+  svg.innerHTML = html;
+
+  // Live calc
+  const lc = document.getElementById('live-calc');
+  const warn = document.getElementById('collinear-warn');
+  if(circ){
+    warn.innerHTML = '';
+    const fmt = v => Number.isInteger(v) ? `${v}` : v.toFixed(2);
+
+    // Compute l, m, n from circumcircle
+    const l = -2 * circ.cx;
+    const m = -2 * circ.cy;
+    const n = circ.cx*circ.cx + circ.cy*circ.cy - circ.r*circ.r;
+
+    let eqParts = 'x^2 + y^2';
+    if(Math.abs(l) > 0.01) eqParts += (l > 0 ? ' + ' : ' - ') + (Math.abs(l) < 1.01 && Math.abs(l) > 0.99 ? '' : fmt(Math.abs(l))) + 'x';
+    if(Math.abs(m) > 0.01) eqParts += (m > 0 ? ' + ' : ' - ') + (Math.abs(m) < 1.01 && Math.abs(m) > 0.99 ? '' : fmt(Math.abs(m))) + 'y';
+    if(Math.abs(n) > 0.01) eqParts += (n > 0 ? ' + ' : ' - ') + fmt(Math.abs(n));
+    eqParts += ' = 0';
+
+    lc.innerHTML =
+      T(`\\text{外接円：}\\;${eqParts}`) + '<br>' +
+      T(`\\text{中心（外心）}\\left(${fmt(circ.cx)},\\;${fmt(circ.cy)}\\right),\\quad r = ${fmt(circ.r)}`);
+  } else {
+    lc.innerHTML = T('\\text{（円が存在しません）}');
+    warn.innerHTML = '<div class="note" style="background:#ffebee;border-color:#f5a3a3;"><strong>3点が同一直線上にあるため、円は存在しません。</strong></div>';
+  }
+}
+
+function setupDrag(){
+  const svg = document.getElementById('graph');
+  const wrap = document.getElementById('svg-wrap');
+  const W = 600, H = 600, ox = 340, oy = 280, scale = 30;
+
+  function toMath(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const svgX = (cx - rect.left) / rect.width * W;
+    const svgY = (cy - rect.top) / rect.height * H;
+    return { x: (svgX - ox)/scale, y: (oy - svgY)/scale };
+  }
+
+  let dragging = null;
+
+  function startDrag(cx, cy){
+    const m = toMath(cx, cy);
+    let best = null, bestD = 1.5;
+    ['A','B','C'].forEach(name => {
+      const d = Math.sqrt((m.x-pts[name].x)**2 + (m.y-pts[name].y)**2);
+      if(d < bestD){ bestD = d; best = name; }
+    });
+    dragging = best;
+  }
+
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    const m = toMath(cx, cy);
+    const snap = v => Math.round(v);
+    pts[dragging] = { x: Math.max(-11,Math.min(7, snap(m.x))), y: Math.max(-7,Math.min(9, snap(m.y))) };
+    drawGraph();
+  }
+
+  function endDrag(){ dragging = null; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+</script>
+</body>
+</html>
