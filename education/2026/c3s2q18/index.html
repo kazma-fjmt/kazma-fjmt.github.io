@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>三角関数の合成と最大・最小</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: .75rem 0; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: .95rem; font-weight: 600; padding: .7rem 1rem; border-radius: 10px;
+    min-height: 48px; cursor: pointer; font-family: inherit; flex: 1; min-width: 150px;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row.locked { opacity: .45; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: center; margin: .5rem 0; font-size: .85rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .35rem; }
+  .swatch { width: 20px; height: 4px; border-radius: 2px; display: inline-block; }
+
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>三角関数の合成と最大・最小</h1>
+  <p class="subtitle">2 つの波を 1 つの正弦の波にまとめて、最大値と最小値を読み取りましょう。</p>
+
+  <h2>考える問題</h2>
+  <p>次の関数の最大値と最小値を求めましょう。</p>
+  <div class="formula-box" id="f-problem"></div>
+  <div class="note">
+    <span id="f-key"></span> の形にまとめられれば、<span id="f-keyin"></span> は必ず <span id="f-range"></span> の範囲を動くので、
+    最大値は <span id="f-mx"></span>、最小値は <span id="f-mn"></span> とすぐ分かります。
+  </div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>係数の組を選び、<span id="f-th"></span> のスライダーを動かすと、左の回転する動径の高さと右のグラフの点が同じ値を指します。</p>
+  <div class="tabs">
+    <button class="tab active" id="tab-1">(1) の係数</button>
+    <button class="tab" id="tab-2">(2) の係数</button>
+    <button class="tab" id="tab-f">自由に動かす</button>
+  </div>
+
+  <div class="slider-row locked" id="row-a">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="-13" max="13" step="0.5" value="3" disabled>
+    <span class="slider-val" id="a-value">3</span>
+  </div>
+  <div class="slider-row locked" id="row-b">
+    <label><span id="lbl-b"></span> =</label>
+    <input type="range" id="b-slider" min="-13" max="13" step="0.5" value="-1.5" disabled>
+    <span class="slider-val" id="b-value">-1.5</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="t-slider" min="0" max="6.283" step="0.01" value="1.05">
+    <span class="slider-val" id="t-value">1.05</span>
+  </div>
+
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+
+  <div class="svg-container" id="wrap-circle">
+    <svg id="circle" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--c-blue)"></i><span id="lg-p"></span></span>
+    <span><i class="swatch" style="background:var(--c-purple)"></i><span id="lg-q"></span></span>
+    <span><i class="swatch" style="background:var(--c-orange)"></i><span id="lg-h"></span></span>
+  </div>
+
+  <div class="svg-container" id="wrap-wave">
+    <svg id="wave" viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--c-blue)"></i><span id="lg-s"></span></span>
+    <span><i class="swatch" style="background:var(--c-red)"></i><span id="lg-c"></span></span>
+    <span><i class="swatch" style="background:var(--c-purple)"></i><span id="lg-y"></span></span>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const CW=600,CH=400,cox=300,coy=200,RAD=150;
+const WW=600,WH=320,wox=52,woy=165,wRight=545,wHalf=118;
+const TH0=-0.18*Math.PI, TH1=2.18*Math.PI;
+
+let mode='m1', th=1.05, aFree=3, bFree=-1.5, animId=null;
+
+const MODES={
+  m1:{a:3,b:-Math.sqrt(3),
+    expr:'y = 3\\sin\\theta - \\sqrt{3}\\,\\cos\\theta',
+    rTex:'2\\sqrt{3}',
+    synth:'y = 2\\sqrt{3}\\,\\sin\\!\\left(\\theta - \\dfrac{\\pi}{6}\\right)',
+    aTex:'\\alpha = -\\dfrac{\\pi}{6}',
+    maxTex:'2\\sqrt{3}', minTex:'-2\\sqrt{3}'},
+  m2:{a:12,b:5,
+    expr:'y = 5\\cos\\theta + 12\\sin\\theta',
+    rTex:'13',
+    synth:'y = 13\\sin(\\theta + \\alpha)',
+    aTex:'\\cos\\alpha = \\dfrac{12}{13},\\; \\sin\\alpha = \\dfrac{5}{13}',
+    maxTex:'13', minTex:'-13'}
+};
+
+function nf(v){const r=Math.abs(v)<5e-4?0:v;return Number(r.toFixed(2)).toString();}
+function nf1(v){const r=Math.abs(v)<5e-4?0:v;return Number(r.toFixed(1)).toString();}
+
+function linTex(a,b){
+  let s='';
+  if(a!==0){s+=(a===1?'':a===-1?'-':nf1(a))+'\\sin\\theta';}
+  if(b!==0){
+    const ab=Math.abs(b);
+    s+=(b<0?(s?' - ':'-'):(s?' + ':''))+(ab===1?'':nf1(ab))+'\\cos\\theta';
+  }
+  return 'y = '+(s||'0');
+}
+
+function cur(){
+  if(mode==='free'){
+    const a=aFree,b=bFree,r=Math.hypot(a,b);
+    return {a:a,b:b,r:r,al:(r<1e-9?0:Math.atan2(b,a)),
+      expr:linTex(a,b), rTex:nf(r),
+      synth:(r<1e-9?'y = 0':'y = '+(Math.abs(r-1)<5e-3?'':nf(r))+'\\sin(\\theta + \\alpha)'),
+      aTex:(r<1e-9?'\\alpha\\ \\text{は定まらない}':'\\alpha \\approx '+nf(Math.atan2(b,a))+'\\ \\text{ラジアン}'),
+      maxTex:nf(r), minTex:(r<1e-9?'0':'-'+nf(r))};
+  }
+  const m=MODES[mode],r=Math.hypot(m.a,m.b);
+  return {a:m.a,b:m.b,r:r,al:Math.atan2(m.b,m.a),
+    expr:m.expr,rTex:m.rTex,synth:m.synth,aTex:m.aTex,maxTex:m.maxTex,minTex:m.minTex};
+}
+
+function init(){
+  document.getElementById('f-key').innerHTML=T('r\\sin(\\theta+\\alpha)');
+  document.getElementById('f-keyin').innerHTML=T('\\sin(\\theta+\\alpha)');
+  document.getElementById('f-range').innerHTML=T('-1 \\le \\sin(\\theta+\\alpha) \\le 1');
+  document.getElementById('f-mx').innerHTML=T('r');
+  document.getElementById('f-mn').innerHTML=T('-r');
+  document.getElementById('f-th').innerHTML=T('\\theta');
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('lbl-b').innerHTML=T('b');
+  document.getElementById('lbl-t').innerHTML=T('\\theta');
+  document.getElementById('lg-p').innerHTML=T('\\mathrm{P}(a,\\,b)')+'&nbsp;と&nbsp;'+T('r=\\mathrm{OP}');
+  document.getElementById('lg-q').innerHTML=T('\\mathrm{P}')+'&nbsp;から&nbsp;'+T('\\theta')+'&nbsp;回した点&nbsp;'+T('\\mathrm{Q}');
+  document.getElementById('lg-h').innerHTML=T('\\mathrm{Q}')+'&nbsp;の高さ&nbsp;'+T('=y');
+  document.getElementById('lg-s').innerHTML=T('a\\sin\\theta');
+  document.getElementById('lg-c').innerHTML=T('b\\cos\\theta');
+  document.getElementById('lg-y').innerHTML=T('y = r\\sin(\\theta+\\alpha)');
+  tex('(1)\\;\\; y = 3\\sin\\theta - \\sqrt{3}\\,\\cos\\theta \\qquad (2)\\;\\; y = 5\\cos\\theta + 12\\sin\\theta',
+    document.getElementById('f-problem'),true);
+  tex('(1)\\;\\text{最大値 } 2\\sqrt{3},\\;\\text{最小値 } -2\\sqrt{3} \\qquad (2)\\;\\text{最大値 } 13,\\;\\text{最小値 } -13',
+    document.getElementById('result-box'),true);
+  initWalkthrough(); setupTabs(); setupSliders(); setupAnim(); redraw();
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: ねらう形を決める',
+     formula:'a\\sin\\theta + b\\cos\\theta = r\\sin(\\theta+\\alpha) \\quad\\text{の形にまとめる}'},
+    {label:'Step 2: (1) の係数を点として読む',
+     formula:'(1)\\;\\; a = 3,\\; b = -\\sqrt{3} \\;\\Longrightarrow\\; \\mathrm{P}(3,\\,-\\sqrt{3})'},
+    {label:'Step 3: 半径 r を求める',
+     formula:'r = \\mathrm{OP} = \\sqrt{3^2 + (-\\sqrt{3})^2} = \\sqrt{12} = 2\\sqrt{3}'},
+    {label:'Step 4: 角 α を決める',
+     formula:'\\cos\\alpha = \\dfrac{3}{2\\sqrt{3}} = \\dfrac{\\sqrt{3}}{2},\\quad \\sin\\alpha = \\dfrac{-\\sqrt{3}}{2\\sqrt{3}} = -\\dfrac{1}{2} \\;\\Longrightarrow\\; \\alpha = -\\dfrac{\\pi}{6}'},
+    {label:'Step 5: 合成した式',
+     formula:'y = 3\\sin\\theta - \\sqrt{3}\\,\\cos\\theta = 2\\sqrt{3}\\,\\sin\\!\\left(\\theta - \\dfrac{\\pi}{6}\\right)'},
+    {label:'Step 6: 中身のとりうる値',
+     formula:'\\theta\\ \\text{がすべての実数を動くとき}\\;\\; -1 \\le \\sin\\!\\left(\\theta - \\dfrac{\\pi}{6}\\right) \\le 1'},
+    {label:'Step 7: (1) の答え',
+     formula:'-2\\sqrt{3} \\le y \\le 2\\sqrt{3} \\;\\Longrightarrow\\; \\text{最大値 } 2\\sqrt{3},\\;\\; \\text{最小値 } -2\\sqrt{3}'},
+    {label:'Step 8: (2) も同じ手順で',
+     formula:'y = 12\\sin\\theta + 5\\cos\\theta,\\;\\; r = \\sqrt{12^2+5^2} = 13 \\;\\Longrightarrow\\; \\text{最大値 } 13,\\;\\; \\text{最小値 } -13'},
+    {label:'Step 9: (2) の角 α',
+     formula:'\\cos\\alpha = \\dfrac{12}{13},\\;\\; \\sin\\alpha = \\dfrac{5}{13}\\ \\text{を満たす角。特別な角でなくても最大・最小は }r\\text{ で決まる}'}
+  ];
+  let c=0;
+  const box=document.getElementById('walkthrough'),cnt=document.getElementById('counter');
+  const pv=document.getElementById('prev'),nx=document.getElementById('next');
+  function render(){
+    let h='';
+    for(let i=0;i<=c;i++){
+      h+='<div class="step '+(i===c?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    box.innerHTML=h; cnt.textContent=(c+1)+' / '+steps.length;
+    pv.disabled=c===0; nx.disabled=c===steps.length-1;
+  }
+  pv.addEventListener('click',()=>{if(c>0){c--;render();}});
+  nx.addEventListener('click',()=>{if(c<steps.length-1){c++;render();}});
+  render();
+}
+
+function niceStep(sc){
+  const t=46/sc, p=Math.pow(10,Math.floor(Math.log10(t)));
+  for(const m of [1,2,5]){ if(p*m>=t) return p*m; }
+  return p*10;
+}
+function stepLbl(v){ return Number(v.toFixed(2)).toString(); }
+
+function arcPath(cx,cy,rr,f1,f2){
+  const x1=cx+rr*Math.cos(f1), y1=cy-rr*Math.sin(f1);
+  const x2=cx+rr*Math.cos(f2), y2=cy-rr*Math.sin(f2);
+  const d=f2-f1, large=Math.abs(d)>Math.PI?1:0, sweep=d>0?0:1;
+  return 'M '+x1.toFixed(1)+' '+y1.toFixed(1)+' A '+rr+' '+rr+' 0 '+large+' '+sweep+' '+x2.toFixed(1)+' '+y2.toFixed(1);
+}
+
+function drawCircle(){
+  const st=cur(), r=st.r, al=st.al;
+  const sc = r<1e-9 ? 60 : RAD/r;
+  let s='';
+  const gs=niceStep(sc);
+  const taken=[];
+  const hit=b=>taken.some(t=>b.x<t.x+t.w&&t.x<b.x+b.w&&b.y<t.y+t.h&&t.y<b.y+b.h);
+  const inside=b=>b.x>=4&&b.y>=4&&b.x+b.w<=CW-4&&b.y+b.h<=CH-4;
+  function place(cands,w,h){
+    for(const c of cands){ const b={x:c[0]-w/2,y:c[1]-h/2,w:w,h:h}; if(inside(b)&&!hit(b)){taken.push(b);return b;} }
+    const b={x:cands[0][0]-w/2,y:cands[0][1]-h/2,w:w,h:h}; taken.push(b); return b;
+  }
+  function ring(cx,cy,d,phi){
+    return [0,45,-45,90,-90,135,-135,180].map(k=>{const a=phi+k*Math.PI/180;return [cx+d*Math.cos(a),cy+d*Math.sin(a)];});
+  }
+  function fo(b,txt,size,col,extra){
+    return '<foreignObject x="'+b.x.toFixed(1)+'" y="'+b.y.toFixed(1)+'" width="'+b.w+'" height="'+b.h+'"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:'+size+'px;color:'+col+';text-align:center;line-height:1.3;'+(extra||'')+'">'+txt+'</div></foreignObject>';
+  }
+  for(let k=-40;k<=40;k++){
+    const gx=cox+k*gs*sc; if(gx<10||gx>CW-10) continue;
+    s+='<line x1="'+gx.toFixed(1)+'" y1="14" x2="'+gx.toFixed(1)+'" y2="'+(CH-14)+'" stroke="'+(k===0?'#999':'#eee')+'" stroke-width="'+(k===0?1.5:1)+'"/>';
+  }
+  for(let k=-40;k<=40;k++){
+    const gy=coy-k*gs*sc; if(gy<14||gy>CH-14) continue;
+    s+='<line x1="14" y1="'+gy.toFixed(1)+'" x2="'+(CW-14)+'" y2="'+gy.toFixed(1)+'" stroke="'+(k===0?'#999':'#eee')+'" stroke-width="'+(k===0?1.5:1)+'"/>';
+  }
+  s+='<foreignObject x="'+(CW-30)+'" y="'+(coy-24)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">'+T('x')+'</div></foreignObject>';
+  s+='<foreignObject x="'+(cox+7)+'" y="8" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">'+T('y')+'</div></foreignObject>';
+  taken.push({x:CW-30,y:coy-24,w:24,h:24});
+  taken.push({x:cox+5,y:6,w:26,h:26});
+
+  if(r<1e-9){
+    s+='<foreignObject x="150" y="180" width="300" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);text-align:center">'+T('a=b=0')+' のとき常に '+T('y=0')+'</div></foreignObject>';
+    document.getElementById('circle').innerHTML=s; return;
+  }
+  taken.push({x:10,y:4,w:186,h:30});
+
+  s+='<circle cx="'+cox+'" cy="'+coy+'" r="'+RAD+'" fill="none" stroke="#dfe4ee" stroke-width="1.5" stroke-dasharray="4 4"/>';
+
+  const Px=cox+RAD*Math.cos(al), Py=coy-RAD*Math.sin(al);
+  const ph=al+th;
+  const Qx=cox+RAD*Math.cos(ph), Qy=coy-RAD*Math.sin(ph);
+  const yv=r*Math.sin(ph);
+  const close=Math.hypot(Qx-Px,Qy-Py)<26;
+
+  // 動く要素のラベルを重要度の高い順に確保し、目盛り数字は最後に「空いている所だけ」描く
+  const pBox=place(ring(Px,Py,18,-al),16,17);
+  const qBox=place(close?ring(Qx,Qy,18,-ph+Math.PI):ring(Qx,Qy,18,-ph),16,17);
+  let alBox=null, thBox=null;
+  if(Math.abs(al)>0.05) alBox=place([58,76,94,44,112].map(d=>{const a=-al/2;return [cox+d*Math.cos(a),coy+d*Math.sin(a)];}),20,20);
+  if(th>0.05) thBox=place([88,106,124,72,142].map(d=>{const a=-(al+th/2);return [cox+d*Math.cos(a),coy+d*Math.sin(a)];}),20,20);
+  const aCands=[],bCands=[];
+  for(const sg of [1,-1]) for(const f of [0.5,0.68,0.34,0.82,0.2]) aCands.push([cox+(Px-cox)*f, coy+sg*14]);
+  const bout=(Math.cos(al)>=0?1:-1);
+  for(const sg of [bout,-bout]) for(const f of [0.5,0.68,0.34,0.82,0.2]) bCands.push([Px+sg*16, coy+(Py-coy)*f]);
+  const aBox=(Math.abs(Px-cox)>26)?place(aCands,18,20):null;
+  const bBox=(Math.abs(Py-coy)>26)?place(bCands,18,20):null;
+
+  s+='<line x1="'+cox+'" y1="'+coy+'" x2="'+Px.toFixed(1)+'" y2="'+coy+'" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>';
+  s+='<line x1="'+Px.toFixed(1)+'" y1="'+coy+'" x2="'+Px.toFixed(1)+'" y2="'+Py.toFixed(1)+'" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>';
+  if(alBox) s+='<path d="'+arcPath(cox,coy,44,0,al)+'" fill="none" stroke="var(--c-green)" stroke-width="2"/>';
+  if(thBox) s+='<path d="'+arcPath(cox,coy,72,al,ph)+'" fill="none" stroke="var(--c-purple)" stroke-width="2"/>';
+
+  s+='<line x1="'+cox+'" y1="'+Qy.toFixed(1)+'" x2="'+Qx.toFixed(1)+'" y2="'+Qy.toFixed(1)+'" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6 4"/>';
+  s+='<line x1="'+cox+'" y1="'+coy+'" x2="'+Px.toFixed(1)+'" y2="'+Py.toFixed(1)+'" stroke="var(--c-blue)" stroke-width="3"/>';
+  s+='<line x1="'+cox+'" y1="'+coy+'" x2="'+Qx.toFixed(1)+'" y2="'+Qy.toFixed(1)+'" stroke="var(--c-purple)" stroke-width="3"/>';
+
+  for(let k=-40;k<=40;k++){
+    if(k===0) continue;
+    const gx=cox+k*gs*sc; if(gx<24||gx>CW-24) continue;
+    if(hit({x:gx-13,y:coy+4,w:26,h:16})) continue;
+    s+='<text x="'+gx.toFixed(1)+'" y="'+(coy+16)+'" text-anchor="middle" font-size="10" fill="#bbb">'+stepLbl(k*gs)+'</text>';
+  }
+
+  if(aBox) s+=fo(aBox,T('a'),13,'var(--c-blue)','background:rgba(255,255,255,0.85)');
+  if(bBox) s+=fo(bBox,T('b'),13,'var(--c-blue)','background:rgba(255,255,255,0.85)');
+  if(alBox) s+=fo(alBox,T('\\alpha'),14,'var(--c-green)','font-weight:700;background:rgba(255,255,255,0.85)');
+  if(thBox) s+=fo(thBox,T('\\theta'),14,'var(--c-purple)','font-weight:700;background:rgba(255,255,255,0.85)');
+
+  s+='<circle cx="'+Px.toFixed(1)+'" cy="'+Py.toFixed(1)+'" r="6" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>';
+  s+='<text x="'+(pBox.x+pBox.w/2).toFixed(1)+'" y="'+(pBox.y+pBox.h-4).toFixed(1)+'" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-blue)">P</text>';
+  const nearTop=Math.abs(Math.sin(ph)-1)<0.02, nearBot=Math.abs(Math.sin(ph)+1)<0.02;
+  s+='<circle cx="'+Qx.toFixed(1)+'" cy="'+Qy.toFixed(1)+'" r="7" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>';
+  if(nearTop||nearBot){
+    s+='<circle cx="'+Qx.toFixed(1)+'" cy="'+Qy.toFixed(1)+'" r="7" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="7;14;7" dur="1s" repeatCount="indefinite"/></circle>';
+  }
+  s+='<text x="'+(qBox.x+qBox.w/2).toFixed(1)+'" y="'+(qBox.y+qBox.h-4).toFixed(1)+'" text-anchor="middle" font-size="14" font-weight="700" fill="var(--c-purple)">Q</text>';
+  s+='<circle cx="'+cox+'" cy="'+Qy.toFixed(1)+'" r="4.5" fill="var(--c-orange)"/>';
+  s+='<foreignObject x="12" y="6" width="180" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-orange);font-weight:700;background:rgba(255,255,255,0.9)">'+T('\\mathrm{Q}\\ \\text{の高さ }y='+nf(yv))+'</div></foreignObject>';
+  document.getElementById('circle').innerHTML=s;
+}
+
+function wx(t){ return wox+(t-TH0)/(TH1-TH0)*(wRight-wox); }
+
+function drawWave(){
+  const st=cur(), r=st.r, al=st.al, a=st.a, b=st.b;
+  const ymax=(r<1e-9?1:r*1.28);
+  const wy=v=>woy-v/ymax*wHalf;
+  let s='';
+  s+='<line x1="'+wox+'" y1="'+woy+'" x2="'+wRight+'" y2="'+woy+'" stroke="#999" stroke-width="1.5"/>';
+  s+='<line x1="'+wx(0)+'" y1="'+(woy-wHalf-14)+'" x2="'+wx(0)+'" y2="'+(woy+wHalf+14)+'" stroke="#999" stroke-width="1.5"/>';
+  const ticks=[[Math.PI/2,'\\dfrac{\\pi}{2}'],[Math.PI,'\\pi'],[1.5*Math.PI,'\\dfrac{3}{2}\\pi'],[2*Math.PI,'2\\pi']];
+  let tickLbl='';
+  for(const tk of ticks){
+    const X=wx(tk[0]);
+    s+='<line x1="'+X.toFixed(1)+'" y1="'+(woy-wHalf-10)+'" x2="'+X.toFixed(1)+'" y2="'+(woy+wHalf+10)+'" stroke="#f0f0f0" stroke-width="1"/>';
+    s+='<line x1="'+X.toFixed(1)+'" y1="'+(woy-4)+'" x2="'+X.toFixed(1)+'" y2="'+(woy+4)+'" stroke="#999" stroke-width="1.5"/>';
+    tickLbl+='<foreignObject x="'+(X-26).toFixed(1)+'" y="'+(woy+10)+'" width="52" height="46"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999;text-align:center"><span style="background:rgba(255,255,255,0.9);border-radius:4px;padding:0 3px">'+T(tk[1])+'</span></div></foreignObject>';
+  }
+  if(r>1e-9){
+    for(const sg of [1,-1]){
+      const Y=wy(sg*r);
+      s+='<line x1="'+wox+'" y1="'+Y.toFixed(1)+'" x2="'+wRight+'" y2="'+Y.toFixed(1)+'" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="7 5"/>';
+      s+='<foreignObject x="4" y="'+(Y-15).toFixed(1)+'" width="46" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-orange);font-weight:700;text-align:right">'+T(sg>0?'r':'-r')+'</div></foreignObject>';
+    }
+  }
+  const N=280;
+  const mk=(f,col,w,dash)=>{
+    let d='';
+    for(let i=0;i<=N;i++){
+      const t=TH0+(TH1-TH0)*i/N;
+      d+=(i?'L':'M')+wx(t).toFixed(1)+' '+wy(f(t)).toFixed(1)+' ';
+    }
+    return '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+' opacity="'+(dash?0.6:1)+'"/>';
+  };
+  s+=mk(t=>a*Math.sin(t),'var(--c-blue)',1.6,'6 4');
+  s+=mk(t=>b*Math.cos(t),'var(--c-red)',1.6,'6 4');
+  s+=mk(t=>r*Math.sin(t+al),'var(--c-purple)',3,null);
+
+  const X=wx(th), Y=wy(r*Math.sin(th+al));
+  s+='<line x1="'+X.toFixed(1)+'" y1="'+(woy-wHalf-10)+'" x2="'+X.toFixed(1)+'" y2="'+(woy+wHalf+10)+'" stroke="var(--c-purple)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.7"/>';
+  s+='<circle cx="'+X.toFixed(1)+'" cy="'+Y.toFixed(1)+'" r="7" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>';
+  if(r>1e-9){
+    let tmax=Math.PI/2-al; while(tmax<0)tmax+=2*Math.PI; while(tmax>=2*Math.PI)tmax-=2*Math.PI;
+    let tmin=-Math.PI/2-al; while(tmin<0)tmin+=2*Math.PI; while(tmin>=2*Math.PI)tmin-=2*Math.PI;
+    for(const pr of [[tmax,r],[tmin,-r]]){
+      s+='<circle cx="'+wx(pr[0]).toFixed(1)+'" cy="'+wy(pr[1]).toFixed(1)+'" r="5" fill="none" stroke="var(--c-orange)" stroke-width="2.5"><animate attributeName="r" values="5;11;5" dur="1.4s" repeatCount="indefinite"/></circle>';
+    }
+  }
+  s+=tickLbl;
+  s+='<foreignObject x="'+(wRight-22)+'" y="'+(woy-30)+'" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">'+T('\\theta')+'</div></foreignObject>';
+  document.getElementById('wave').innerHTML=s;
+}
+
+function redraw(){
+  const st=cur();
+  drawCircle(); drawWave();
+  const yv=st.r*Math.sin(th+st.al);
+  document.getElementById('live-calc').innerHTML=
+    T(st.expr)+'<br>'+T(st.synth)+'<br>'+T(st.aTex)+'<br>'+
+    T('\\theta = '+nf(th)+' \\;\\Rightarrow\\; y = '+nf(yv))+'<br>'+
+    T('\\text{最大値 }'+st.maxTex+',\\quad \\text{最小値 }'+st.minTex);
+}
+
+function setupTabs(){
+  const t1=document.getElementById('tab-1'),t2=document.getElementById('tab-2'),tf=document.getElementById('tab-f');
+  const ra=document.getElementById('row-a'),rb=document.getElementById('row-b');
+  const sa=document.getElementById('a-slider'),sb=document.getElementById('b-slider');
+  function set(m){
+    mode=m;
+    [t1,t2,tf].forEach(b=>b.classList.remove('active'));
+    ({m1:t1,m2:t2,free:tf})[m].classList.add('active');
+    const free=(m==='free');
+    sa.disabled=!free; sb.disabled=!free;
+    ra.classList.toggle('locked',!free); rb.classList.toggle('locked',!free);
+    if(free){
+      sa.value=aFree; sb.value=bFree;
+      document.getElementById('a-value').textContent=nf1(aFree);
+      document.getElementById('b-value').textContent=nf1(bFree);
+    }else{
+      const st=cur();
+      document.getElementById('a-value').textContent=nf(st.a);
+      document.getElementById('b-value').textContent=nf(st.b);
+      sa.value=Math.max(-13,Math.min(13,st.a)); sb.value=Math.max(-13,Math.min(13,st.b));
+    }
+    redraw();
+  }
+  t1.addEventListener('click',()=>set('m1'));
+  t2.addEventListener('click',()=>set('m2'));
+  tf.addEventListener('click',()=>set('free'));
+  set('m1');
+}
+
+function setupSliders(){
+  const sa=document.getElementById('a-slider'),sb=document.getElementById('b-slider'),stt=document.getElementById('t-slider');
+  sa.addEventListener('input',()=>{aFree=parseFloat(sa.value);document.getElementById('a-value').textContent=nf1(aFree);redraw();});
+  sb.addEventListener('input',()=>{bFree=parseFloat(sb.value);document.getElementById('b-value').textContent=nf1(bFree);redraw();});
+  stt.addEventListener('input',()=>{th=parseFloat(stt.value);document.getElementById('t-value').textContent=nf(th);redraw();});
+}
+
+function setupAnim(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const sl=document.getElementById('t-slider'),vd=document.getElementById('t-value');
+    const dur=6000; let t0=null;
+    function step(ts){
+      if(!t0)t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      th=p*2*Math.PI;
+      sl.value=th; vd.textContent=nf(th); redraw();
+      if(p<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

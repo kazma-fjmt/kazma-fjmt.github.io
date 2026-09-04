@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>一般角と動径</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn.small { min-width: 92px; padding: .6rem .7rem; font-size: .95rem; min-height: 48px; }
+  .btn.small.active { background: #f0f5ff; border-color: var(--accent); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .preset-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>一般角と動径</h1>
+  <p class="subtitle">始線からの回転の向きと回転数を追いかけて、動径の位置を決めましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>点 <span id="f-o"></span> を中心に半直線 <span id="f-op"></span> を回転させます。回転前の位置を示す半直線 <span id="f-ox"></span> が始線、回転後の <span id="f-op2"></span> が動径です。</p>
+  <div class="formula-box" id="f-rule"></div>
+  <div class="note">回転は 1 回転を超えても構いません。回転数を <span id="f-n"></span> 回とすると、動径の位置は <span id="f-alpha"></span> だけで決まります。</div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>下のボタンをタップすると、始線から動径までの回転がアニメーションで再現されます。スライダーをドラッグして角を自由に変えることもできます。</p>
+
+  <div class="preset-row" id="preset-row"></div>
+
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="-720" max="810" step="1" value="240">
+    <span class="slider-val" id="th-value">240°</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>答えのまとめ</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const CX = 300, CY = 300, R = 200;
+let theta = 240;
+let animId = null;
+
+const presets = [
+  { deg: 240,  tag: '(1)', tex: '240^\\circ' },
+  { deg: -60,  tag: '(2)', tex: '-60^\\circ' },
+  { deg: 765,  tag: '(3)', tex: '765^\\circ' },
+  { deg: -570, tag: '(4)', tex: '-570^\\circ' }
+];
+
+function init(){
+  document.getElementById('f-o').innerHTML = T('\\mathrm{O}');
+  document.getElementById('f-op').innerHTML = T('\\mathrm{OP}');
+  document.getElementById('f-ox').innerHTML = T('\\mathrm{OX}');
+  document.getElementById('f-op2').innerHTML = T('\\mathrm{OP}');
+  document.getElementById('f-n').innerHTML = T('n');
+  document.getElementById('f-alpha').innerHTML = T('\\alpha');
+  document.getElementById('lbl-th').innerHTML = T('\\theta');
+
+  tex('\\begin{aligned}&\\text{正の向き（時計と逆回り）に回した角}\\;\\Rightarrow\\;\\text{正の角}\\\\&\\text{負の向き（時計回り）に回した角}\\;\\Rightarrow\\;\\text{負の角}\\\\&\\theta = \\alpha + 360^\\circ \\times n \\quad (n\\;\\text{は整数})\\end{aligned}', document.getElementById('f-rule'), true);
+
+  tex('\\begin{aligned}(1)\\;&240^\\circ\\;\\text{：正の向きに }240^\\circ\\text{（第 3 象限）}\\\\(2)\\;&-60^\\circ\\;\\text{：負の向きに }60^\\circ\\text{（第 4 象限）}\\\\(3)\\;&765^\\circ = 45^\\circ + 360^\\circ\\times 2\\;\\text{（第 1 象限）}\\\\(4)\\;&-570^\\circ = 150^\\circ + 360^\\circ\\times(-2)\\;\\text{（第 2 象限）}\\end{aligned}', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  buildPresets();
+  setupSlider();
+  setupAnimation();
+  draw();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 始線と回転の向きを決める',
+      formula: '\\text{始線 }\\mathrm{OX}\\text{ は右向き。反時計回りが正、時計回りが負}' },
+    { label: 'Step 2: (1) 240 度',
+      formula: '240^\\circ = 180^\\circ + 60^\\circ \\;\\Rightarrow\\; \\text{正の向きに半回転してさらに }60^\\circ\\text{（第 3 象限）}' },
+    { label: 'Step 3: (2) マイナス 60 度',
+      formula: '-60^\\circ \\;\\Rightarrow\\; \\text{負の向きに }60^\\circ\\text{。}\\;-60^\\circ+360^\\circ=300^\\circ\\text{（第 4 象限）}' },
+    { label: 'Step 4: (3) 765 度 は何回転か',
+      formula: '765 \\div 360 = 2\\;\\text{あまり}\\;45 \\;\\Rightarrow\\; 765^\\circ = 45^\\circ + 360^\\circ \\times 2' },
+    { label: 'Step 5: (3) の動径',
+      formula: '\\text{正の向きに 2 回転してさらに }45^\\circ\\;\\Rightarrow\\;45^\\circ\\text{ の動径と一致（第 1 象限）}' },
+    { label: 'Step 6: (4) マイナス 570 度 を 0 度以上にそろえる',
+      formula: '-570^\\circ + 360^\\circ = -210^\\circ,\\quad -210^\\circ + 360^\\circ = 150^\\circ' },
+    { label: 'Step 7: (4) の動径',
+      formula: '-570^\\circ = 150^\\circ + 360^\\circ \\times (-2)\\;\\Rightarrow\\;150^\\circ\\text{ の動径と一致（第 2 象限）}' },
+    { label: 'Step 8: まとめ',
+      formula: '\\text{動径の位置は }\\alpha\\;(0^\\circ \\leq \\alpha < 360^\\circ)\\text{ で決まり、回転数 }n\\text{ は位置に影響しない}' }
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function normalize(d){
+  const n = Math.floor(d/360);
+  return { n: n, alpha: d - 360*n };
+}
+
+function quadrant(a){
+  if(Math.abs(a%90) < 1e-9) return '座標軸上';
+  if(a < 90) return '第 1 象限';
+  if(a < 180) return '第 2 象限';
+  if(a < 270) return '第 3 象限';
+  return '第 4 象限';
+}
+
+function spiralPoints(d){
+  const n = Math.max(2, Math.ceil(Math.abs(d)/2.5));
+  const pts = [];
+  for(let i=0;i<=n;i++){
+    const t = d*i/n;
+    const rr = Math.min(178, 50 + 28*(Math.abs(t)/360));
+    const a = t*Math.PI/180;
+    pts.push({ x: CX + rr*Math.cos(a), y: CY - rr*Math.sin(a) });
+  }
+  return pts;
+}
+
+function draw(){
+  const svg = document.getElementById('graph');
+  const dir = theta >= 0 ? 'var(--c-blue)' : 'var(--c-red)';
+  const info = normalize(theta);
+  let s = '';
+
+  s += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="#fff" stroke="#e6e6e6" stroke-width="1.5"/>`;
+  s += `<line x1="${CX-R-40}" y1="${CY}" x2="${CX+R+40}" y2="${CY}" stroke="#e8e8e8" stroke-width="1"/>`;
+  s += `<line x1="${CX}" y1="${CY-R-40}" x2="${CX}" y2="${CY+R+40}" stroke="#e8e8e8" stroke-width="1"/>`;
+
+  for(let a=0;a<360;a+=30){
+    const rad = a*Math.PI/180;
+    const r1 = (a%90===0) ? R-14 : R-8;
+    s += `<line x1="${(CX+r1*Math.cos(rad)).toFixed(1)}" y1="${(CY-r1*Math.sin(rad)).toFixed(1)}" x2="${(CX+R*Math.cos(rad)).toFixed(1)}" y2="${(CY-R*Math.sin(rad)).toFixed(1)}" stroke="#ccc" stroke-width="${a%90===0?2:1}"/>`;
+  }
+  for(let a=0;a<360;a+=90){
+    const rad = a*Math.PI/180;
+    const rl = R+22;
+    s += `<text x="${(CX+rl*Math.cos(rad)).toFixed(1)}" y="${(CY-rl*Math.sin(rad)+5).toFixed(1)}" text-anchor="middle" font-size="12" fill="#bbb">${a}°</text>`;
+  }
+
+  s += `<text x="54" y="86" font-size="12" fill="#ddd">第 2 象限</text>`;
+  s += `<text x="546" y="86" font-size="12" fill="#ddd" text-anchor="end">第 1 象限</text>`;
+  s += `<text x="54" y="524" font-size="12" fill="#ddd">第 3 象限</text>`;
+  s += `<text x="546" y="524" font-size="12" fill="#ddd" text-anchor="end">第 4 象限</text>`;
+
+  s += `<line x1="${CX}" y1="${CY}" x2="${CX+R}" y2="${CY}" stroke="#555" stroke-width="3.5"/>`;
+  s += `<text x="${CX+R+8}" y="${CY-16}" font-size="15" font-weight="700" fill="#555">X</text>`;
+
+  const pts = spiralPoints(theta);
+  if(Math.abs(theta) > 0.5){
+    let d = '';
+    for(let i=0;i<pts.length;i++) d += (i===0?'M':'L') + ` ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`;
+    s += `<path d="${d}" fill="none" stroke="${dir}" stroke-width="2.5" opacity="0.85"/>`;
+    const p2 = pts[pts.length-1], p1 = pts[pts.length-2];
+    const ang = Math.atan2(p2.y-p1.y, p2.x-p1.x);
+    const hl = 13, hw = 6.5;
+    const ax = p2.x, ay = p2.y;
+    const bx = p2.x - hl*Math.cos(ang) + hw*Math.sin(ang);
+    const by = p2.y - hl*Math.sin(ang) - hw*Math.cos(ang);
+    const cx2 = p2.x - hl*Math.cos(ang) - hw*Math.sin(ang);
+    const cy2 = p2.y - hl*Math.sin(ang) + hw*Math.cos(ang);
+    s += `<polygon points="${ax.toFixed(1)},${ay.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)} ${cx2.toFixed(1)},${cy2.toFixed(1)}" fill="${dir}"/>`;
+  }
+
+  const rad = theta*Math.PI/180;
+  const ex = CX + R*Math.cos(rad), ey = CY - R*Math.sin(rad);
+  s += `<line x1="${CX}" y1="${CY}" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--c-orange)" stroke-width="4"/>`;
+  s += `<circle cx="${ex.toFixed(2)}" cy="${ey.toFixed(2)}" r="9" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="9;13;9" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  const lx = CX + (R+48)*Math.cos(rad), ly = CY - (R+48)*Math.sin(rad);
+  s += `<text x="${lx.toFixed(1)}" y="${(ly+5).toFixed(1)}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--c-orange)">P</text>`;
+
+  s += `<circle cx="${CX}" cy="${CY}" r="6" fill="#333"/>`;
+  s += `<text x="${CX-18}" y="${CY+20}" font-size="15" font-weight="700" fill="#333">O</text>`;
+
+  const dirText = theta >= 0 ? '正の向き' : '負の向き';
+  s += `<foreignObject x="14" y="14" width="260" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;font-weight:700;color:${theta>=0?'#2a6df4':'#d9534f'};white-space:nowrap">${T('\\theta = ' + theta + '^\\circ')}</div></foreignObject>`;
+  s += `<foreignObject x="14" y="46" width="280" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#888;white-space:nowrap">${dirText}に ${Math.abs(theta)}° 回転</div></foreignObject>`;
+  s += `<foreignObject x="330" y="14" width="260" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;font-weight:700;color:#e67e22;text-align:right;white-space:nowrap">${T('\\alpha = ' + info.alpha + '^\\circ')}</div></foreignObject>`;
+  s += `<foreignObject x="330" y="46" width="260" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#888;text-align:right;white-space:nowrap">${quadrant(info.alpha)}</div></foreignObject>`;
+
+  svg.innerHTML = s;
+
+  let general;
+  if(info.n === 0) general = `\\theta = ${theta}^\\circ = ${info.alpha}^\\circ`;
+  else if(info.n > 0) general = `\\theta = ${theta}^\\circ = ${info.alpha}^\\circ + 360^\\circ \\times ${info.n}`;
+  else general = `\\theta = ${theta}^\\circ = ${info.alpha}^\\circ - 360^\\circ \\times ${-info.n}`;
+
+  const turns = Math.abs(info.n);
+  const turnText = info.n === 0
+    ? '1 回転に満たない回転です。'
+    : (info.n > 0 ? `正の向きに ${turns} 回転してから、さらに ${info.alpha}° 回った位置です。`
+                  : `負の向きに ${turns} 回転してから、正の向きに ${info.alpha}° 戻した位置です。`);
+
+  document.getElementById('live-calc').innerHTML =
+    T(general) + '<br>' +
+    `<span style="color:var(--c-orange);font-weight:600;">動径 OP は ${quadrant(info.alpha)} にあります</span><br>` +
+    `<span style="color:#888;font-size:.9rem;">${turnText}</span>`;
+}
+
+function buildPresets(){
+  const row = document.getElementById('preset-row');
+  presets.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'btn small';
+    b.dataset.deg = String(p.deg);
+    b.innerHTML = `${p.tag} ${T(p.tex)}`;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#preset-row .btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      runAnim(p.deg);
+    });
+    row.appendChild(b);
+  });
+}
+
+function setValue(d){
+  theta = Math.round(d);
+  document.getElementById('th-slider').value = theta;
+  document.getElementById('th-value').textContent = theta + '°';
+  draw();
+}
+
+function setupSlider(){
+  const slider = document.getElementById('th-slider');
+  slider.addEventListener('input', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    document.querySelectorAll('#preset-row .btn').forEach(x=>x.classList.remove('active'));
+    setValue(parseFloat(slider.value));
+  });
+}
+
+function runAnim(target){
+  if(animId){ cancelAnimationFrame(animId); animId = null; }
+  const duration = Math.min(3400, 600 + Math.abs(target)*3);
+  let startTime = null;
+  function animate(ts){
+    if(!startTime) startTime = ts;
+    const progress = Math.min((ts - startTime) / duration, 1);
+    const eased = progress < 0.5 ? 2*progress*progress : 1 - Math.pow(-2*progress+2, 2)/2;
+    setValue(target * eased);
+    if(progress < 1) animId = requestAnimationFrame(animate); else animId = null;
+  }
+  animId = requestAnimationFrame(animate);
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click', ()=>{ runAnim(theta); });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>正接を含む不等式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    flex: 1; appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: .95rem; font-weight: 600; font-family: inherit;
+    padding: .7rem .6rem; border-radius: 10px; cursor: pointer; min-height: 48px; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>正接を含む不等式</h1>
+  <p class="subtitle">単位円に「正接の軸」を書き足して、<span id="f-title"></span> の形の不等式を解きましょう。</p>
+
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>どちらの不等式を見るか</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab-0"></button>
+    <button class="tab" id="tab-1"></button>
+  </div>
+
+  <h2>正接の値が現れる場所</h2>
+  <p>原点と点 <span id="f-P"></span> を通る直線が、直線 <span id="f-x1"></span> と交わる点を <span id="f-T"></span> とすると、その <span id="f-yc"></span> 座標がちょうど <span id="f-tan"></span> です。</p>
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="0" max="6.28" step="0.01" value="0.6">
+    <span class="slider-val" id="th-value">0.60</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container" id="circle-wrap">
+    <svg id="circle" viewBox="0 0 600 460" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">円周上の点 P をドラッグ、またはスライダーで動かせます。</p>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>グラフで確かめよう</h2>
+  <p>関数 <span id="f-ygraph"></span> のグラフが、境界の直線より上（または下）にある部分が答えです。</p>
+  <div class="svg-container">
+    <svg id="graph" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="formula-box" id="answer-box"></div>
+  <div class="note" id="note-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const PI=Math.PI, TAU=2*Math.PI;
+const W=600,H=460,ox=200,oy=230,scale=88,TMAX=2.35;
+function px(x){return ox+x*scale;}
+function py(y){return oy-y*scale;}
+
+const OX2=54,OY2=168,SX=(600-54-26)/TAU,SY=40,YMAX=3.4;
+function gx(t){return OX2+t*SX;}
+function gy(y){return OY2-y*SY;}
+
+const problems=[
+{
+  key:'(1)', tab:'(1)\\;\\tan\\theta > \\sqrt{3}',
+  ineq:'\\tan\\theta > \\sqrt{3}',
+  thr:Math.sqrt(3), thrTex:'\\sqrt{3}', gt:true,
+  rootsTex:'\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{4}{3}\\pi',
+  ints:[{a:PI/3,b:PI/2,ca:false,cb:false},{a:4*PI/3,b:3*PI/2,ca:false,cb:false}],
+  marks:[{v:PI/3,tex:'\\dfrac{\\pi}{3}'},{v:4*PI/3,tex:'\\dfrac{4}{3}\\pi'}],
+  ans:'\\dfrac{\\pi}{3} < \\theta < \\dfrac{\\pi}{2},\\quad \\dfrac{4}{3}\\pi < \\theta < \\dfrac{3}{2}\\pi',
+  note:'両端はどちらも含みません。'+'$\\theta=\\dfrac{\\pi}{3}$'+' では等号が成り立ち、'+'$\\theta=\\dfrac{\\pi}{2}$'+' では正接の値そのものが定まらないからです。',
+  steps:[
+    {label:'Step 1: まず等号の場合を調べる', formula:'\\tan\\theta=\\sqrt{3}\\;\\text{ となる }\\theta\\;\\text{ を求める}'},
+    {label:'Step 2: 境界の角', formula:'0\\le\\theta<2\\pi\\;\\text{ では }\\;\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{4}{3}\\pi'},
+    {label:'Step 3: 正接の軸に置き換える', formula:'\\text{直線 }x=1\\;\\text{ 上の点 }\\mathrm{T}(1,\\;\\tan\\theta)\\;\\text{ の高さが }\\tan\\theta'},
+    {label:'Step 4: 不等式を図の条件に読み替える', formula:'\\tan\\theta>\\sqrt{3}\\iff \\mathrm{T}\\;\\text{ が点 }(1,\\;\\sqrt{3})\\;\\text{ より上}'},
+    {label:'Step 5: 第 1 象限側の範囲', formula:'\\dfrac{\\pi}{3}<\\theta<\\dfrac{\\pi}{2}'},
+    {label:'Step 6: 第 3 象限側の範囲', formula:'\\dfrac{4}{3}\\pi<\\theta<\\dfrac{3}{2}\\pi'},
+    {label:'Step 7: 端点の扱い', formula:'\\theta=\\dfrac{\\pi}{2},\\;\\dfrac{3}{2}\\pi\\;\\text{ では }\\tan\\theta\\;\\text{ は定義されない}'},
+    {label:'Step 8: 答え', formula:'\\dfrac{\\pi}{3}<\\theta<\\dfrac{\\pi}{2},\\quad \\dfrac{4}{3}\\pi<\\theta<\\dfrac{3}{2}\\pi'}
+  ]
+},
+{
+  key:'(2)', tab:'(2)\\;\\sqrt{3}\\tan\\theta+1\\le 0',
+  ineq:'\\sqrt{3}\\tan\\theta+1\\le 0',
+  thr:-1/Math.sqrt(3), thrTex:'-\\dfrac{1}{\\sqrt{3}}', gt:false,
+  rootsTex:'\\theta=\\dfrac{5}{6}\\pi,\\;\\dfrac{11}{6}\\pi',
+  ints:[{a:PI/2,b:5*PI/6,ca:false,cb:true},{a:3*PI/2,b:11*PI/6,ca:false,cb:true}],
+  marks:[{v:5*PI/6,tex:'\\dfrac{5}{6}\\pi'},{v:11*PI/6,tex:'\\dfrac{11}{6}\\pi'}],
+  ans:'\\dfrac{\\pi}{2} < \\theta \\le \\dfrac{5}{6}\\pi,\\quad \\dfrac{3}{2}\\pi < \\theta \\le \\dfrac{11}{6}\\pi',
+  note:'左端は含まず、右端は含みます。'+'$\\theta=\\dfrac{\\pi}{2}$'+' では正接の値が定まらず、'+'$\\theta=\\dfrac{5}{6}\\pi$'+' では等号が成り立つからです。',
+  steps:[
+    {label:'Step 1: 正接について解く', formula:'\\sqrt{3}\\tan\\theta+1\\le 0\\iff \\tan\\theta\\le-\\dfrac{1}{\\sqrt{3}}'},
+    {label:'Step 2: まず等号の場合を調べる', formula:'\\tan\\theta=-\\dfrac{1}{\\sqrt{3}}\\;\\text{ となる }\\theta\\;\\text{ を求める}'},
+    {label:'Step 3: 境界の角', formula:'0\\le\\theta<2\\pi\\;\\text{ では }\\;\\theta=\\dfrac{5}{6}\\pi,\\;\\dfrac{11}{6}\\pi'},
+    {label:'Step 4: 不等式を図の条件に読み替える', formula:'\\mathrm{T}(1,\\;\\tan\\theta)\\;\\text{ が点 }\\left(1,\\;-\\dfrac{1}{\\sqrt{3}}\\right)\\;\\text{ 以下}'},
+    {label:'Step 5: 第 2 象限側の範囲', formula:'\\dfrac{\\pi}{2}<\\theta\\le\\dfrac{5}{6}\\pi'},
+    {label:'Step 6: 第 4 象限側の範囲', formula:'\\dfrac{3}{2}\\pi<\\theta\\le\\dfrac{11}{6}\\pi'},
+    {label:'Step 7: 答え', formula:'\\dfrac{\\pi}{2}<\\theta\\le\\dfrac{5}{6}\\pi,\\quad \\dfrac{3}{2}\\pi<\\theta\\le\\dfrac{11}{6}\\pi'}
+  ]
+}];
+
+let cur=0, prob=0, theta=0.6, animId=null, dragging=false;
+
+function P(){return problems[prob];}
+function satisfied(th){
+  const c=Math.cos(th);
+  if(Math.abs(c)<1e-6) return false;
+  const t=Math.tan(th);
+  return P().gt ? t>P().thr+1e-9 : t<=P().thr+1e-9;
+}
+
+function init(){
+  document.getElementById('f-title').innerHTML=T('\\tan\\theta > k');
+  document.getElementById('f-P').innerHTML=T('\\mathrm{P}');
+  document.getElementById('f-x1').innerHTML=T('x=1');
+  document.getElementById('f-T').innerHTML=T('\\mathrm{T}');
+  document.getElementById('f-yc').innerHTML=T('y');
+  document.getElementById('f-tan').innerHTML=T('\\tan\\theta');
+  document.getElementById('lbl-th').innerHTML=T('\\theta');
+  document.getElementById('f-ygraph').innerHTML=T('y=\\tan\\theta');
+  tex('0\\le\\theta<2\\pi\\;\\text{ のとき、次の不等式を満たす }\\theta\\;\\text{ の範囲を求めよ}',document.getElementById('f-problem'),true);
+  document.getElementById('tab-0').innerHTML=T(problems[0].tab);
+  document.getElementById('tab-1').innerHTML=T(problems[1].tab);
+  document.getElementById('tab-0').addEventListener('click',()=>setProb(0));
+  document.getElementById('tab-1').addEventListener('click',()=>setProb(1));
+  setupWalkthrough(); setupSlider(); setupAnimation(); setupDrag();
+  draw();
+}
+
+function setProb(i){
+  prob=i; cur=0;
+  document.getElementById('tab-0').classList.toggle('active',i===0);
+  document.getElementById('tab-1').classList.toggle('active',i===1);
+  renderSteps(); draw();
+}
+
+function setupWalkthrough(){
+  document.getElementById('prev').addEventListener('click',()=>{if(cur>0){cur--;renderSteps();}});
+  document.getElementById('next').addEventListener('click',()=>{if(cur<P().steps.length-1){cur++;renderSteps();}});
+  renderSteps();
+}
+function renderSteps(){
+  const steps=P().steps; let html='';
+  for(let i=0;i<=cur;i++){
+    html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=`${cur+1} / ${steps.length}`;
+  document.getElementById('prev').disabled=cur===0;
+  document.getElementById('next').disabled=cur===steps.length-1;
+}
+
+function lineEnds(dx,dy){
+  const bx=[-2.15,4.3], by=[-2.5,2.5], ts=[];
+  if(Math.abs(dx)>1e-9){ts.push(bx[0]/dx,bx[1]/dx);}
+  if(Math.abs(dy)>1e-9){ts.push(by[0]/dy,by[1]/dy);}
+  let tp=0,tn=0;
+  for(const t of ts){
+    const x=t*dx,y=t*dy;
+    if(x>=bx[0]-1e-6&&x<=bx[1]+1e-6&&y>=by[0]-1e-6&&y<=by[1]+1e-6){
+      if(t>0&&(tp===0||t<tp))tp=t;
+      if(t<0&&(tn===0||t>tn))tn=t;
+    }
+  }
+  return {p:{x:tp*dx,y:tp*dy},n:{x:tn*dx,y:tn*dy}};
+}
+function arcPath(a,b,r){
+  const x1=px(r*Math.cos(a)),y1=py(r*Math.sin(a));
+  const x2=px(r*Math.cos(b)),y2=py(r*Math.sin(b));
+  const large=(b-a)>PI?1:0;
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${(r*scale).toFixed(1)} ${(r*scale).toFixed(1)} 0 ${large} 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+
+/* --- label collision bookkeeping (SVG user units) --- */
+let LBOX=[];
+function keep(x,y,w,h){ LBOX.push([x,y,x+w,y+h]); return [x,y]; }
+function busy(x,y,w,h){
+  return LBOX.some(b=>x<b[2]-2&&x+w>b[0]+2&&y<b[3]-2&&y+h>b[1]+2);
+}
+/* place a label near (ax, ay), trying offsets until a free slot is found */
+function place(ax,ay,w,h){
+  const cand=[[12,-h-2],[-w-12,-h-2],[12,4],[-w-12,4],[-w/2,-h-14],[-w/2,16],[20,-h/2],[-w-20,-h/2],[12,-h-20],[-w-12,-h-20]];
+  for(let i=0;i<cand.length;i++){
+    const x=Math.max(2,Math.min(ax+cand[i][0],W-w-2)), y=ay+cand[i][1];
+    if(!busy(x,y,w,h)){ keep(x,y,w,h); return [x,y,cand[i][0]<0?'right':'left']; }
+  }
+  const fx=Math.max(2,Math.min(ax+12,W-w-2));
+  keep(fx,ay-h-2,w,h);
+  return [fx,ay-h-2,'left'];
+}
+
+function draw(){ drawCircle(); drawGraph(); drawTexts(); }
+
+function drawCircle(){
+  const p=P(); let s='';
+  LBOX=[];
+  /* reserve the fixed marks of this figure so no label lands on them */
+  keep(ox-16, oy+5, 18, 18);            /* O */
+  keep(px(1)-8, oy+5, 16, 18);          /* 1 on the x axis */
+  keep(ox-24, py(1)-11, 24, 18);        /* 1 on the y axis */
+  s+=`<line x1="0" y1="${oy}" x2="${W}" y2="${oy}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${ox}" y1="0" x2="${ox}" y2="${H}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<circle cx="${ox}" cy="${oy}" r="${scale}" fill="none" stroke="#bbb" stroke-width="1.5"/>`;
+
+  /* tangent axis x = 1 */
+  s+=`<line x1="${px(1)}" y1="${py(TMAX)}" x2="${px(1)}" y2="${py(-TMAX)}" stroke="var(--c-purple)" stroke-width="2"/>`;
+  keep(px(1)+8, py(TMAX)-4, 150, 26);
+  s+=`<foreignObject x="${px(1)+8}" y="${py(TMAX)-4}" width="150" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-purple);font-weight:600;white-space:nowrap">正接の軸 ${T('x=1')}</div></foreignObject>`;
+
+  /* satisfying part of the tangent axis */
+  const yA=p.gt?TMAX:-TMAX, yB=p.thr;
+  s+=`<line x1="${px(1)}" y1="${py(yA)}" x2="${px(1)}" y2="${py(yB)}" stroke="var(--c-green)" stroke-width="7" opacity="0.35"/>`;
+  s+=`<line x1="96" y1="${py(p.thr)}" x2="${px(1.9)}" y2="${py(p.thr)}" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="7 5"/>`;
+  s+=`<circle cx="${px(1)}" cy="${py(p.thr)}" r="5" fill="${p.gt?'#fff':'var(--c-red)'}" stroke="var(--c-red)" stroke-width="2.5"/>`;
+  keep(4, py(p.thr)-19, 90, 38);
+  s+=`<foreignObject x="4" y="${py(p.thr)-19}" width="90" height="38"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:600;white-space:nowrap">${T('y='+p.thrTex)}</div></foreignObject>`;
+
+  /* satisfying arcs on the unit circle */
+  for(const iv of p.ints){
+    s+=`<path d="${arcPath(iv.a,iv.b,1)}" fill="none" stroke="var(--c-green)" stroke-width="9" opacity="0.35" stroke-linecap="round"/>`;
+  }
+
+  /* line through O and P */
+  const c=Math.cos(theta), sn=Math.sin(theta), tv=Math.tan(theta);
+  const finite=Math.abs(c)>0.02 && Math.abs(tv)<=TMAX;
+  const e=lineEnds(c,sn);
+  s+=`<line x1="${px(e.n.x)}" y1="${py(e.n.y)}" x2="${px(e.p.x)}" y2="${py(e.p.y)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6 5" opacity="0.75"/>`;
+  s+=`<line x1="${ox}" y1="${oy}" x2="${px(c)}" y2="${py(sn)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+
+  /* angle arc */
+  s+=`<path d="${arcPath(0,theta,0.3)}" fill="none" stroke="var(--c-blue)" stroke-width="2"/>`;
+  keep(px(c)-11, py(sn)-11, 22, 22);
+  if(finite) keep(px(1)-11, py(tv)-11, 22, 22);
+  const thb=place(px(0.30*Math.cos(theta/2)), py(0.30*Math.sin(theta/2)), 26, 26);
+  s+=`<foreignObject x="${thb[0]}" y="${thb[1]}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600;text-align:${thb[2]}">${T('\\theta')}</div></foreignObject>`;
+
+  /* point P */
+  s+=`<circle cx="${px(c)}" cy="${py(sn)}" r="9" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+  const pb=place(px(c), py(sn), 26, 26);
+  s+=`<foreignObject x="${pb[0]}" y="${pb[1]}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:700;text-align:${pb[2]}">${T('\\mathrm{P}')}</div></foreignObject>`;
+
+  /* point T on the tangent axis */
+  if(finite){
+    const ok=satisfied(theta);
+    const col=ok?'var(--c-green)':'var(--c-orange)';
+    s+=`<circle cx="${px(1)}" cy="${py(tv)}" r="9" fill="${col}" stroke="#fff" stroke-width="2.5"/>`;
+    if(ok){
+      s+=`<circle cx="${px(1)}" cy="${py(tv)}" r="9" fill="none" stroke="var(--c-green)" stroke-width="3"><animate attributeName="r" values="9;15;9" dur="1s" repeatCount="indefinite"/></circle>`;
+    }
+    const tb=place(px(1), py(tv), 140, 28);
+    s+=`<foreignObject x="${tb[0]}" y="${tb[1]}" width="140" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:${col};font-weight:700;white-space:nowrap;text-align:${tb[2]}">${T('\\mathrm{T}(1,\\;'+tv.toFixed(2)+')')}</div></foreignObject>`;
+  }else{
+    s+=`<foreignObject x="${px(1)+14}" y="${oy-72}" width="200" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap">${T('\\tan\\theta')} は図の外</div></foreignObject>`;
+  }
+
+  s+=`<text x="${ox-14}" y="${oy+18}" font-size="13" fill="#666" font-weight="700">O</text>`;
+  s+=`<text x="${px(1)}" y="${oy+18}" text-anchor="middle" font-size="12" fill="#aaa">1</text>`;
+  s+=`<text x="${ox-10}" y="${py(1)+4}" text-anchor="end" font-size="12" fill="#aaa">1</text>`;
+  document.getElementById('circle').innerHTML=s;
+}
+
+function drawGraph(){
+  const p=P(); let s='';
+  s+=`<rect x="0" y="0" width="600" height="340" fill="#fff"/>`;
+
+  /* solution bands */
+  for(const iv of p.ints){
+    s+=`<rect x="${gx(iv.a)}" y="6" width="${gx(iv.b)-gx(iv.a)}" height="328" fill="rgba(40,167,69,0.13)"/>`;
+  }
+  /* asymptotes */
+  for(const a of [PI/2,3*PI/2]){
+    s+=`<line x1="${gx(a)}" y1="6" x2="${gx(a)}" y2="334" stroke="#ddd" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  }
+  s+=`<line x1="${gx(0)}" y1="${OY2}" x2="${gx(TAU)+14}" y2="${OY2}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${OX2}" y1="6" x2="${OX2}" y2="334" stroke="#ccc" stroke-width="1.5"/>`;
+
+  /* y = tan θ */
+  let d='',pen=false;
+  for(let i=0;i<=900;i++){
+    const th=i/900*TAU, t=Math.tan(th);
+    if(Math.abs(Math.cos(th))<1e-4||Math.abs(t)>YMAX){pen=false;continue;}
+    d+=(pen?' L ':' M ')+gx(th).toFixed(1)+' '+gy(t).toFixed(1); pen=true;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  /* threshold line */
+  s+=`<line x1="${gx(0)}" y1="${gy(p.thr)}" x2="${gx(TAU)}" y2="${gy(p.thr)}" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="7 5"/>`;
+  let thrY=gy(p.thr)-42;
+  if(thrY+38>OY2+4) thrY=OY2-54;
+  s+=`<foreignObject x="${gx(TAU)-108}" y="${thrY}" width="104" height="38"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-red);font-weight:600;white-space:nowrap;text-align:right;background:#fff;border-radius:4px">${T('y='+p.thrTex)}</div></foreignObject>`;
+
+  /* solution segments on the θ axis */
+  for(const iv of p.ints){
+    s+=`<line x1="${gx(iv.a)}" y1="${OY2}" x2="${gx(iv.b)}" y2="${OY2}" stroke="var(--c-green)" stroke-width="6"/>`;
+    s+=`<circle cx="${gx(iv.a)}" cy="${OY2}" r="5.5" fill="${iv.ca?'var(--c-green)':'#fff'}" stroke="var(--c-green)" stroke-width="2.5"/>`;
+    s+=`<circle cx="${gx(iv.b)}" cy="${OY2}" r="5.5" fill="${iv.cb?'var(--c-green)':'#fff'}" stroke="var(--c-green)" stroke-width="2.5"/>`;
+  }
+
+  /* ticks and labels */
+  const base=[{v:0,tex:'0'},{v:PI/2,tex:'\\dfrac{\\pi}{2}'},{v:PI,tex:'\\pi'},{v:3*PI/2,tex:'\\dfrac{3}{2}\\pi'},{v:TAU,tex:'2\\pi'}];
+  for(let k=1;k<12;k++){
+    const v=k*PI/6;
+    s+=`<line x1="${gx(v)}" y1="${OY2-5}" x2="${gx(v)}" y2="${OY2+5}" stroke="#bbb" stroke-width="1"/>`;
+  }
+  const clampX=v=>Math.max(2,Math.min(gx(v)-27,W-56));
+  for(const L of base){
+    s+=`<foreignObject x="${clampX(L.v)}" y="${OY2+10}" width="54" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#999;text-align:center;background:#fff;border-radius:4px">${T(L.tex)}</div></foreignObject>`;
+  }
+  /* boundary angles on a second row so they never overlap the standard labels */
+  for(const L of p.marks){
+    s+=`<line x1="${gx(L.v)}" y1="${OY2+5}" x2="${gx(L.v)}" y2="${OY2+46}" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+    s+=`<foreignObject x="${clampX(L.v)}" y="${OY2+46}" width="54" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#c0392b;font-weight:700;text-align:center;background:#fff;border-radius:4px">${T(L.tex)}</div></foreignObject>`;
+  }
+  s+=`<foreignObject x="${gx(TAU)+2}" y="${OY2-30}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('\\theta')}</div></foreignObject>`;
+  s+=`<foreignObject x="${OX2+6}" y="6" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('y')}</div></foreignObject>`;
+
+  /* current θ marker */
+  const tv=Math.tan(theta);
+  s+=`<line x1="${gx(theta)}" y1="6" x2="${gx(theta)}" y2="334" stroke="var(--c-orange)" stroke-width="2" opacity="0.8"/>`;
+  if(Math.abs(Math.cos(theta))>0.02&&Math.abs(tv)<=YMAX){
+    s+=`<circle cx="${gx(theta)}" cy="${gy(tv)}" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  }
+  document.getElementById('graph').innerHTML=s;
+}
+
+function drawTexts(){
+  const p=P(), tv=Math.tan(theta), deg=theta*180/PI, ok=satisfied(theta);
+  const tanTex=Math.abs(Math.cos(theta))<0.02?'\\tan\\theta\\;\\text{ は定義されない}':'\\tan\\theta='+tv.toFixed(3);
+  const judge=ok
+    ?'<span style="color:var(--c-green);font-weight:700;">この '+T('\\theta')+' は不等式を満たす</span>'
+    :'<span style="color:#999;">この '+T('\\theta')+' は不等式を満たさない</span>';
+  document.getElementById('live-calc').innerHTML=
+    T('\\theta='+theta.toFixed(2)+'\\;\\text{rad}='+deg.toFixed(1)+'^\\circ')+'<br>'+T(tanTex)+'<br>'+
+    T(p.ineq)+'<br>'+judge;
+  tex('\\text{答え }'+p.key+'\\quad '+p.ans,document.getElementById('answer-box'),true);
+  const nb=document.getElementById('note-box');
+  nb.innerHTML=p.note.replace(/\$([^$]+)\$/g,(m,g)=>T(g));
+}
+
+function setupSlider(){
+  const sl=document.getElementById('th-slider'), vd=document.getElementById('th-value');
+  sl.addEventListener('input',()=>{ theta=parseFloat(sl.value); vd.textContent=theta.toFixed(2); draw(); });
+}
+function syncSlider(){
+  document.getElementById('th-slider').value=theta;
+  document.getElementById('th-value').textContent=theta.toFixed(2);
+}
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const dur=7000; let st=null;
+    function step(ts){
+      if(!st) st=ts;
+      const pr=Math.min((ts-st)/dur,1);
+      theta=pr*6.28; syncSlider(); draw();
+      if(pr<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+}
+
+function setAngleFrom(cx,cy){
+  const svg=document.getElementById('circle'), r=svg.getBoundingClientRect();
+  const sx=(cx-r.left)/r.width*W, sy=(cy-r.top)/r.height*H;
+  let a=Math.atan2(oy-sy,sx-ox);
+  if(a<0) a+=TAU;
+  theta=Math.min(6.28,Math.max(0,a));
+  syncSlider(); draw();
+}
+function setupDrag(){
+  const wrap=document.getElementById('circle-wrap');
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();dragging=true;setAngleFrom(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();setAngleFrom(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',()=>{dragging=false;});
+  wrap.addEventListener('touchstart',e=>{dragging=true;const t=e.touches[0];setAngleFrom(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];setAngleFrom(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',()=>{dragging=false;});
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

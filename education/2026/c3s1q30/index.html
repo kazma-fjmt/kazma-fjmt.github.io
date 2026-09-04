@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>三角関数を含む関数の最大・最小</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .compare-table { width: 100%; border-collapse: collapse; background: #fff; margin: .75rem 0; font-size: .95rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .6rem .5rem; text-align: center; }
+  .compare-table th { background: #f4f7ff; font-weight: 600; }
+  .compare-table td.hit { background: #eaf7ee; font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>三角関数を含む関数の最大・最小</h1>
+  <p class="subtitle">余弦をひとつの文字に置き換えて、2 次関数の最大・最小の問題に直して考えましょう。</p>
+
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>置き換えのしくみ</h2>
+  <p>角 <span id="f-th"></span> を動かすと、点 <span id="f-P"></span> の <span id="f-xc"></span> 座標が <span id="f-t"></span> です。その <span id="f-t2"></span> を下の放物線に持ち込むと <span id="f-y"></span> の値が決まります。縦の線が 2 つの図をつないでいます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="0" max="6.28" step="0.01" value="0.7">
+    <span class="slider-val" id="th-value">0.70</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="max-btn">最大の位置へ</button>
+    <button class="btn" id="min-btn">最小の位置へ</button>
+  </div>
+
+  <div class="svg-container" id="link-wrap">
+    <svg id="link" viewBox="0 0 600 560" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">円周上の点 P をドラッグ、またはスライダーで動かせます。</p>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>端の値と頂点を比べる</h2>
+  <p>上に凸の放物線なので、頂点が範囲の中にあれば最大値は頂点で決まります。最小値は範囲の両端のうち、頂点から遠いほうで決まります。</p>
+  <table class="compare-table" id="cmp-table"></table>
+
+  <h2>角を横軸にとったグラフ</h2>
+  <p>同じ関数を <span id="f-th2"></span> の関数として描くと、最大値をとる角が 2 つあることが見えます。</p>
+  <div class="svg-container">
+    <svg id="graph" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="formula-box" id="answer-box"></div>
+  <div class="note" id="note-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const PI=Math.PI, TAU=2*PI;
+
+/* y = -t^2 + t + 2 = -(t - 1/2)^2 + 9/4, with t = cos(theta) and -1 <= t <= 1 */
+function f(t){return -t*t+t+2;}
+const TV=0.5, YV=9/4;            /* vertex   */
+const TMIN=-1, YMIN=f(-1);       /* minimum at the far endpoint: y = 0 */
+const YEND=f(1);                 /* the other endpoint: y = 2 */
+
+/* --- linked panel: unit circle above, parabola below, sharing the t scale --- */
+const W=600,H=560;
+const cx0=300, cy0=128, R=105;                 /* unit circle */
+const PY0=490, PSY=75;                         /* parabola: t axis and vertical scale */
+const AXY=268, PTOP=310;                       /* shared t axis, and top of the parabola panel */
+function tx(t){return cx0+t*R;}                /* shared horizontal map for t */
+function cy(y){return cy0-y*R;}                /* circle panel vertical map */
+function pyv(y){return PY0-y*PSY;}             /* parabola panel vertical map */
+
+/* --- y as a function of theta --- */
+const W2=600,H2=300,GX0=60,GY0=250,GSX=500/TAU,GSY=75;
+function gx(t){return GX0+t*GSX;}
+function gy(y){return GY0-y*GSY;}
+
+let theta=0.7, cur=0, animId=null, dragging=false;
+
+const STEPS=[
+  {label:'Step 1: 置き換えの方針',
+   formula:'\\cos\\theta=t\\;\\text{ とおいて、}y\\;\\text{ を }t\\;\\text{ の式で見る}'},
+  {label:'Step 2: t のとりうる範囲',
+   formula:'0\\le\\theta<2\\pi\\;\\text{ のとき }\\;-1\\le t\\le 1'},
+  {label:'Step 3: y を t の式に直す',
+   formula:'y=-\\cos^2\\theta+\\cos\\theta+2=-t^2+t+2'},
+  {label:'Step 4: 平方完成する',
+   formula:'y=-\\left(t-\\dfrac{1}{2}\\right)^2+\\dfrac{9}{4}'},
+  {label:'Step 5: 頂点が範囲の中にあるか調べる',
+   formula:'\\text{頂点 }\\left(\\dfrac{1}{2},\\;\\dfrac{9}{4}\\right)\\;\\text{ は }\\;-1\\le t\\le 1\\;\\text{ の中にある}'},
+  {label:'Step 6: 最大値を読み取る',
+   formula:'t=\\dfrac{1}{2}\\;\\text{ のとき }\\;y=\\dfrac{9}{4}\\;\\text{（最大）}'},
+  {label:'Step 7: 両端の値を比べる',
+   formula:'t=-1\\;\\text{ で }y=0,\\qquad t=1\\;\\text{ で }y=2'},
+  {label:'Step 8: 最小値を読み取る',
+   formula:'t=-1\\;\\text{ のとき }\\;y=0\\;\\text{（最小）}'},
+  {label:'Step 9: t を θ に戻す（最大）',
+   formula:'\\cos\\theta=\\dfrac{1}{2}\\;\\Longrightarrow\\;\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{5}{3}\\pi'},
+  {label:'Step 10: t を θ に戻す（最小）',
+   formula:'\\cos\\theta=-1\\;\\Longrightarrow\\;\\theta=\\pi'},
+  {label:'Step 11: 答え',
+   formula:'\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{5}{3}\\pi\\;\\text{ で最大値 }\\dfrac{9}{4},\\quad \\theta=\\pi\\;\\text{ で最小値 }0'}
+];
+
+function init(){
+  document.getElementById('f-th').innerHTML=T('\\theta');
+  document.getElementById('f-th2').innerHTML=T('\\theta');
+  document.getElementById('f-P').innerHTML=T('\\mathrm{P}');
+  document.getElementById('f-xc').innerHTML=T('x');
+  document.getElementById('f-t').innerHTML=T('t=\\cos\\theta');
+  document.getElementById('f-t2').innerHTML=T('t');
+  document.getElementById('f-y').innerHTML=T('y');
+  document.getElementById('lbl-th').innerHTML=T('\\theta');
+  tex('0\\le\\theta<2\\pi\\;\\text{ のとき、}\\;y=-\\cos^2\\theta+\\cos\\theta+2\\;\\text{ の最大値と最小値を求めよ}',
+      document.getElementById('f-problem'),true);
+  tex('\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{5}{3}\\pi\\;\\text{ のとき最大値 }\\dfrac{9}{4},\\qquad \\theta=\\pi\\;\\text{ のとき最小値 }0',
+      document.getElementById('answer-box'),true);
+  document.getElementById('note-box').innerHTML=
+    '置き換えたあとは '+T('t')+' の 2 次関数ですが、'+T('t')+' が自由に動けるわけではありません。'
+    +T('-1\\le t\\le 1')+' という範囲がついて回るので、頂点が範囲の中にあるかどうかを必ず確かめます。また '
+    +T('\\cos\\theta=\\dfrac{1}{2}')+' を満たす角は 1 周のうちに 2 つあるので、最大値を与える '+T('\\theta')+' も 2 つになります。';
+  buildTable();
+  setupWalkthrough(); setupSlider(); setupButtons(); setupDrag();
+  draw();
+}
+
+/* ---------- walkthrough ---------- */
+function setupWalkthrough(){
+  document.getElementById('prev').addEventListener('click',()=>{if(cur>0){cur--;renderSteps();}});
+  document.getElementById('next').addEventListener('click',()=>{if(cur<STEPS.length-1){cur++;renderSteps();}});
+  renderSteps();
+}
+function renderSteps(){
+  let html='';
+  for(let i=0;i<=cur;i++){
+    html+=`<div class="step ${i===cur?'current':''}"><div class="label">${STEPS[i].label}</div><div class="formula-line">${T(STEPS[i].formula)}</div></div>`;
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=`${cur+1} / ${STEPS.length}`;
+  document.getElementById('prev').disabled=cur===0;
+  document.getElementById('next').disabled=cur===STEPS.length-1;
+}
+
+/* ---------- the comparison table ---------- */
+function buildTable(){
+  const rows=[
+    {t:'-1',              y:'0',              note:'\\text{範囲の左端}',   hit:'min'},
+    {t:'\\dfrac{1}{2}',   y:'\\dfrac{9}{4}',  note:'\\text{頂点}',         hit:'max'},
+    {t:'1',               y:'2',              note:'\\text{範囲の右端}',   hit:''}
+  ];
+  let h=`<tr><th>${T('t=\\cos\\theta')}</th><th>${T('y')}</th><th>${T('\\text{位置}')}</th><th>${T('\\text{判定}')}</th></tr>`;
+  for(const r of rows){
+    const verdict=r.hit==='max'?T('\\text{最大}'):(r.hit==='min'?T('\\text{最小}'):'');
+    const c=r.hit?' class="hit"':'';
+    h+=`<tr><td>${T(r.t)}</td><td${c}>${T(r.y)}</td><td>${T(r.note)}</td><td${c}>${verdict}</td></tr>`;
+  }
+  document.getElementById('cmp-table').innerHTML=h;
+}
+
+/* ---------- shared drawing ---------- */
+function draw(){ drawLink(); drawGraph(); drawTexts(); }
+
+function drawLink(){
+  const t=Math.cos(theta), sn=Math.sin(theta), y=f(t);
+  let s='';
+  s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+
+  /* ---- upper panel: the unit circle ---- */
+  s+=`<line x1="${tx(-1)-60}" y1="${cy0}" x2="${tx(1)+60}" y2="${cy0}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${cx0}" y1="${cy0-R-20}" x2="${cx0}" y2="${cy0+R+20}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<circle cx="${cx0}" cy="${cy0}" r="${R}" fill="none" stroke="#bbb" stroke-width="1.5"/>`;
+  /* the radius, the angle and the point P */
+  s+=`<line x1="${cx0}" y1="${cy0}" x2="${tx(t)}" y2="${cy(sn)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+  s+=`<path d="${arc(0,theta,0.3)}" fill="none" stroke="var(--c-blue)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${tx(0.38*Math.cos(theta/2))-12}" y="${cy(0.38*Math.sin(theta/2))-14}" width="32" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600">${T('\\theta')}</div></foreignObject>`;
+  /* the companion angle that gives the same value of t */
+  const th2=(TAU-theta)%TAU;
+  if(Math.abs(Math.sin(theta))>0.03){
+    s+=`<circle cx="${tx(t)}" cy="${cy(Math.sin(th2))}" r="6" fill="#fff" stroke="var(--c-blue)" stroke-width="2" opacity="0.65"/>`;
+  }
+  /* drop the x coordinate onto the axis: this is t */
+  s+=`<line x1="${tx(t)}" y1="${cy(sn)}" x2="${tx(t)}" y2="${cy0}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=`<circle cx="${tx(t)}" cy="${cy(sn)}" r="9" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<foreignObject x="${tx(t)+11}" y="${cy(sn)-27}" width="34" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:700">${T('\\mathrm{P}')}</div></foreignObject>`;
+  s+=`<text x="${cx0-15}" y="${cy0+19}" font-size="13" fill="#666" font-weight="700">O</text>`;
+
+  /* ---- the shared t axis, drawn between the two panels ---- */
+  s+=`<line x1="${tx(-1)-40}" y1="${AXY}" x2="${tx(1)+40}" y2="${AXY}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<line x1="${tx(-1)}" y1="${AXY}" x2="${tx(1)}" y2="${AXY}" stroke="var(--c-purple)" stroke-width="7" opacity="0.3"/>`;
+  for(const q of [-1,-0.5,0,0.5,1]){
+    s+=`<line x1="${tx(q)}" y1="${AXY-6}" x2="${tx(q)}" y2="${AXY+6}" stroke="#999" stroke-width="1.5"/>`;
+  }
+  s+=`<foreignObject x="${tx(-1)-26}" y="${AXY+8}" width="52" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#888;text-align:center">${T('-1')}</div></foreignObject>`;
+  s+=`<foreignObject x="${tx(1)-26}" y="${AXY+8}" width="52" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#888;text-align:center">${T('1')}</div></foreignObject>`;
+  s+=`<foreignObject x="${tx(1)+42}" y="${AXY-14}" width="70" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-purple);font-weight:700">${T('t')}</div></foreignObject>`;
+  s+=`<circle cx="${tx(t)}" cy="${AXY}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  /* sit the readout beside the linking line, never straddling it */
+  s+=`<foreignObject x="${Math.max(2,tx(t)-152)}" y="${AXY-34}" width="140" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:700;text-align:right;background:#fff;border-radius:4px">${T('t='+t.toFixed(3))}</div></foreignObject>`;
+
+  /* the line that links the two panels */
+  s+=`<line x1="${tx(t)}" y1="${cy0}" x2="${tx(t)}" y2="${pyv(y)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="5 4" opacity="0.85"/>`;
+
+  /* ---- lower panel: the parabola y = -t^2 + t + 2 ---- */
+  s+=`<line x1="${tx(-1.35)}" y1="${PY0}" x2="${tx(2.35)}" y2="${PY0}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${cx0}" y1="${PTOP}" x2="${cx0}" y2="${PY0+16}" stroke="#ccc" stroke-width="1.5"/>`;
+  /* the part of the parabola outside the range, drawn faintly */
+  s+=`<path d="${para(-1.2,-1)}" fill="none" stroke="#ccc" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=`<path d="${para(1,2.2)}" fill="none" stroke="#ccc" stroke-width="2" stroke-dasharray="5 4"/>`;
+  /* the range that t actually covers */
+  s+=`<rect x="${tx(-1)}" y="${PTOP}" width="${tx(1)-tx(-1)}" height="${PY0+16-PTOP}" fill="rgba(123,97,255,0.09)"/>`;
+  s+=`<path d="${para(-1,1)}" fill="none" stroke="var(--c-blue)" stroke-width="3"/>`;
+  /* the vertex, and the two endpoints */
+  s+=`<line x1="${tx(-1)-40}" y1="${pyv(YV)}" x2="${tx(1)+40}" y2="${pyv(YV)}" stroke="var(--c-green)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  s+=`<line x1="${tx(TV)}" y1="${pyv(YV)}" x2="${tx(TV)}" y2="${PY0}" stroke="var(--c-green)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  s+=`<circle cx="${tx(TV)}" cy="${pyv(YV)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<foreignObject x="${tx(TV)-262}" y="${pyv(YV)+8}" width="200" height="38"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-green);font-weight:700;white-space:nowrap;text-align:right"><span style="background:rgba(250,250,250,0.92);border-radius:4px;padding:0 4px">頂点 ${T('\\left(\\dfrac{1}{2},\\;\\dfrac{9}{4}\\right)')}</span></div></foreignObject>`;
+  s+=`<circle cx="${tx(-1)}" cy="${pyv(YMIN)}" r="7" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${tx(1)}" cy="${pyv(YEND)}" r="7" fill="#999" stroke="#fff" stroke-width="2.5"/>`;
+  /* the moving point on the parabola */
+  const atMax=Math.abs(t-TV)<0.02, atMin=Math.abs(t-TMIN)<0.02;
+  const col=atMax?'var(--c-green)':(atMin?'var(--c-red)':'var(--c-orange)');
+  s+=`<circle cx="${tx(t)}" cy="${pyv(y)}" r="9" fill="${col}" stroke="#fff" stroke-width="2.5"/>`;
+  if(atMax||atMin){
+    s+=`<circle cx="${tx(t)}" cy="${pyv(y)}" r="9" fill="none" stroke="${col}" stroke-width="3"><animate attributeName="r" values="9;16;9" dur="1s" repeatCount="indefinite"/></circle>`;
+  }
+  s+=`<foreignObject x="${cx0+8}" y="${PTOP-20}" width="30" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<foreignObject x="${tx(2.35)+4}" y="${PY0-14}" width="40" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('t')}</div></foreignObject>`;
+
+  document.getElementById('link').innerHTML=s;
+}
+
+function arc(a,b,r){
+  const x1=tx(r*Math.cos(a)),y1=cy(r*Math.sin(a));
+  const x2=tx(r*Math.cos(b)),y2=cy(r*Math.sin(b));
+  const large=(b-a)>PI?1:0;
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${(r*R).toFixed(1)} ${(r*R).toFixed(1)} 0 ${large} 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+function para(t1,t2){
+  let d='';
+  for(let i=0;i<=120;i++){
+    const t=t1+(t2-t1)*i/120;
+    d+=(i?' L ':'M ')+tx(t).toFixed(1)+' '+pyv(f(t)).toFixed(1);
+  }
+  return d;
+}
+
+/* ---------- y as a function of theta ---------- */
+function drawGraph(){
+  let s='';
+  s+=`<rect x="0" y="0" width="${W2}" height="${H2}" fill="#fff"/>`;
+  s+=`<line x1="${gx(0)-20}" y1="${GY0}" x2="${gx(TAU)+24}" y2="${GY0}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${GX0}" y1="${gy(2.7)}" x2="${GX0}" y2="${GY0+16}" stroke="#ccc" stroke-width="1.5"/>`;
+  /* the two levels that matter */
+  s+=`<line x1="${gx(0)}" y1="${gy(YV)}" x2="${gx(TAU)}" y2="${gy(YV)}" stroke="var(--c-green)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  s+=`<foreignObject x="4" y="${gy(YV)-34}" width="60" height="36"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-green);font-weight:700">${T('\\dfrac{9}{4}')}</div></foreignObject>`;
+  /* the curve */
+  let d='';
+  for(let i=0;i<=600;i++){
+    const th=TAU*i/600;
+    d+=(i?' L ':'M ')+gx(th).toFixed(1)+' '+gy(f(Math.cos(th))).toFixed(1);
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  /* where the maximum and the minimum happen */
+  for(const q of [PI/3,5*PI/3]){
+    s+=`<line x1="${gx(q)}" y1="${gy(YV)}" x2="${gx(q)}" y2="${GY0}" stroke="var(--c-green)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+    s+=`<circle cx="${gx(q)}" cy="${gy(YV)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2.5"/>`;
+  }
+  s+=`<circle cx="${gx(PI)}" cy="${gy(YMIN)}" r="7" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  /* tick labels */
+  const labs=[{v:0,tex:'0'},{v:PI/3,tex:'\\dfrac{\\pi}{3}'},{v:PI,tex:'\\pi'},{v:5*PI/3,tex:'\\dfrac{5}{3}\\pi'},{v:TAU,tex:'2\\pi'}];
+  for(const L of labs){
+    const hi=(L.v>0&&L.v<TAU);
+    s+=`<foreignObject x="${Math.max(2,Math.min(gx(L.v)-27,W2-56))}" y="${GY0+8}" width="54" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:${hi?'#c0392b':'#999'};font-weight:${hi?'700':'400'};text-align:center;background:#fff;border-radius:4px">${T(L.tex)}</div></foreignObject>`;
+  }
+  s+=`<foreignObject x="${gx(TAU)+4}" y="${GY0-30}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('\\theta')}</div></foreignObject>`;
+  s+=`<foreignObject x="${GX0+6}" y="${gy(2.7)-2}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('y')}</div></foreignObject>`;
+  /* the moving point */
+  const yv=f(Math.cos(theta));
+  s+=`<line x1="${gx(theta)}" y1="${gy(2.7)}" x2="${gx(theta)}" y2="${GY0}" stroke="var(--c-orange)" stroke-width="2" opacity="0.75"/>`;
+  s+=`<circle cx="${gx(theta)}" cy="${gy(yv)}" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  document.getElementById('graph').innerHTML=s;
+}
+
+/* ---------- text readouts ---------- */
+function drawTexts(){
+  const t=Math.cos(theta), y=f(t), deg=theta*180/PI;
+  let verdict='';
+  if(Math.abs(t-TV)<0.02) verdict='<span style="color:var(--c-green);font-weight:700;">最大値 '+T('\\dfrac{9}{4}')+' に到達</span>';
+  else if(Math.abs(t-TMIN)<0.02) verdict='<span style="color:var(--c-red);font-weight:700;">最小値 '+T('0')+' に到達</span>';
+  else verdict='<span style="color:#999;">頂点でも端でもない位置</span>';
+  document.getElementById('live-calc').innerHTML=
+    T('\\theta='+theta.toFixed(2)+'\\;\\text{rad}='+deg.toFixed(1)+'^\\circ')+'<br>'+
+    T('t=\\cos\\theta='+t.toFixed(3))+'<br>'+
+    T('y=-t^2+t+2='+y.toFixed(3))+'<br>'+verdict;
+}
+
+/* ---------- controls ---------- */
+function syncSlider(){
+  document.getElementById('th-slider').value=theta;
+  document.getElementById('th-value').textContent=theta.toFixed(2);
+}
+function setupSlider(){
+  const sl=document.getElementById('th-slider'), vd=document.getElementById('th-value');
+  sl.addEventListener('input',()=>{ theta=parseFloat(sl.value); vd.textContent=theta.toFixed(2); draw(); });
+}
+function setupButtons(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const dur=7000; let st=null;
+    function step(ts){
+      if(!st) st=ts;
+      const pr=Math.min((ts-st)/dur,1);
+      theta=pr*6.28; syncSlider(); draw();
+      if(pr<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+  document.getElementById('max-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    theta=(Math.abs(theta-PI/3)<0.3)?5*PI/3:PI/3; syncSlider(); draw();
+  });
+  document.getElementById('min-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    theta=PI; syncSlider(); draw();
+  });
+}
+function setAngleFrom(clx,cly){
+  const svg=document.getElementById('link'), r=svg.getBoundingClientRect();
+  const sx=(clx-r.left)/r.width*W, sy=(cly-r.top)/r.height*H;
+  let a=Math.atan2(cy0-sy,sx-cx0);
+  if(a<0) a+=TAU;
+  theta=Math.min(6.28,Math.max(0,a));
+  syncSlider(); draw();
+}
+function setupDrag(){
+  const wrap=document.getElementById('link-wrap');
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();dragging=true;setAngleFrom(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();setAngleFrom(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',()=>{dragging=false;});
+  wrap.addEventListener('touchstart',e=>{dragging=true;const t=e.touches[0];setAngleFrom(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];setAngleFrom(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',()=>{dragging=false;});
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

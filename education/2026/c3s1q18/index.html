@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>偶関数と奇関数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .88rem; margin: .5rem 0 .75rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  .legend i { width: .85rem; height: .85rem; border-radius: 50%; display: inline-block; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; overflow-x: auto; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; line-height: 2.1; }
+  .live-calc .katex { font-size: 1.02rem; }
+  .verdict { font-weight: 700; font-size: 1.05rem; margin-top: .4rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: .95rem; font-weight: 600; padding: .6rem .9rem; border-radius: 10px;
+    cursor: pointer; min-height: 48px; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab.active .katex { color: #fff; }
+  .tab:active { transform: scale(.97); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>偶関数と奇関数</h1>
+  <p class="subtitle">グラフの対称性と定義式の両方から、偶関数か奇関数かを見分けられるようになりましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>関数 <span id="i-fx"></span> について、<span id="i-mx"></span> を代入した値がもとの値とどう関係するかで名前が決まります。</p>
+  <div class="formula-box" id="f-def"></div>
+  <p>これは形として、次の対称性と同じことを言っています。</p>
+  <div class="formula-box" id="f-sym"></div>
+  <p>変数の文字は <span id="i-xt"></span> でも <span id="i-tt"></span> でも構いません。単位円の公式 <span id="i-cneg"></span>、<span id="i-sneg"></span> から、<span id="i-ycos"></span> は偶関数、<span id="i-ysin"></span> は奇関数だと分かります。</p>
+
+  <h2>動かして確かめよう</h2>
+  <p>タブで関数を選び、スライダーか図のドラッグで <span id="i-a"></span> を動かします。青い点をどちらの向きに折り返すとグラフに戻るかを見てください。</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="8" max="100" step="1" value="70">
+    <span class="slider-val" id="a-value">1.12</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 540" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>関数 <span id="i-prob"></span> が偶関数か奇関数かを、定義にあてはめて調べます。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=540,ox=300,oy=270,SC=78;
+const XMAX=3.6, YMAX=3.35;
+function px(x){return ox+x*SC;}
+function py(y){return oy-y*SC;}
+
+const FUNCS=[
+  {tex:'f(x)=2x',      f:x=>2*x,      amax:1.6,  kind:'odd'},
+  {tex:'g(x)=x^2',     f:x=>x*x,      amax:1.75, kind:'even'},
+  {tex:'y=\\cos x',    f:Math.cos,    amax:3.0,  kind:'even'},
+  {tex:'y=\\sin x',    f:Math.sin,    amax:3.0,  kind:'odd'},
+  {tex:'y=\\tan x',    f:Math.tan,    amax:1.25, kind:'odd'}
+];
+let fi=0;            /* selected function */
+let frac=0.70;       /* a = frac * amax */
+let animId=null;
+
+function curA(){return frac*FUNCS[fi].amax;}
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+
+function fo(x,y,w,h,size,color,html,weight){
+  return '<foreignObject x="'+Math.max(2,Math.min(x,W-w-2))+'" y="'+Math.max(2,Math.min(y,H-h-2))+'" width="'+w+'" height="'+h+'">'
+    +'<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:'+size+'px;color:'+color+';font-weight:'+(weight||400)+';white-space:nowrap;text-align:center">'+html+'</div></foreignObject>';
+}
+function seg(x1,y1,x2,y2,color,w,dash){
+  return '<line x1="'+px(x1)+'" y1="'+py(y1)+'" x2="'+px(x2)+'" y2="'+py(y2)+'" stroke="'+color+'" stroke-width="'+w+'"'
+    +(dash?' stroke-dasharray="6 4"':'')+' stroke-linecap="round"/>';
+}
+/* label offset: above the point when the value is positive, below when negative,
+   and always clear of the tick-number row that runs along the x axis */
+function labelY(v){
+  return v>=0 ? Math.min(py(v)-32, oy-34) : Math.max(py(v)+10, oy+22);
+}
+function dot(x,y,color,r){
+  return '<circle cx="'+px(x)+'" cy="'+py(y)+'" r="'+r+'" fill="'+color+'" stroke="#fff" stroke-width="2.5"/>';
+}
+function ring(x,y,color,r){
+  return '<circle cx="'+px(x)+'" cy="'+py(y)+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-dasharray="4 3"/>';
+}
+
+/* path for  y = my * f(mx * x)  clipped to the window, broken at asymptotes */
+function pathFor(f,mx,my){
+  const N=440; let d='', pen=false, prev=null;
+  for(let i=0;i<=N;i++){
+    const x=-XMAX+2*XMAX*i/N;
+    const y=my*f(mx*x);
+    if(!isFinite(y)||Math.abs(y)>YMAX||(prev!==null&&Math.abs(y-prev)>2.2)){pen=false;prev=null;continue;}
+    d+=(pen?' L ':' M ')+px(x).toFixed(1)+' '+py(y).toFixed(1);
+    pen=true; prev=y;
+  }
+  return d.trim();
+}
+
+function draw(){
+  const F=FUNCS[fi], a=curA();
+  const fa=F.f(a), fma=F.f(-a);
+  let s='';
+
+  /* grid */
+  for(let k=-3;k<=3;k++){
+    if(k===0) continue;
+    s+='<line x1="'+px(k)+'" y1="'+py(YMAX)+'" x2="'+px(k)+'" y2="'+py(-YMAX)+'" stroke="#f0f0f0" stroke-width="1"/>';
+    s+='<line x1="'+px(-XMAX)+'" y1="'+py(k)+'" x2="'+px(XMAX)+'" y2="'+py(k)+'" stroke="#f0f0f0" stroke-width="1"/>';
+  }
+  /* axes */
+  s+='<line x1="'+px(-XMAX)+'" y1="'+oy+'" x2="'+px(XMAX)+'" y2="'+oy+'" stroke="#bbb" stroke-width="1.5"/>';
+  s+='<line x1="'+ox+'" y1="'+py(YMAX)+'" x2="'+ox+'" y2="'+py(-YMAX)+'" stroke="'+(F.kind==='even'?'#cfe8d5':'#bbb')+'" stroke-width="'+(F.kind==='even'?4:1.5)+'"/>';
+  s+=fo(px(XMAX)-6,oy-30,26,26,14,'#999',T('x'));
+  s+=fo(ox+8,py(YMAX)-2,26,26,14,'#999',T('y'));
+  s+='<text x="'+(ox-10)+'" y="'+(oy+18)+'" text-anchor="end" font-size="12" fill="#aaa">O</text>';
+  for(let k=-3;k<=3;k++){
+    if(k===0) continue;
+    s+='<text x="'+px(k)+'" y="'+(oy+18)+'" text-anchor="middle" font-size="11" fill="#bbb">'+k+'</text>';
+    s+='<text x="'+(ox-8)+'" y="'+(py(k)+4)+'" text-anchor="end" font-size="11" fill="#bbb">'+k+'</text>';
+  }
+  if(F.kind==='odd'){
+    s+='<circle cx="'+ox+'" cy="'+oy+'" r="11" fill="none" stroke="#e0d4ff" stroke-width="4"/>';
+  }
+
+  /* mirrored ghost curves */
+  s+='<path d="'+pathFor(F.f,-1,1)+'" fill="none" stroke="var(--c-green)" stroke-width="2.5" stroke-dasharray="7 5" opacity="0.55"/>';
+  s+='<path d="'+pathFor(F.f,-1,-1)+'" fill="none" stroke="var(--c-purple)" stroke-width="2.5" stroke-dasharray="2 6" opacity="0.55"/>';
+  /* the graph itself */
+  s+='<path d="'+pathFor(F.f,1,1)+'" fill="none" stroke="var(--c-blue)" stroke-width="3"/>';
+
+  /* the four points */
+  const inWin=v=>Math.abs(v)<=YMAX;
+  if(inWin(fa)){
+    s+=seg(a,fa,-a,fa,'#ccc',1.5,true);
+    s+=seg(a,fa,-a,-fa,'#ddd',1.5,true);
+    s+=seg(a,fa,a,0,'#ddd',1.5,true);
+    s+=ring(-a,fa,'var(--c-green)',10);
+    s+=ring(-a,-fa,'var(--c-purple)',10);
+    s+=dot(a,fa,'var(--c-blue)',7);
+    s+=fo(px(a)+8,labelY(fa),34,26,14,'var(--c-blue)',T('\\mathrm{A}'),700);
+  }
+  if(inWin(fma)){
+    s+=dot(-a,fma,'var(--c-red)',6);
+    s+=fo(px(-a)-42,labelY(fma),34,26,14,'var(--c-red)',T('\\mathrm{B}'),700);
+    const hit=(Math.abs(fma-fa)<1e-9)?'var(--c-green)':((Math.abs(fma+fa)<1e-9)?'var(--c-purple)':null);
+    if(hit){
+      s+='<circle cx="'+px(-a)+'" cy="'+py(fma)+'" r="12" fill="none" stroke="'+hit+'" stroke-width="3">'
+        +'<animate attributeName="r" values="12;19;12" dur="1.3s" repeatCount="indefinite"/></circle>';
+    }
+  }
+  s+=fo(8,H-30,110,28,14,'var(--c-blue)',T(F.tex),700);
+
+  document.getElementById('graph').innerHTML=s;
+  readout(a,fa,fma);
+}
+
+function readout(a,fa,fma){
+  const F=FUNCS[fi];
+  const n=v=>(Math.abs(v)<5e-4?0:v).toFixed(3);
+  const isEven=Math.abs(fma-fa)<1e-9, isOdd=Math.abs(fma+fa)<1e-9;
+  let verdict, col;
+  if(isEven&&isOdd){ verdict='この '+T('a')+' では両方が成り立ちます。'+T('a')+' を動かしてください。'; col='var(--muted)'; }
+  else if(isEven){ verdict=T('f(-a)=f(a)')+' なので、'+T('y')+' 軸に関して対称です。'; col='var(--c-green)'; }
+  else if(isOdd){ verdict=T('f(-a)=-f(a)')+' なので、原点に関して対称です。'; col='var(--c-purple)'; }
+  else { verdict='どちらも成り立ちません。'; col='var(--c-red)'; }
+
+  document.getElementById('live-calc').innerHTML=
+    T('a='+a.toFixed(3))+'<br>'+
+    T('f(a)='+n(fa)+',\\quad f(-a)='+n(fma)+',\\quad -f(a)='+n(-fa))+
+    '<div class="verdict" style="color:'+col+'">'+verdict+'</div>';
+
+  const nb=document.getElementById('note-box');
+  const kindWord=F.kind==='even'?'偶関数':'奇関数';
+  const mirrorWord=F.kind==='even'?'緑の破線（'+T('y')+' 軸で折り返したグラフ）':'紫の点線（原点のまわりに '+T('180^\\circ')+' 回したグラフ）';
+  nb.innerHTML=T(F.tex)+' は'+kindWord+'です。'+mirrorWord+'がもとのグラフにぴったり重なっていることを確かめてください。'
+    +'ただし、1 つの '+T('a')+' で成り立つだけでは判定できません。すべての '+T('x')+' で等式が成り立つことを、下のウォークスルーのように式で確かめます。';
+}
+
+function buildTabs(){
+  const box=document.getElementById('tabs');
+  let s='';
+  for(let i=0;i<FUNCS.length;i++){
+    s+='<button class="tab'+(i===0?' active':'')+'" data-t="'+i+'">'+T(FUNCS[i].tex)+'</button>';
+  }
+  box.innerHTML=s;
+  box.querySelectorAll('.tab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      stopAnim();
+      fi=parseInt(b.dataset.t,10);
+      box.querySelectorAll('.tab').forEach(o=>o.classList.remove('active'));
+      b.classList.add('active');
+      syncSlider();
+      draw();
+    });
+  });
+}
+
+function buildLegend(){
+  const items=[
+    ['var(--c-blue)','出発点 '+T('\\mathrm{A}(a,\\,f(a))')],
+    ['var(--c-red)','グラフ上の点 '+T('\\mathrm{B}(-a,\\,f(-a))')],
+    ['var(--c-green)',T('y')+' 軸で折り返した位置 '+T('(-a,\\,f(a))')],
+    ['var(--c-purple)','原点で回した位置 '+T('(-a,\\,-f(a))')]
+  ];
+  document.getElementById('legend').innerHTML=
+    items.map(it=>'<span><i style="background:'+it[0]+'"></i>'+it[1]+'</span>').join('');
+}
+
+function syncSlider(){
+  document.getElementById('a-slider').value=Math.round(frac*100);
+  document.getElementById('a-value').textContent=curA().toFixed(2);
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 判定の基準を思い出す',
+     formula:'f(-x)=f(x)\\ \\Rightarrow\\ \\text{偶関数},\\qquad f(-x)=-f(x)\\ \\Rightarrow\\ \\text{奇関数}'},
+    {label:'Step 2: 与えられた関数を書く',
+     formula:'f(x)=2x'},
+    {label:'Step 3: x のところに −x を代入する',
+     formula:'f(-x)=2\\cdot(-x)'},
+    {label:'Step 4: 右辺を整理する',
+     formula:'f(-x)=-2x'},
+    {label:'Step 5: もとの f(x) と見比べる',
+     formula:'-2x=-(2x)=-f(x)'},
+    {label:'Step 6: すべての x で成り立つことを確認する',
+     formula:'f(-x)=-f(x)\\quad \\text{（すべての実数 }x\\text{ について）}'},
+    {label:'Step 7: 偶関数でないことも確かめる',
+     formula:'f(-x)=f(x)\\ \\text{とすると}\\ -2x=2x,\\ \\text{つまり}\\ x=0\\ \\text{のときだけ}'},
+    {label:'Step 8: グラフの対称性でも確認する',
+     formula:'y=2x\\ \\text{のグラフは原点に関して対称}'},
+    {label:'Step 9: 答え',
+     formula:'f(x)=2x\\ \\text{は奇関数}'}
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    container.innerHTML=html;
+    counter.textContent=(cur+1)+' / '+steps.length;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function setupSlider(){
+  const sl=document.getElementById('a-slider');
+  sl.addEventListener('input',()=>{
+    stopAnim();
+    frac=parseInt(sl.value,10)/100;
+    document.getElementById('a-value').textContent=curA().toFixed(2);
+    draw();
+  });
+}
+
+function setupDrag(){
+  const wrap=document.getElementById('svg-wrap');
+  const svg=document.getElementById('graph');
+  let dragging=false;
+  function apply(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const mx=((cx-rect.left)/rect.width*W-ox)/SC;
+    let f=Math.abs(mx)/FUNCS[fi].amax;
+    frac=Math.max(0.08,Math.min(1,f));
+    syncSlider();
+    draw();
+  }
+  function start(cx,cy){ stopAnim(); dragging=true; apply(cx,cy); }
+  function end(){ dragging=false; }
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();start(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();apply(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',end);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];start(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];apply(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',end);
+  wrap.addEventListener('touchcancel',end);
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const duration=5200;
+    let startTime=null;
+    function animate(ts){
+      if(!startTime) startTime=ts;
+      const progress=Math.min((ts-startTime)/duration,1);
+      const eased=progress<0.5?2*progress*progress:1-Math.pow(-2*progress+2,2)/2;
+      frac=0.08+0.92*eased;
+      syncSlider();
+      draw();
+      if(progress<1) animId=requestAnimationFrame(animate); else animId=null;
+    }
+    animId=requestAnimationFrame(animate);
+  });
+}
+
+function init(){
+  const put=(id,l)=>{document.getElementById(id).innerHTML=T(l);};
+  put('i-fx','f(x)'); put('i-mx','-x'); put('i-a','a'); put('lbl-a','a');
+  put('i-xt','x'); put('i-tt','\\theta');
+  put('i-cneg','\\cos(-\\theta)=\\cos\\theta'); put('i-sneg','\\sin(-\\theta)=-\\sin\\theta');
+  put('i-ycos','y=\\cos\\theta'); put('i-ysin','y=\\sin\\theta');
+  put('i-prob','f(x)=2x');
+
+  tex('\\begin{aligned}'
+    +'f(-x)&=f(x)\\ \\ \\text{が常に成り立つ}\\ \\Longrightarrow\\ f(x)\\ \\text{は偶関数}\\\\'
+    +'f(-x)&=-f(x)\\ \\text{が常に成り立つ}\\ \\Longrightarrow\\ f(x)\\ \\text{は奇関数}'
+    +'\\end{aligned}', document.getElementById('f-def'), true);
+
+  tex('\\begin{aligned}'
+    +'\\text{偶関数のグラフ}&:\\ y\\ \\text{軸に関して対称}\\\\'
+    +'\\text{奇関数のグラフ}&:\\ \\text{原点に関して対称}'
+    +'\\end{aligned}', document.getElementById('f-sym'), true);
+
+  buildTabs();
+  buildLegend();
+  initWalkthrough();
+  setupSlider();
+  setupDrag();
+  setupAnimation();
+  syncSlider();
+  draw();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

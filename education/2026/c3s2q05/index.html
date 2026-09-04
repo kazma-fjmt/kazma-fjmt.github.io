@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>特別な角の正接の値</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.1rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.12rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; padding: .7rem 1rem; border-radius: 10px;
+    cursor: pointer; min-height: 48px; min-width: 96px; font-family: inherit; user-select: none; flex: 1;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc .row { margin: .35rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; min-width: 3.2rem; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.2rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: center; font-size: .85rem; margin: .5rem 0; }
+  .legend span { white-space: nowrap; }
+  .sw { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: .35rem; border-radius: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>特別な角の正接の値</h1>
+  <p class="subtitle">角を特別な角の和や差に分けて、正接の加法定理で値を求めましょう。</p>
+
+  <h2>使う道具</h2>
+  <div class="formula-box" id="f-thm"></div>
+  <div class="formula-box" id="f-tbl"></div>
+  <p>正接の値がわかっているのは <span id="f-sp"></span> の3つです。求めたい角をこの3つの和か差で表せれば、加法定理で値が出せます。</p>
+
+  <h2>角の分け方を選ぼう</h2>
+  <div class="tabs" id="tabs"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>直線 <span id="f-x1"></span> と、原点を通る傾き <span id="f-tan"></span> の直線との交点の高さが正接の値です。オレンジの動径をドラッグするか、スライダーを動かしてみましょう。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="t-slider" min="0" max="170" step="1" value="45">
+    <span class="slider-val" id="t-value">45°</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">角を積み上げる</button>
+    <button class="btn" id="reset-btn">最初の角に戻す</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 620" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--c-blue)"></i>1つ目の角の動径</span>
+    <span><i class="sw" style="background:var(--c-green)"></i>積み上げる角</span>
+    <span><i class="sw" style="background:var(--c-orange)"></i>合わせた角の動径</span>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>覚えておきたいこと</h2>
+  <div class="note" id="note1"></div>
+  <div class="note" id="note2"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=620,ox=140,oy=310,scale=76,TX=ox+scale;
+const D2R=Math.PI/180,TANMAX=3.85;
+let caseIdx=0,theta=15,animId=null,dragging=false,cur=0;
+
+function fmt(v,d){let s=v.toFixed(d);if(/^-0(\.0*)?$/.test(s))s=s.slice(1);return s;}
+function degStr(d){return (d<0?'-':'')+Math.abs(d)+'^\\circ';}
+function tanOf(deg){const r=((deg%180)+180)%180;return Math.abs(r-90)<1e-9?null:Math.tan(deg*D2R);}
+
+const CASES=[
+  {tgt:15,a:45,chip:'15°',exact:'2-\\sqrt3',val:2-Math.sqrt(3),
+   steps:[
+     {label:'Step 1: 特別な角の差に分ける',formula:'15^\\circ=45^\\circ-30^\\circ'},
+     {label:'Step 2: 差の加法定理にあてはめる',formula:'\\tan 15^\\circ=\\dfrac{\\tan 45^\\circ-\\tan 30^\\circ}{1+\\tan 45^\\circ\\tan 30^\\circ}'},
+     {label:'Step 3: 特別な角の値を代入する',formula:'=\\dfrac{1-\\dfrac{1}{\\sqrt3}}{1+1\\cdot\\dfrac{1}{\\sqrt3}}'},
+     {label:'Step 4: 分母・分子に同じ数を掛けて整理する',formula:'=\\dfrac{\\sqrt3-1}{\\sqrt3+1}'},
+     {label:'Step 5: 分母を有理化する',formula:'=\\dfrac{(\\sqrt3-1)^2}{(\\sqrt3+1)(\\sqrt3-1)}=\\dfrac{4-2\\sqrt3}{2}'},
+     {label:'Step 6: 答え',formula:'\\tan 15^\\circ=2-\\sqrt3'}
+   ]},
+  {tgt:75,a:45,chip:'75°',exact:'2+\\sqrt3',val:2+Math.sqrt(3),
+   steps:[
+     {label:'Step 1: 特別な角の和に分ける',formula:'75^\\circ=45^\\circ+30^\\circ'},
+     {label:'Step 2: 和の加法定理にあてはめる',formula:'\\tan 75^\\circ=\\dfrac{\\tan 45^\\circ+\\tan 30^\\circ}{1-\\tan 45^\\circ\\tan 30^\\circ}'},
+     {label:'Step 3: 特別な角の値を代入する',formula:'=\\dfrac{1+\\dfrac{1}{\\sqrt3}}{1-1\\cdot\\dfrac{1}{\\sqrt3}}'},
+     {label:'Step 4: 分母・分子に同じ数を掛けて整理する',formula:'=\\dfrac{\\sqrt3+1}{\\sqrt3-1}'},
+     {label:'Step 5: 分母を有理化する',formula:'=\\dfrac{(\\sqrt3+1)^2}{(\\sqrt3-1)(\\sqrt3+1)}=\\dfrac{4+2\\sqrt3}{2}'},
+     {label:'Step 6: 答え',formula:'\\tan 75^\\circ=2+\\sqrt3'}
+   ]},
+  {tgt:105,a:60,chip:'105°',exact:'-2-\\sqrt3',val:-2-Math.sqrt(3),
+   steps:[
+     {label:'Step 1: 特別な角の和に分ける',formula:'105^\\circ=60^\\circ+45^\\circ'},
+     {label:'Step 2: 和の加法定理にあてはめる',formula:'\\tan 105^\\circ=\\dfrac{\\tan 60^\\circ+\\tan 45^\\circ}{1-\\tan 60^\\circ\\tan 45^\\circ}'},
+     {label:'Step 3: 特別な角の値を代入する',formula:'=\\dfrac{\\sqrt3+1}{1-\\sqrt3\\cdot 1}=\\dfrac{\\sqrt3+1}{1-\\sqrt3}'},
+     {label:'Step 4: 分母を有理化する',formula:'=\\dfrac{(\\sqrt3+1)(1+\\sqrt3)}{(1-\\sqrt3)(1+\\sqrt3)}'},
+     {label:'Step 5: 分母が負になることに注意する',formula:'=\\dfrac{4+2\\sqrt3}{-2}'},
+     {label:'Step 6: 答え',formula:'\\tan 105^\\circ=-2-\\sqrt3'}
+   ]},
+  {tgt:120,a:60,chip:'120°',exact:'-\\sqrt3',val:-Math.sqrt(3),
+   steps:[
+     {label:'Step 1: 同じ特別な角の和に分ける',formula:'120^\\circ=60^\\circ+60^\\circ'},
+     {label:'Step 2: 和の加法定理にあてはめる',formula:'\\tan 120^\\circ=\\dfrac{\\tan 60^\\circ+\\tan 60^\\circ}{1-\\tan 60^\\circ\\tan 60^\\circ}'},
+     {label:'Step 3: 特別な角の値を代入する',formula:'=\\dfrac{\\sqrt3+\\sqrt3}{1-\\sqrt3\\cdot\\sqrt3}=\\dfrac{2\\sqrt3}{1-3}'},
+     {label:'Step 4: 分母を計算する',formula:'=\\dfrac{2\\sqrt3}{-2}'},
+     {label:'Step 5: 答え',formula:'\\tan 120^\\circ=-\\sqrt3'}
+   ]}
+];
+
+function init(){
+  tex('\\tan(\\alpha+\\beta)=\\dfrac{\\tan\\alpha+\\tan\\beta}{1-\\tan\\alpha\\tan\\beta},\\qquad \\tan(\\alpha-\\beta)=\\dfrac{\\tan\\alpha-\\tan\\beta}{1+\\tan\\alpha\\tan\\beta}',document.getElementById('f-thm'),true);
+  tex('\\tan 30^\\circ=\\dfrac{1}{\\sqrt3},\\qquad \\tan 45^\\circ=1,\\qquad \\tan 60^\\circ=\\sqrt3',document.getElementById('f-tbl'),true);
+  document.getElementById('f-sp').innerHTML=T('30^\\circ')+'、'+T('45^\\circ')+'、'+T('60^\\circ');
+  document.getElementById('f-x1').innerHTML=T('x=1');
+  document.getElementById('f-tan').innerHTML=T('\\tan\\theta');
+  document.getElementById('lbl-t').innerHTML=T('\\theta');
+  document.getElementById('note1').innerHTML=
+    '分母に根号が残ったら、'+T('(\\sqrt3+1)(\\sqrt3-1)=2')+' のように共役な式を掛けて有理化します。'+
+    T('(\\sqrt3\\pm1)^2=4\\pm2\\sqrt3')+' も一緒に覚えておくと計算が速くなります。';
+  document.getElementById('note2').innerHTML=
+    '鈍角のときは正接が負になります。動径そのものは直線 '+T('x=1')+' と交わりませんが、'+
+    '原点を通る同じ傾きの直線を反対側までのばすと交わり、その高さが負の正接の値です。'+
+    '積み上げる角が負のとき、図では '+T('\\beta')+' が負の値で表示されます。和の公式にその負の値を入れれば、差の公式で計算したときと同じ結果になります。';
+  buildTabs();
+  setupWalkthrough();
+  setupControls();
+  applyCase(0);
+}
+
+function buildTabs(){
+  const box=document.getElementById('tabs');
+  let h='';
+  for(let i=0;i<CASES.length;i++){
+    h+='<button class="tab'+(i===0?' active':'')+'" data-i="'+i+'">'+CASES[i].chip+'</button>';
+  }
+  box.innerHTML=h;
+  box.querySelectorAll('.tab').forEach(b=>{
+    b.addEventListener('click',()=>applyCase(parseInt(b.dataset.i,10)));
+  });
+}
+
+function applyCase(i){
+  stopAnim();
+  caseIdx=i;cur=0;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.i,10)===i));
+  theta=CASES[i].a;
+  const sl=document.getElementById('t-slider');
+  sl.value=theta;document.getElementById('t-value').textContent=theta+'°';
+  renderSteps();
+  draw();
+}
+
+let renderSteps=null;
+function setupWalkthrough(){
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  renderSteps=function(){
+    const steps=CASES[caseIdx].steps;
+    if(cur>steps.length-1)cur=steps.length-1;
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    container.innerHTML=html;
+    counter.textContent=(cur+1)+' / '+steps.length;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  };
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;renderSteps();}});
+  nextBtn.addEventListener('click',()=>{if(cur<CASES[caseIdx].steps.length-1){cur++;renderSteps();}});
+}
+
+function arcPath(r,a0,a1){
+  const x0=ox+r*Math.cos(a0),y0=oy-r*Math.sin(a0);
+  const x1=ox+r*Math.cos(a1),y1=oy-r*Math.sin(a1);
+  const large=Math.abs(a1-a0)>Math.PI?1:0;
+  const sweep=a1>a0?0:1;
+  return 'M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' '+sweep+' '+x1+' '+y1;
+}
+
+function draw(){
+  const svg=document.getElementById('graph');
+  const C=CASES[caseIdx];
+  const aDeg=C.a,bDeg=theta-aDeg;
+  const ta=tanOf(aDeg),tt=tanOf(theta),tb=tanOf(bDeg);
+  let s='';
+
+  s+='<line x1="16" y1="'+oy+'" x2="584" y2="'+oy+'" stroke="#bbb" stroke-width="1.5"/>';
+  s+='<line x1="'+ox+'" y1="16" x2="'+ox+'" y2="604" stroke="#bbb" stroke-width="1.5"/>';
+  s+='<foreignObject x="556" y="'+(oy-32)+'" width="30" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#aaa">'+T('x')+'</div></foreignObject>';
+  s+='<foreignObject x="'+(ox+8)+'" y="108" width="30" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#aaa">'+T('y')+'</div></foreignObject>';
+
+  s+='<circle cx="'+ox+'" cy="'+oy+'" r="'+scale+'" fill="none" stroke="#dde3ee" stroke-width="2"/>';
+  s+='<line x1="'+TX+'" y1="24" x2="'+TX+'" y2="596" stroke="#9aa4b8" stroke-width="2"/>';
+  s+='<text x="'+TX+'" y="'+(oy+18)+'" text-anchor="middle" font-size="12" fill="#aaa">1</text>';
+  s+='<foreignObject x="'+(TX-60)+'" y="566" width="56" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#7a8496;font-weight:600">'+T('x=1')+'</div></foreignObject>';
+
+  s+='<path d="'+arcPath(30,0,aDeg*D2R)+'" fill="none" stroke="var(--c-blue)" stroke-width="3"/>';
+  if(Math.abs(bDeg)>0.5)s+='<path d="'+arcPath(48,aDeg*D2R,theta*D2R)+'" fill="none" stroke="var(--c-green)" stroke-width="3"/>';
+
+  s+=rayAndChord(aDeg,ta,'var(--c-blue)',2.5,'5 4');
+  s+=rayAndChord(theta,tt,'var(--c-orange)',3.5,'8 5');
+
+  const items=[];
+  const same=Math.abs(bDeg)<0.5;
+  if(!same&&ta!==null&&Math.abs(ta)<=TANMAX)items.push({y:oy-scale*ta,col:'var(--c-blue)',tx:'\\tan '+degStr(aDeg)+'='+fmt(ta,3)});
+  if(tt!==null&&Math.abs(tt)<=TANMAX)items.push({y:oy-scale*tt,col:'var(--c-orange)',tx:'\\tan '+degStr(theta)+'='+fmt(tt,3)});
+  items.sort((p,q)=>p.y-q.y);
+  const GAP=36;
+  for(let i=0;i<items.length;i++){
+    items[i].ly=Math.max(items[i].y,28+i*GAP);
+    if(i>0&&items[i].ly-items[i-1].ly<GAP)items[i].ly=items[i-1].ly+GAP;
+  }
+  for(let i=items.length-1;i>=0;i--){
+    if(items[i].ly>H-40)items[i].ly=H-40-(items.length-1-i)*GAP;
+    if(i>0&&items[i].ly-items[i-1].ly<GAP)items[i-1].ly=items[i].ly-GAP;
+  }
+  for(const it of items){
+    s+='<line x1="'+(TX+7)+'" y1="'+it.y+'" x2="'+(TX+26)+'" y2="'+it.ly+'" stroke="'+it.col+'" stroke-width="1" opacity="0.6"/>';
+    s+='<foreignObject x="'+(TX+28)+'" y="'+(it.ly-16)+'" width="300" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:'+it.col+';font-weight:600;white-space:nowrap">'+T(it.tx)+'</div></foreignObject>';
+  }
+
+  s+='<rect x="8" y="8" width="192" height="96" rx="9" fill="#ffffff" opacity="0.92" stroke="#e6e6e6"/>';
+  s+='<foreignObject x="16" y="12" width="180" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;line-height:1.6">'+
+     '<div style="color:var(--c-blue);font-weight:600">'+T('\\alpha='+degStr(aDeg))+'</div>'+
+     '<div style="color:var(--c-green);font-weight:600">'+T('\\beta='+degStr(bDeg))+'</div>'+
+     '<div style="color:var(--c-orange);font-weight:600">'+T('\\theta='+degStr(theta))+'</div>'+
+     '</div></foreignObject>';
+
+  svg.innerHTML=s;
+  updateLive(aDeg,bDeg,ta,tb,tt);
+}
+
+function rayAndChord(deg,tv,color,wid,dash){
+  const t=deg*D2R;
+  const cx=ox+scale*Math.cos(t),cy=oy-scale*Math.sin(t);
+  let s='<line x1="'+ox+'" y1="'+oy+'" x2="'+cx+'" y2="'+cy+'" stroke="'+color+'" stroke-width="'+wid+'"/>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="'+color+'" stroke="#fff" stroke-width="1.5"/>';
+  if(tv===null){
+    s+='<foreignObject x="'+(TX+28)+'" y="'+(oy-18)+'" width="290" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);font-weight:600;white-space:nowrap">'+T('\\tan '+degStr(deg)+'\\ \\text{は定義されません}')+'</div></foreignObject>';
+    return s;
+  }
+  if(Math.abs(tv)>TANMAX){
+    const dir=tv>0?-1:1,edge=tv>0?26:594;
+    s+='<line x1="'+ox+'" y1="'+oy+'" x2="'+TX+'" y2="'+edge+'" stroke="'+color+'" stroke-width="2" stroke-dasharray="'+dash+'" opacity="0.7"/>';
+    s+='<path d="M '+(TX-7)+' '+(edge+dir*-14)+' L '+TX+' '+edge+' L '+(TX+7)+' '+(edge+dir*-14)+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>';
+    s+='<foreignObject x="'+(TX+28)+'" y="'+(edge-16)+'" width="300" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:'+color+';font-weight:600;white-space:nowrap">'+T('\\tan '+degStr(deg)+'='+fmt(tv,2)+'\\ \\text{（図の外）}')+'</div></foreignObject>';
+    return s;
+  }
+  const ty=oy-scale*tv;
+  s+='<line x1="'+ox+'" y1="'+oy+'" x2="'+TX+'" y2="'+ty+'" stroke="'+color+'" stroke-width="2" stroke-dasharray="'+dash+'" opacity="0.75"/>';
+  s+='<circle cx="'+TX+'" cy="'+ty+'" r="6" fill="'+color+'" stroke="#fff" stroke-width="2"/>';
+  if(wid>3){
+    s+='<circle cx="'+TX+'" cy="'+ty+'" r="6" fill="none" stroke="'+color+'" stroke-width="2.5"><animate attributeName="r" values="6;13;6" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0;0.9" dur="1.4s" repeatCount="indefinite"/></circle>';
+  }
+  return s;
+}
+
+function updateLive(aDeg,bDeg,ta,tb,tt){
+  const C=CASES[caseIdx];
+  const el=document.getElementById('live-calc');
+  let h='';
+  if(tt===null){
+    h+='<div class="row" style="color:var(--c-red);font-weight:600">'+T('\\tan '+degStr(aDeg+bDeg)+'\\ \\text{は定義されません}')+'</div>';
+  }else{
+    h+='<div class="row">'+T('\\text{左辺}\\;\\tan '+degStr(aDeg+bDeg)+'='+fmt(tt,4))+'</div>';
+  }
+  if(ta===null||tb===null){
+    h+='<div class="row" style="color:var(--c-red)">'+T('\\text{分解した角のどちらかで}\\ \\tan\\ \\text{が定義されません}')+'</div>';
+  }else{
+    const den=1-ta*tb;
+    if(Math.abs(den)<1e-9){
+      h+='<div class="row" style="color:var(--c-red)">'+T('1-\\tan\\alpha\\tan\\beta=0\\ \\text{なので右辺は計算できません}')+'</div>';
+    }else{
+      h+='<div class="row">'+T('\\text{右辺}=\\dfrac{\\tan\\alpha+\\tan\\beta}{1-\\tan\\alpha\\tan\\beta}=\\dfrac{'+fmt(ta,3)+'+('+fmt(tb,3)+')}{1-('+fmt(ta,3)+')('+fmt(tb,3)+')}='+fmt((ta+tb)/den,4))+'</div>';
+    }
+  }
+  if(theta===C.tgt){
+    h+='<div class="row" style="color:var(--c-green);font-weight:600">'+T('\\tan '+degStr(C.tgt)+'='+C.exact+'='+fmt(C.val,4))+'</div>';
+  }else{
+    h+='<div class="row" style="color:var(--muted);font-size:.9rem">'+T('\\theta='+degStr(C.tgt))+' に合わせると厳密な値が出ます</div>';
+  }
+  el.innerHTML=h;
+}
+
+function setTheta(v){
+  theta=Math.max(0,Math.min(170,Math.round(v)));
+  const sl=document.getElementById('t-slider');
+  sl.value=theta;document.getElementById('t-value').textContent=theta+'°';
+  draw();
+}
+function stopAnim(){if(animId){cancelAnimationFrame(animId);animId=null;}}
+
+function setupControls(){
+  const sl=document.getElementById('t-slider');
+  sl.addEventListener('input',()=>{stopAnim();setTheta(parseFloat(sl.value));});
+  document.getElementById('reset-btn').addEventListener('click',()=>{stopAnim();setTheta(CASES[caseIdx].a);});
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const C=CASES[caseIdx],st=C.a,en=C.tgt,dur=2600;
+    let t0=null;
+    function frame(ts){
+      if(!t0)t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      setTheta(st+(en-st)*e);
+      if(p<1)animId=requestAnimationFrame(frame);else animId=null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+
+  const wrap=document.getElementById('svg-wrap');
+  const svg=document.getElementById('graph');
+  function toDeg(cx,cy){
+    const r=svg.getBoundingClientRect();
+    const sx=(cx-r.left)/r.width*W,sy=(cy-r.top)/r.height*H;
+    let d=Math.atan2(oy-sy,sx-ox)/D2R;
+    if(d<0)d+=360;
+    return d;
+  }
+  function start(cx,cy){stopAnim();dragging=true;setTheta(toDeg(cx,cy));}
+  function move(cx,cy){setTheta(toDeg(cx,cy));}
+  function end(){dragging=false;}
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();start(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();move(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',end);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];start(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];move(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',end);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>一般角の三角関数の値</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { overflow-x: auto; }
+  .compare-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e3e3e3; margin: .75rem 0; font-size: .95rem; }
+  .compare-table th, .compare-table td { border: 1px solid #eee; padding: .55rem .4rem; text-align: center; }
+  .compare-table th { background: #f0f5ff; font-weight: 700; }
+  .compare-table td.qhl, .compare-table th.qhl { background: #fff3e0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>一般角の三角関数の値</h1>
+  <p class="subtitle">動径と円の交点の座標を読み取って、どんな角でも三角関数の値を求められるようにしましょう。</p>
+
+  <h2>三角関数の定義</h2>
+  <p>原点 <span id="f-O"></span> を中心とする半径 <span id="f-r0"></span> の円をかき、<span id="f-xaxis"></span> の正の部分を始線として角 <span id="f-th0"></span> の動径と円の交点を <span id="f-Pxy"></span> とします。3 つの比の値は半径 <span id="f-r1"></span> の大きさに関係せず、角 <span id="f-th1"></span> だけで決まります。</p>
+  <div class="formula-box" id="f-def"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>動かして確かめよう</h2>
+  <p>角のスライダーを動かすか、図の点 <span id="f-P2"></span> をドラッグしてください。半径を変えても 3 つの値が変わらないことを確かめましょう。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="k-slider" min="0" max="24" step="1" value="15">
+    <span class="slider-val" id="k-value"></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-r"></span> =</label>
+    <input type="range" id="r-slider" min="0" max="4" step="1" value="2">
+    <span class="slider-val" id="r-value"></span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 620 660" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">点をドラッグすると角が変わります</p>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>象限と符号</h2>
+  <p>動径がどの象限にあるかで、3 つの値の符号が決まります。今の角にあたる列がオレンジ色になります。</p>
+  <div class="table-wrap"><table class="compare-table" id="sign-table"></table></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p><span id="f-q0"></span> が次の値のとき、<span id="f-q1"></span> の値を求めましょう。</p>
+  <div class="formula-box" id="f-q2"></div>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=620,H=660,cx=300,cy=400,GRIDPX=225;
+function uNow(){ return GRIDPX/(rNow()+1); }
+const R2=Math.SQRT2, R3=Math.sqrt(3);
+const rOpt=[1,R2,2,3,4];
+const rTex=['1','\\sqrt{2}','2','3','4'];
+let kVal=15, riVal=2, animId=null;
+
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
+function fracPi(n,d){
+  if(n===0) return '0';
+  const g=gcd(n,d); n=n/g; d=d/g;
+  if(d===1) return (n===1?'\\pi':n+'\\pi');
+  if(n===1) return '\\dfrac{\\pi}{'+d+'}';
+  return '\\dfrac{'+n+'}{'+d+'}\\pi';
+}
+
+/* recognise the exact values that appear in this topic */
+const NICE=[];
+(function(){
+  NICE.push([1/R2,'\\dfrac{1}{\\sqrt{2}}'],[-1/R2,'-\\dfrac{1}{\\sqrt{2}}']);
+  NICE.push([1/R3,'\\dfrac{1}{\\sqrt{3}}'],[-1/R3,'-\\dfrac{1}{\\sqrt{3}}']);
+  for(let n=-8;n<=8;n++){
+    NICE.push([n,''+n]);
+    if(n%2!==0) NICE.push([n/2,(n<0?'-':'')+'\\dfrac{'+Math.abs(n)+'}{2}']);
+  }
+  const roots=[[R2,'\\sqrt{2}'],[R3,'\\sqrt{3}']];
+  for(let n=1;n<=8;n++){
+    for(let j=0;j<2;j++){
+      const rt=roots[j][0], rl=roots[j][1];
+      let lab;
+      if(n===2) lab=rl;
+      else if(n%2===0) lab=(n/2)+rl;
+      else lab='\\dfrac{'+(n===1?'':n)+rl+'}{2}';
+      NICE.push([n*rt/2,lab],[-n*rt/2,'-'+lab]);
+    }
+  }
+})();
+function nice(v){
+  for(let i=0;i<NICE.length;i++){ if(Math.abs(v-NICE[i][0])<1e-9) return NICE[i][1]; }
+  return v.toFixed(3);
+}
+
+function theta(){ return kVal*Math.PI/12; }
+function rNow(){ return rOpt[riVal]; }
+function coordX(){ return rNow()*Math.cos(theta()); }
+function coordY(){ return rNow()*Math.sin(theta()); }
+function tanDefined(){ return Math.abs(Math.cos(theta()))>1e-9; }
+
+function quadrant(){
+  const k=kVal%24;
+  if(k%6===0) return 0;
+  if(k<6) return 1;
+  if(k<12) return 2;
+  if(k<18) return 3;
+  return 4;
+}
+
+function init(){
+  document.getElementById('f-O').innerHTML=T('\\mathrm{O}');
+  document.getElementById('f-r0').innerHTML=T('r');
+  document.getElementById('f-r1').innerHTML=T('r');
+  document.getElementById('f-xaxis').innerHTML=T('x');
+  document.getElementById('f-th0').innerHTML=T('\\theta');
+  document.getElementById('f-th1').innerHTML=T('\\theta');
+  document.getElementById('f-Pxy').innerHTML=T('\\mathrm{P}(x,\\,y)');
+  document.getElementById('f-P2').innerHTML=T('\\mathrm{P}');
+  document.getElementById('lbl-t').innerHTML=T('\\theta');
+  document.getElementById('lbl-r').innerHTML=T('r');
+  document.getElementById('f-q0').innerHTML=T('\\theta');
+  document.getElementById('f-q1').innerHTML=T('\\sin\\theta,\\; \\cos\\theta,\\; \\tan\\theta');
+
+  tex('\\sin\\theta = \\dfrac{y}{r}, \\qquad \\cos\\theta = \\dfrac{x}{r}, \\qquad \\tan\\theta = \\dfrac{y}{x}', document.getElementById('f-def'), true);
+  tex('(1)\\;\\; \\theta = \\dfrac{5}{4}\\pi \\qquad\\qquad (2)\\;\\; \\theta = \\dfrac{11}{6}\\pi', document.getElementById('f-q2'), true);
+  document.getElementById('f-note').innerHTML =
+    T('0 \\leqq \\theta \\leqq \\pi') + ' の場合、これらの値は直角三角形で学んだ三角比と一致します。'
+    + T('\\theta = \\dfrac{\\pi}{2} + n\\pi') + ' ' + T('\\text{（}n\\text{ は整数）}') + ' のときは '
+    + T('x = 0') + ' となるため、' + T('\\tan\\theta') + ' は定義されません。';
+
+  buildSignTable();
+  initWalkthrough();
+  setupSliders();
+  setupAnimation();
+  setupDrag();
+  draw();
+
+  tex('(1)\\;\\; \\sin\\dfrac{5}{4}\\pi = -\\dfrac{1}{\\sqrt{2}},\\;\\; \\cos\\dfrac{5}{4}\\pi = -\\dfrac{1}{\\sqrt{2}},\\;\\; \\tan\\dfrac{5}{4}\\pi = 1', document.getElementById('result-box'), true);
+}
+
+function buildSignTable(){
+  const t=document.getElementById('sign-table');
+  const heads=['','\\text{第 1 象限}','\\text{第 2 象限}','\\text{第 3 象限}','\\text{第 4 象限}'];
+  const rows=[['\\sin\\theta','+','+','-','-'],['\\cos\\theta','+','-','-','+'],['\\tan\\theta','+','-','+','-']];
+  let h='<tr>';
+  for(let i=0;i<heads.length;i++) h+='<th class="qcol'+i+'">'+(i===0?'':T(heads[i]))+'</th>';
+  h+='</tr>';
+  rows.forEach(rw=>{
+    h+='<tr>';
+    for(let i=0;i<rw.length;i++) h+='<td class="qcol'+i+'">'+T(i===0?rw[i]:rw[i])+'</td>';
+    h+='</tr>';
+  });
+  t.innerHTML=h;
+}
+
+function highlightQuadrant(){
+  const q=quadrant();
+  for(let i=1;i<=4;i++){
+    const cells=document.querySelectorAll('#sign-table .qcol'+i);
+    cells.forEach(c=>c.classList.toggle('qhl', i===q));
+  }
+}
+
+function draw(){
+  const svg=document.getElementById('graph');
+  const th=theta(), r=rNow(), U=uNow(), R=r*U, GR=r+1;
+  const x=coordX(), y=coordY();
+  const Px=cx+x*U, Py=cy-y*U;
+  let s='';
+
+  const gmax=Math.floor(GR+1e-9);
+  for(let g=-gmax;g<=gmax;g++){
+    s+='<line x1="'+(cx+g*U).toFixed(2)+'" y1="'+(cy-GRIDPX)+'" x2="'+(cx+g*U).toFixed(2)+'" y2="'+(cy+GRIDPX)+'" stroke="#f2f2f2" stroke-width="1"/>';
+    s+='<line x1="'+(cx-GRIDPX)+'" y1="'+(cy+g*U).toFixed(2)+'" x2="'+(cx+GRIDPX)+'" y2="'+(cy+g*U).toFixed(2)+'" stroke="#f2f2f2" stroke-width="1"/>';
+  }
+  s+='<line x1="'+(cx-GRIDPX)+'" y1="'+cy+'" x2="'+(cx+GRIDPX)+'" y2="'+cy+'" stroke="#bbb" stroke-width="1.5"/>';
+  s+='<line x1="'+cx+'" y1="'+(cy-GRIDPX)+'" x2="'+cx+'" y2="'+(cy+GRIDPX)+'" stroke="#bbb" stroke-width="1.5"/>';
+  s+='<foreignObject x="'+(cx+GRIDPX+6)+'" y="'+(cy+6)+'" width="30" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;display:inline-block">'+T('x')+'</div></foreignObject>';
+  s+='<foreignObject x="'+(cx+10)+'" y="'+(cy-GRIDPX-30)+'" width="30" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;display:inline-block">'+T('y')+'</div></foreignObject>';
+
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R.toFixed(2)+'" fill="none" stroke="#d8d8d8" stroke-width="2"/>';
+
+  /* vertical guide at x = r for reading the third ratio */
+  const legPx = tanDefined() ? Math.abs(r*Math.tan(th))*U : 0;
+  const tanGuide = tanDefined() && legPx>=60 && legPx<=GRIDPX-14;
+  if(tanGuide){
+    const tv=Math.tan(th);
+    const ty=cy-r*tv*U;
+    s+='<line x1="'+(cx+R).toFixed(2)+'" y1="'+(cy-GRIDPX+4)+'" x2="'+(cx+R).toFixed(2)+'" y2="'+(cy+GRIDPX-4)+'" stroke="#e8e8e8" stroke-width="1.5" stroke-dasharray="5 5"/>';
+    s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+R).toFixed(2)+'" y2="'+ty.toFixed(2)+'" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.8"/>';
+    s+='<line x1="'+(cx+R).toFixed(2)+'" y1="'+cy+'" x2="'+(cx+R).toFixed(2)+'" y2="'+ty.toFixed(2)+'" stroke="var(--c-orange)" stroke-width="4"/>';
+    s+='<circle cx="'+(cx+R).toFixed(2)+'" cy="'+ty.toFixed(2)+'" r="5" fill="var(--c-orange)"/>';
+    s+='<foreignObject x="'+(cx+R+10).toFixed(2)+'" y="'+(ty-14).toFixed(2)+'" width="120" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:700;white-space:nowrap;display:inline-block">'+T('r\\tan\\theta')+'</div></foreignObject>';
+  }
+
+  /* swept angle */
+  const AR=Math.min(46,R*0.42);
+  let ap='M '+(cx+AR).toFixed(2)+' '+cy;
+  const N=Math.max(2,Math.round(Math.abs(th)/0.02));
+  for(let i=0;i<=N;i++){ const t=th*i/N; ap+=' L '+(cx+AR*Math.cos(t)).toFixed(2)+' '+(cy-AR*Math.sin(t)).toFixed(2); }
+  s+='<path d="'+ap+'" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>';
+  const alx=cx+(AR+22)*Math.cos(th/2), aly=cy-(AR+22)*Math.sin(th/2);
+  s+='<foreignObject x="'+(alx-9).toFixed(1)+'" y="'+(aly-15).toFixed(1)+'" width="40" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-purple);font-weight:700;display:inline-block;background:rgba(255,255,255,0.88);border-radius:5px;padding:0 2px;">'+T('\\theta')+'</div></foreignObject>';
+
+  /* x and y legs */
+  s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+Px.toFixed(2)+'" y2="'+cy+'" stroke="var(--c-blue)" stroke-width="4"/>';
+  s+='<line x1="'+Px.toFixed(2)+'" y1="'+cy+'" x2="'+Px.toFixed(2)+'" y2="'+Py.toFixed(2)+'" stroke="var(--c-red)" stroke-width="4"/>';
+  const legX=Math.abs(x)*U, legY=Math.abs(y)*U;
+  if(legX>52 && legY>40){
+    s+='<foreignObject x="'+((cx+Px)/2-7).toFixed(2)+'" y="'+(cy+(y>=0?8:-34))+'" width="34" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-blue);font-weight:700;display:inline-block;background:rgba(255,255,255,0.88);border-radius:5px;padding:0 2px;">'+T('x')+'</div></foreignObject>';
+  }
+  if(legY>52 && legX>40){
+    s+='<foreignObject x="'+(Px+(x>=0?10:-26)).toFixed(2)+'" y="'+((cy+Py)/2-15).toFixed(2)+'" width="34" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-red);font-weight:700;display:inline-block;background:rgba(255,255,255,0.88);border-radius:5px;padding:0 2px;">'+T('y')+'</div></foreignObject>';
+  }
+
+  /* terminal side */
+  s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+Px.toFixed(2)+'" y2="'+Py.toFixed(2)+'" stroke="var(--c-green)" stroke-width="3"/>';
+  const mx=cx+(Px-cx)*0.52, my=cy+(Py-cy)*0.52;
+  let ux=Px-cx, uy=Py-cy; const ul=Math.hypot(ux,uy)||1; ux/=ul; uy/=ul;
+  let nx=-uy, ny=ux;
+  if((Px-mx)*nx+(cy-my)*ny > 0){ nx=-nx; ny=-ny; }
+  const rlx=mx+nx*27, rly=my+ny*27;
+  s+='<foreignObject x="'+(rlx-9).toFixed(2)+'" y="'+(rly-15).toFixed(2)+'" width="34" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-green);font-weight:700;display:inline-block;background:rgba(255,255,255,0.88);border-radius:5px;padding:0 2px;">'+T('r')+'</div></foreignObject>';
+
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#666"/>';
+  s+='<text x="'+(Px>=cx?cx-26:cx+10)+'" y="'+(cy+24)+'" font-size="14" fill="#666" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">O</text>';
+  s+='<circle cx="'+Px.toFixed(2)+'" cy="'+Py.toFixed(2)+'" r="10" fill="var(--c-green)" stroke="#fff" stroke-width="3"><animate attributeName="r" values="10;14;10" dur="1.6s" repeatCount="indefinite"/></circle>';
+  let plX = (x>=0 && !tanGuide) ? Px+18 : Px-158;
+  plX = Math.max(6, Math.min(plX, W-206));
+  const plY = Math.max(4, Math.min((y>=-1e-9) ? Py-44 : Py+14, H-36));
+  s+='<foreignObject x="'+plX.toFixed(2)+'" y="'+plY.toFixed(2)+'" width="200" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-green);font-weight:700;white-space:nowrap;display:inline-block;background:rgba(255,255,255,0.88);border-radius:5px;padding:0 2px;">'+T('\\mathrm{P}('+nice(x)+',\\;'+nice(y)+')')+'</div></foreignObject>';
+
+  s+='<foreignObject x="14" y="6" width="300" height="160"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;font-weight:700;line-height:2.9;white-space:nowrap;background:rgba(255,255,255,0.92);border-radius:8px;padding:4px 10px;display:inline-block">'
+    +'<span style="color:var(--c-purple)">'+T('\\theta = '+fracPi(kVal,12))+'</span><span style="display:inline-block;width:26px"></span><span style="color:var(--c-green)">'+T('r = '+rTex[riVal])+'</span><br/>'
+    +'<span style="color:var(--c-red)">'+T('\\sin\\theta = '+nice(Math.sin(th)))+'</span><br/>'
+    +'<span style="color:var(--c-blue)">'+T('\\cos\\theta = '+nice(Math.cos(th)))+'</span></div></foreignObject>';
+
+  svg.innerHTML=s;
+
+  document.getElementById('k-value').innerHTML=T(fracPi(kVal,12));
+  document.getElementById('r-value').innerHTML=T(rTex[riVal]);
+
+  const tanLine = tanDefined()
+    ? T('\\tan\\theta = \\dfrac{y}{x} = \\dfrac{'+nice(y)+'}{'+nice(x)+'} = '+nice(Math.tan(th)))
+    : '<span style="color:var(--c-red);font-weight:600">'+T('x = 0')+' なので '+T('\\tan\\theta')+' は定義されません</span>';
+  document.getElementById('live-calc').innerHTML=
+    T('\\mathrm{P}('+nice(x)+',\\;'+nice(y)+'),\\quad r = '+rTex[riVal])+'<br>'+
+    T('\\sin\\theta = \\dfrac{y}{r} = \\dfrac{'+nice(y)+'}{'+rTex[riVal]+'} = '+nice(Math.sin(th)))+'<br>'+
+    T('\\cos\\theta = \\dfrac{x}{r} = \\dfrac{'+nice(x)+'}{'+rTex[riVal]+'} = '+nice(Math.cos(th)))+'<br>'+
+    tanLine;
+
+  highlightQuadrant();
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 定義を確認する', k:15, ri:1,
+      formula:'\\sin\\theta = \\dfrac{y}{r},\\;\\; \\cos\\theta = \\dfrac{x}{r},\\;\\; \\tan\\theta = \\dfrac{y}{x}' },
+    { label:'Step 2: (1) 動径の位置をつかむ', k:15, ri:1,
+      formula:'\\dfrac{5}{4}\\pi = \\pi + \\dfrac{\\pi}{4}\\;\\Longrightarrow\\;\\text{動径は第 3 象限}' },
+    { label:'Step 3: (1) 座標が簡単になる半径を選ぶ', k:15, ri:1,
+      formula:'\\mathrm{OP} = \\sqrt{2}\\;\\text{とすると}\\;\\mathrm{P}(-1,\\,-1)' },
+    { label:'Step 4: (1) 定義に代入する', k:15, ri:1,
+      formula:'\\sin\\dfrac{5}{4}\\pi = \\dfrac{-1}{\\sqrt{2}} = -\\dfrac{1}{\\sqrt{2}},\\quad \\cos\\dfrac{5}{4}\\pi = \\dfrac{-1}{\\sqrt{2}} = -\\dfrac{1}{\\sqrt{2}},\\quad \\tan\\dfrac{5}{4}\\pi = \\dfrac{-1}{-1} = 1' },
+    { label:'Step 5: (2) 動径の位置をつかむ', k:22, ri:2,
+      formula:'\\dfrac{11}{6}\\pi = 2\\pi - \\dfrac{\\pi}{6}\\;\\Longrightarrow\\;\\text{動径は第 4 象限}' },
+    { label:'Step 6: (2) 座標が簡単になる半径を選ぶ', k:22, ri:2,
+      formula:'\\mathrm{OP} = 2\\;\\text{とすると}\\;\\mathrm{P}(\\sqrt{3},\\,-1)' },
+    { label:'Step 7: (2) 定義に代入する', k:22, ri:2,
+      formula:'\\sin\\dfrac{11}{6}\\pi = \\dfrac{-1}{2} = -\\dfrac{1}{2},\\quad \\cos\\dfrac{11}{6}\\pi = \\dfrac{\\sqrt{3}}{2},\\quad \\tan\\dfrac{11}{6}\\pi = \\dfrac{-1}{\\sqrt{3}} = -\\dfrac{1}{\\sqrt{3}}' },
+    { label:'Step 8: 符号を象限で検算する', k:22, ri:2,
+      formula:'\\text{第 3 象限では}\\;\\sin<0,\\;\\cos<0,\\;\\tan>0.\\quad \\text{第 4 象限では}\\;\\sin<0,\\;\\cos>0,\\;\\tan<0' }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    container.innerHTML=html;
+    counter.textContent=(cur+1)+' / '+steps.length;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+    setKR(steps[cur].k, steps[cur].ri);
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function setKR(k,ri){
+  stopAnim();
+  kVal=k; riVal=ri;
+  document.getElementById('k-slider').value=k;
+  document.getElementById('r-slider').value=ri;
+  draw();
+}
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+
+function setupSliders(){
+  document.getElementById('k-slider').addEventListener('input',e=>{ stopAnim(); kVal=parseInt(e.target.value,10); draw(); });
+  document.getElementById('r-slider').addEventListener('input',e=>{ stopAnim(); riVal=parseInt(e.target.value,10); draw(); });
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const slider=document.getElementById('k-slider');
+    const duration=5000; let startTime=null;
+    function stepFn(ts){
+      if(!startTime) startTime=ts;
+      const pr=Math.min((ts-startTime)/duration,1);
+      kVal=Math.round(24*pr);
+      slider.value=kVal;
+      draw();
+      if(pr<1) animId=requestAnimationFrame(stepFn); else animId=null;
+    }
+    animId=requestAnimationFrame(stepFn);
+  });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph');
+  const wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toSvg(clx,cly){
+    const rect=svg.getBoundingClientRect();
+    return { x:(clx-rect.left)/rect.width*W, y:(cly-rect.top)/rect.height*H };
+  }
+  function startDrag(clx,cly){
+    const p=toSvg(clx,cly);
+    const d=Math.sqrt((p.x-cx)*(p.x-cx)+(p.y-cy)*(p.y-cy));
+    const R=rNow()*uNow();
+    if(d>R*0.4 && d<R*1.5){ dragging=true; moveDrag(clx,cly); }
+  }
+  function moveDrag(clx,cly){
+    stopAnim();
+    const p=toSvg(clx,cly);
+    let a=Math.atan2(cy-p.y, p.x-cx);
+    if(a<0) a+=2*Math.PI;
+    let k=Math.round(a/(Math.PI/12));
+    if(k<0) k=0; if(k>24) k=24;
+    kVal=k;
+    document.getElementById('k-slider').value=kVal;
+    draw();
+  }
+  function endDrag(){ dragging=false; }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX,e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX,t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

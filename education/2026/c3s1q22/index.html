@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>三角関数のグラフと周期</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; flex-wrap: wrap; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: .95rem; font-weight: 600; padding: .6rem 1rem; border-radius: 999px;
+    cursor: pointer; min-height: 44px; min-width: 76px; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; font-size: .85rem; margin: .5rem 0 0; color: var(--muted); }
+  .legend .sw { display: inline-block; width: 24px; border-top: 3px solid; vertical-align: middle; margin-right: .35rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>三角関数のグラフと周期</h1>
+  <p class="subtitle">係数でくくると、グラフの平行移動と周期が同時に見えてきます。</p>
+
+  <h2>基本の考え方</h2>
+  <p>角の部分を <span id="f-inner"></span> の形に変形します。すると次の 2 つが読み取れます。</p>
+  <div class="formula-box" id="f-key"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>ボタンをタップして式を選ぶか、スライダーをドラッグしてグラフの変化を見ましょう。</p>
+  <div class="tabs" id="preset-tabs">
+    <button class="tab active" id="pre0">例題</button>
+    <button class="tab" id="pre1">(1)</button>
+    <button class="tab" id="pre2">(2)</button>
+  </div>
+  <div class="tabs" id="type-tabs">
+    <button class="tab active" id="ty-sin"></button>
+    <button class="tab" id="ty-cos"></button>
+  </div>
+
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="3" max="36" step="3" value="24">
+    <span class="slider-val" id="a-value"></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-b"></span> =</label>
+    <input type="range" id="b-slider" min="-24" max="24" step="1" value="8">
+    <span class="slider-val" id="b-value"></span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="border-color:#bbb"></span><span id="lg0"></span></span>
+    <span><span class="sw" style="border-color:var(--c-blue)"></span><span id="lg1"></span></span>
+    <span><span class="sw" style="border-color:var(--c-orange)"></span><span id="lg2"></span></span>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+const _tc=new Map();
+function TC(l){if(_tc.has(l))return _tc.get(l);const s=T(l);_tc.set(l,s);return s;}
+
+const PI=Math.PI;
+const W=600,H=360,ox=300,oy=180,xs=270/(2*PI),ys=62;
+const TMIN=-2*PI,TMAX=2*PI;
+function px(t){return ox+t*xs;}
+function py(y){return oy-y*ys;}
+
+/* a = a12/12,  b = (b24/24)*pi */
+let TYPE='sin', a12=24, b24=8, animId=null, STATIC='', LABELS='';
+
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function red(n,d){const g=gcd(n,d);return [n/g,d/g];}
+/* (n/d) * pi , n>=0 */
+function fracPi(n,d){
+  if(n===0)return '0';
+  const [p,q]=red(n,d);
+  const num=(p===1?'\\pi':p+'\\pi');
+  return q===1?num:'\\dfrac{'+num+'}{'+q+'}';
+}
+function signedPi(n,d){ if(n===0)return ''; return (n>0?' + ':' - ')+fracPi(Math.abs(n),d); }
+/* (n/d) * theta */
+function coefTheta(n,d){
+  const [p,q]=red(n,d);
+  if(q===1)return p===1?'\\theta':p+'\\theta';
+  return '\\dfrac{'+(p===1?'\\theta':p+'\\theta')+'}{'+q+'}';
+}
+/* plain n/d */
+function fracNum(n,d){const [p,q]=red(n,d);return q===1?String(p):'\\dfrac{'+p+'}{'+q+'}';}
+
+function A(){return a12/12;}
+function B(){return b24/24*PI;}
+function fn(){return TYPE==='sin'?'\\sin':'\\cos';}
+function fv(t){return TYPE==='sin'?Math.sin(t):Math.cos(t);}
+
+function expanded(){return fn()+'\\left('+coefTheta(a12,12)+signedPi(b24,24)+'\\right)';}
+function factored(){const c=(a12===12)?'':fracNum(a12,12);return fn()+c+'\\left(\\theta'+signedPi(b24,2*a12)+'\\right)';}
+function shiftPi(){return -b24/(2*a12);}
+
+function init(){
+  document.getElementById('f-inner').innerHTML=T('a(\\theta+p)');
+  tex(fn()+'(a\\theta+b)='+fn()+' a\\left(\\theta+\\dfrac{b}{a}\\right)',document.getElementById('f-key'),true);
+  document.getElementById('f-note').innerHTML=
+    T('y='+fn()+'(a\\theta+b)')+' のグラフは '+T('y='+fn()+' a\\theta')+
+    ' のグラフを '+T('\\theta')+' 軸方向に '+T('-\\dfrac{b}{a}')+
+    ' だけ平行移動したもので、周期は '+T('\\dfrac{2\\pi}{|a|}')+' です。';
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('lbl-b').innerHTML=T('b');
+  document.getElementById('ty-sin').innerHTML=T('\\sin');
+  document.getElementById('ty-cos').innerHTML=T('\\cos');
+  buildStatic();
+  initWalkthrough();
+  setupControls();
+  refresh();
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 目標',
+     formula:'y=\\sin\\left(2\\theta-\\dfrac{2}{3}\\pi\\right)\\;\\text{のグラフと周期}'},
+    {label:'Step 2: 角の部分を θ の係数でくくる',
+     formula:'2\\theta-\\dfrac{2}{3}\\pi=2\\left(\\theta-\\dfrac{\\pi}{3}\\right)'},
+    {label:'Step 3: 変形した式',
+     formula:'y=\\sin 2\\left(\\theta-\\dfrac{\\pi}{3}\\right)'},
+    {label:'Step 4: 平行移動を読み取る',
+     formula:'y=\\sin 2\\theta\\;\\text{のグラフを }\\theta\\text{ 軸方向に }\\dfrac{\\pi}{3}\\text{ だけ平行移動}'},
+    {label:'Step 5: 周期を読み取る',
+     formula:'\\text{周期は }\\sin 2\\theta\\text{ と同じ }\\dfrac{2\\pi}{2}=\\pi'},
+    {label:'Step 6: (2) も同じ手順でくくる',
+     formula:'\\dfrac{\\theta}{2}+\\dfrac{\\pi}{4}=\\dfrac{1}{2}\\left(\\theta+\\dfrac{\\pi}{2}\\right)'},
+    {label:'Step 7: (2) の平行移動',
+     formula:'y=\\cos\\dfrac{1}{2}\\left(\\theta+\\dfrac{\\pi}{2}\\right)\\;\\text{は }y=\\cos\\dfrac{\\theta}{2}\\text{ を }-\\dfrac{\\pi}{2}\\text{ 平行移動}'},
+    {label:'Step 8: (2) の周期と結論',
+     formula:'\\text{周期}=\\dfrac{2\\pi}{\\frac{1}{2}}=4\\pi\\quad\\text{(1) の周期}=\\pi'},
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function buildStatic(){
+  let s='';
+  for(let k=-4;k<=4;k++){
+    const x=px(k*PI/2);
+    s+=`<line x1="${x.toFixed(1)}" y1="${py(1.55)}" x2="${x.toFixed(1)}" y2="${py(-1.55)}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`;
+  }
+  for(let k=-1;k<=1;k++){
+    const y=py(k);
+    s+=`<line x1="${px(TMIN)}" y1="${y}" x2="${px(TMAX)}" y2="${y}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`;
+  }
+  s+=`<foreignObject x="${W-30}" y="${oy-24}" width="26" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${TC('\\theta')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="4" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${TC('y')}</div></foreignObject>`;
+  STATIC=s;
+  /* 目盛りラベルは曲線を描いたあとで重ねる（曲線に隠れないように） */
+  let t='';
+  t+=`<text x="${ox-10}" y="${py(1)+4}" text-anchor="end" font-size="11" fill="#aaa">1</text>`;
+  t+=`<text x="${ox-10}" y="${py(-1)+4}" text-anchor="end" font-size="11" fill="#aaa">-1</text>`;
+  const lab={'-4':'-2\\pi','-3':'-\\dfrac{3}{2}\\pi','-2':'-\\pi','-1':'-\\dfrac{\\pi}{2}','1':'\\dfrac{\\pi}{2}','2':'\\pi','3':'\\dfrac{3}{2}\\pi','4':'2\\pi'};
+  for(const k in lab){
+    const x=px(Number(k)*PI/2);
+    t+=`<foreignObject x="${Math.max(Math.min(x-24,W-50),2)}" y="${oy+6}" width="52" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:11px;color:#aaa;text-align:center;white-space:nowrap"><span style="display:inline-block;background:rgba(255,255,255,.85);border-radius:3px;padding:0 2px">${TC(lab[k])}</span></div></foreignObject>`;
+  }
+  LABELS=t;
+}
+
+function curvePath(f){
+  let d='';const N=400;
+  for(let i=0;i<=N;i++){
+    const t=TMIN+(TMAX-TMIN)*i/N;
+    d+=(i===0?'M':'L')+px(t).toFixed(1)+' '+py(f(t)).toFixed(1)+' ';
+  }
+  return d;
+}
+
+function hArrow(x1,x2,y,color,label,below){
+  const cx1=Math.max(30,Math.min(570,x1)),cx2=Math.max(30,Math.min(570,x2));
+  let s=`<line x1="${cx1}" y1="${y}" x2="${cx2}" y2="${y}" stroke="${color}" stroke-width="2"/>`;
+  const dir=cx2>=cx1?1:-1;
+  s+=`<path d="M ${cx2} ${y} L ${cx2-dir*9} ${y-5} L ${cx2-dir*9} ${y+5} Z" fill="${color}"/>`;
+  s+=`<path d="M ${cx1} ${y} L ${cx1+dir*9} ${y-5} L ${cx1+dir*9} ${y+5} Z" fill="${color}"/>`;
+  const mid=(cx1+cx2)/2;
+  s+=`<foreignObject x="${Math.max(Math.min(mid-60,W-124),2)}" y="${below?y+3:y-30}" width="120" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:${color};font-weight:600;text-align:center;white-space:nowrap">${label}</div></foreignObject>`;
+  return s;
+}
+
+function drawGraph(){
+  const a=A(),b=B();
+  let s=STATIC;
+  s+=`<path d="${curvePath(t=>fv(t))}" fill="none" stroke="#bbb" stroke-width="1.8" stroke-dasharray="5 4"/>`;
+  s+=`<path d="${curvePath(t=>fv(a*t))}" fill="none" stroke="var(--c-blue)" stroke-width="2" opacity="0.55"/>`;
+  s+=`<path d="${curvePath(t=>fv(a*t+b))}" fill="none" stroke="var(--c-orange)" stroke-width="3.5"/>`;
+  s+=LABELS;
+
+  /* period marker on the shifted curve */
+  const base=-b/a;
+  const P=2*PI/a;
+  s+=hArrow(px(base),px(base+P),py(1.35),'var(--c-purple)',TC('\\text{周期}='+fracPi(24,a12)));
+
+  /* shift marker from 0 to -b/a */
+  const sh=shiftPi();
+  if(Math.abs(sh)>1e-9){
+    s+=hArrow(px(0),px(base),py(-1.45),'var(--c-green)',TC('\\text{平行移動 }'+(sh<0?'-':'')+fracPi(Math.abs(b24),2*a12)),true);
+  }
+  /* pulsing marker at the start of one period */
+  s+=`<circle cx="${px(base).toFixed(1)}" cy="${py(fv(0)).toFixed(1)}" r="6" fill="var(--c-orange)" stroke="#fff" stroke-width="2"><animate attributeName="r" values="6;11;6" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  document.getElementById('graph').innerHTML=s;
+}
+
+function refresh(){
+  document.getElementById('a-value').innerHTML=TC(fracNum(a12,12));
+  document.getElementById('b-value').innerHTML=TC(b24===0?'0':(b24<0?'-':'')+fracPi(Math.abs(b24),24));
+  document.getElementById('lg0').innerHTML=TC('y='+fn()+'\\theta');
+  document.getElementById('lg1').innerHTML=TC('y='+fn()+coefTheta(a12,12));
+  document.getElementById('lg2').innerHTML=TC('y='+expanded());
+  const sh=shiftPi();
+  /* b=0 のときは「0 だけ平行移動」ではなく「平行移動なし」と表示する */
+  const shTex=(sh===0)?null:((sh<0?'-':'')+fracPi(Math.abs(b24),2*a12));
+  document.getElementById('live-calc').innerHTML=
+    TC('y='+expanded()+'='+factored())+'<br>'+
+    TC('\\text{周期}=\\dfrac{2\\pi}{'+fracNum(a12,12)+'}='+fracPi(24,a12))+'<br>'+
+    (shTex===null?TC('\\text{平行移動なし（}'+fn()+' '+coefTheta(a12,12)+'\\text{ そのもの）}')
+                :TC('\\theta\\text{ 軸方向に }'+shTex+'\\text{ だけ平行移動}'));
+  drawGraph();
+}
+
+function setPreset(type,na,nb){
+  TYPE=type;a12=na;b24=nb;
+  document.getElementById('a-slider').value=a12;
+  document.getElementById('b-slider').value=b24;
+  syncTypeTabs();
+  refresh();
+}
+function syncTypeTabs(){
+  document.getElementById('ty-sin').classList.toggle('active',TYPE==='sin');
+  document.getElementById('ty-cos').classList.toggle('active',TYPE==='cos');
+}
+function setActiveTab(id){
+  ['pre0','pre1','pre2'].forEach(k=>document.getElementById(k).classList.toggle('active',k===id));
+}
+
+function setupControls(){
+  const as=document.getElementById('a-slider'),bs=document.getElementById('b-slider');
+  as.addEventListener('input',()=>{stopAnim();a12=parseInt(as.value,10);setActiveTab('');refresh();});
+  bs.addEventListener('input',()=>{stopAnim();b24=parseInt(bs.value,10);setActiveTab('');refresh();});
+  document.getElementById('pre0').addEventListener('click',()=>{stopAnim();setActiveTab('pre0');setPreset('sin',24,8);});
+  document.getElementById('pre1').addEventListener('click',()=>{stopAnim();setActiveTab('pre1');setPreset('sin',24,-16);});
+  document.getElementById('pre2').addEventListener('click',()=>{stopAnim();setActiveTab('pre2');setPreset('cos',6,6);});
+  document.getElementById('ty-sin').addEventListener('click',()=>{stopAnim();TYPE='sin';syncTypeTabs();refresh();});
+  document.getElementById('ty-cos').addEventListener('click',()=>{stopAnim();TYPE='cos';syncTypeTabs();refresh();});
+  document.getElementById('anim-btn').addEventListener('click',runAnim);
+}
+
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+
+/* Phase 1: 1 -> a （周期が変わる）  Phase 2: 0 -> b （平行移動する） */
+function runAnim(){
+  stopAnim();
+  const targetA=a12,targetB=b24;
+  const as=document.getElementById('a-slider'),bs=document.getElementById('b-slider');
+  const dur=3600;let st=null;
+  a12=12;b24=0;as.value=12;bs.value=0;refresh();
+  function frame(ts){
+    if(!st)st=ts;
+    const pr=Math.min((ts-st)/dur,1);
+    const ease=x=>x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+    if(pr<0.5){
+      const u=ease(pr/0.5);
+      a12=Math.max(3,Math.round((12+(targetA-12)*u)/3)*3);
+      b24=0;
+    }else{
+      const u=ease((pr-0.5)/0.5);
+      a12=targetA;
+      b24=Math.round(targetB*u);
+    }
+    as.value=a12;bs.value=b24;
+    refresh();
+    if(pr<1){animId=requestAnimationFrame(frame);}
+    else{a12=targetA;b24=targetB;as.value=a12;bs.value=b24;refresh();animId=null;}
+  }
+  animId=requestAnimationFrame(frame);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

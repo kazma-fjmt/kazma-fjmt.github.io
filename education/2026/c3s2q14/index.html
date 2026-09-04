@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>22.5°の余弦と正接</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.12rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc .row { margin: .2rem 0; }
+  .live-calc .hit { color: var(--c-orange); font-weight: 700; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .legend { list-style: none; padding: 0; margin: .5rem 0 1rem; font-size: .9rem; }
+  .legend li { display: flex; align-items: center; gap: .5rem; margin: .35rem 0; }
+  .legend .sw { display: inline-block; width: 22px; height: 5px; border-radius: 3px; flex: none; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>22.5°の余弦と正接</h1>
+  <p class="subtitle">45°の半分の角として 22.5° をとらえ、半角の公式から値を求めましょう。</p>
+
+  <h2>考える問題</h2>
+  <div class="formula-box" id="f-goal"></div>
+  <p><span id="f-225"></span> は三角比の表にある角ではありません。しかし <span id="f-45"></span> のちょうど半分なので、半角の公式が使えます。</p>
+
+  <h2>出発点</h2>
+  <p>半角の公式は次の 2 つです。</p>
+  <div class="formula-box" id="f-half"></div>
+  <p>正弦の側はすでに次のように求まっています。</p>
+  <div class="formula-box" id="f-sin"></div>
+  <div class="note" id="n-start"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>単位円の上に、もとの角 <span id="f-a1"></span> とその半分の角 <span id="f-a2"></span> を並べた図です。スライダーを動かすか、点 P をドラッグしてみましょう。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="20" max="120" step="0.5" value="45">
+    <span class="slider-val" id="a-value">45.0°</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="preset-btn">45° に合わせる</button>
+  </div>
+
+  <div class="svg-container" id="circle-wrap">
+    <svg id="circle" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <ul class="legend" id="legend"></ul>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>値のものさし</h2>
+  <p>半分の角の 3 つの値を同じ目盛りで並べます。<span id="f-a3"></span> を変えると長さが伸び縮みします。</p>
+  <div class="svg-container">
+    <svg id="bars" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="answer-box"></div>
+  <div class="note" id="n-alt"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const PI = Math.PI, D2R = PI/180;
+const DMIN = 20, DMAX = 120;
+let deg = 45;
+let animId = null;
+
+/* --- circle panel --- */
+const UW = 600, UH = 400, UOX = 180, UOY = 340, UR = 250;
+function ux(x){ return UOX + x*UR; }
+function uy(y){ return UOY - y*UR; }
+function arcAt(cx, cy, r, a0, a1){
+  const large = (a1 - a0) > PI ? 1 : 0;
+  return `M ${(cx + r*Math.cos(a0)).toFixed(2)} ${(cy - r*Math.sin(a0)).toFixed(2)} A ${r} ${r} 0 ${large} 0 ${(cx + r*Math.cos(a1)).toFixed(2)} ${(cy - r*Math.sin(a1)).toFixed(2)}`;
+}
+
+/* --- bar panel --- */
+const BX0 = 150, BX1 = 560, BMAX = 1.6;
+function bx(v){ return BX0 + Math.min(v, BMAX)/BMAX*(BX1-BX0); }
+
+function nz(v){ return Math.abs(v) < 5e-5 ? 0 : v; }
+function f4(v){ return nz(v).toFixed(4); }
+function isHalfOf45(){ return Math.abs(deg - 45) < 1e-9; }
+
+function init(){
+  tex('\\cos 22.5^\\circ\\;\\text{と}\\;\\tan 22.5^\\circ\\;\\text{の値を求める}', document.getElementById('f-goal'), true);
+  tex('\\sin^2\\dfrac{\\alpha}{2}=\\dfrac{1-\\cos\\alpha}{2},\\qquad \\cos^2\\dfrac{\\alpha}{2}=\\dfrac{1+\\cos\\alpha}{2}', document.getElementById('f-half'), true);
+  tex('\\sin^2 22.5^\\circ=\\dfrac{1-\\cos 45^\\circ}{2}=\\dfrac{2-\\sqrt{2}}{4}\\;\\Rightarrow\\;\\sin 22.5^\\circ=\\dfrac{\\sqrt{2-\\sqrt{2}}}{2}', document.getElementById('f-sin'), true);
+  tex('\\cos 22.5^\\circ=\\dfrac{\\sqrt{2+\\sqrt{2}}}{2},\\qquad \\tan 22.5^\\circ=\\sqrt{2}-1', document.getElementById('answer-box'), true);
+
+  document.getElementById('f-225').innerHTML = T('22.5^\\circ');
+  document.getElementById('f-45').innerHTML = T('45^\\circ');
+  document.getElementById('f-a1').innerHTML = T('\\alpha');
+  document.getElementById('f-a2').innerHTML = T('\\dfrac{\\alpha}{2}');
+  document.getElementById('f-a3').innerHTML = T('\\alpha');
+  document.getElementById('lbl-a').innerHTML = T('\\alpha');
+
+  document.getElementById('n-start').innerHTML =
+    '公式が与えるのは ' + T('\\sin^2\\dfrac{\\alpha}{2}') + ' や ' + T('\\cos^2\\dfrac{\\alpha}{2}') +
+    ' という 2 乗の値です。平方根をとるときに符号が 2 通り出るので、' + T('\\dfrac{\\alpha}{2}') +
+    ' がどの象限の角かを見て、正か負かを自分で決める必要があります。';
+
+  document.getElementById('legend').innerHTML =
+    '<li><span class="sw" style="background:var(--c-purple)"></span>もとの角 ' + T('\\alpha') + ' の動径</li>' +
+    '<li><span class="sw" style="background:var(--c-blue)"></span>半分の角 ' + T('\\dfrac{\\alpha}{2}') + ' の動径と、横軸上の長さ ' + T('\\cos\\dfrac{\\alpha}{2}') + '</li>' +
+    '<li><span class="sw" style="background:var(--c-green)"></span>縦軸上の長さ ' + T('\\sin\\dfrac{\\alpha}{2}') + '</li>' +
+    '<li><span class="sw" style="background:var(--c-orange)"></span>点 P ' + T('\\left(\\cos\\dfrac{\\alpha}{2},\\ \\sin\\dfrac{\\alpha}{2}\\right)') + '</li>';
+
+  document.getElementById('n-alt').innerHTML =
+    '別の道すじもあります。' + T('\\tan^2\\dfrac{\\alpha}{2}=\\dfrac{1-\\cos\\alpha}{1+\\cos\\alpha}') + ' を使うと ' +
+    T('\\tan^2 22.5^\\circ=\\dfrac{2-\\sqrt{2}}{2+\\sqrt{2}}=3-2\\sqrt{2}=(\\sqrt{2}-1)^2') +
+    ' となり、' + T('\\tan 22.5^\\circ>0') + ' から同じ答え ' + T('\\sqrt{2}-1') + ' が出ます。';
+
+  initWalkthrough();
+  setupSlider();
+  setupButtons();
+  setupDrag();
+  drawAll();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 余弦の半角の公式を使う',
+      formula: '\\cos^2\\dfrac{\\alpha}{2}=\\dfrac{1+\\cos\\alpha}{2}' },
+    { label: 'Step 2: もとの角を 45 度にとる',
+      formula: '\\alpha=45^\\circ\\;\\text{とおくと}\\;\\;\\cos^2 22.5^\\circ=\\dfrac{1+\\cos 45^\\circ}{2}' },
+    { label: 'Step 3: 45 度の余弦の値を入れる',
+      formula: '=\\dfrac{1}{2}\\left(1+\\dfrac{\\sqrt{2}}{2}\\right)=\\dfrac{2+\\sqrt{2}}{4}' },
+    { label: 'Step 4: 平方根の符号を決める',
+      formula: '0^\\circ<22.5^\\circ<90^\\circ\\;\\text{だから}\\;\\;\\cos 22.5^\\circ>0' },
+    { label: 'Step 5: 余弦の値が出る',
+      formula: '\\cos 22.5^\\circ=\\sqrt{\\dfrac{2+\\sqrt{2}}{4}}=\\dfrac{\\sqrt{2+\\sqrt{2}}}{2}' },
+    { label: 'Step 6: 正接は正弦と余弦の比',
+      formula: '\\tan 22.5^\\circ=\\dfrac{\\sin 22.5^\\circ}{\\cos 22.5^\\circ}=\\dfrac{\\ \\frac{\\sqrt{2-\\sqrt{2}}}{2}\\ }{\\ \\frac{\\sqrt{2+\\sqrt{2}}}{2}\\ }=\\dfrac{\\sqrt{2-\\sqrt{2}}}{\\sqrt{2+\\sqrt{2}}}' },
+    { label: 'Step 7: 分母を有理化する',
+      formula: '=\\dfrac{\\sqrt{2-\\sqrt{2}}\\cdot\\sqrt{2-\\sqrt{2}}}{\\sqrt{2+\\sqrt{2}}\\cdot\\sqrt{2-\\sqrt{2}}}=\\dfrac{2-\\sqrt{2}}{\\sqrt{(2+\\sqrt{2})(2-\\sqrt{2})}}' },
+    { label: 'Step 8: 根号の中を計算して整理する',
+      formula: '=\\dfrac{2-\\sqrt{2}}{\\sqrt{4-2}}=\\dfrac{2-\\sqrt{2}}{\\sqrt{2}}=\\dfrac{2}{\\sqrt{2}}-1=\\sqrt{2}-1' },
+    { label: 'Step 9: 答えをまとめる',
+      formula: '\\cos 22.5^\\circ=\\dfrac{\\sqrt{2+\\sqrt{2}}}{2}\\approx 0.9239,\\qquad \\tan 22.5^\\circ=\\sqrt{2}-1\\approx 0.4142' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawAll(){ drawCircle(); drawBars(); updateLive(); }
+
+function drawCircle(){
+  let s = '';
+  const a = deg*D2R, h = a/2;
+  const cH = Math.cos(h), sH = Math.sin(h);
+  const fx = ux(cH), fy = uy(sH);
+
+  /* axes */
+  s += `<line x1="30" y1="${UOY}" x2="470" y2="${UOY}" stroke="#bbb" stroke-width="1.5"/>`;
+  s += `<line x1="${UOX}" y1="${UOY+10}" x2="${UOX}" y2="60" stroke="#bbb" stroke-width="1.5"/>`;
+
+  /* quadrant arc of the unit circle */
+  s += `<path d="${arcAt(UOX, UOY, UR, 0, 125*D2R)}" fill="none" stroke="#e0e0e0" stroke-width="2"/>`;
+
+  /* the two lengths on the axes */
+  s += `<line x1="${UOX}" y1="${UOY}" x2="${fx.toFixed(2)}" y2="${UOY}" stroke="var(--c-blue)" stroke-width="9" opacity="0.4" stroke-linecap="butt"/>`;
+  s += `<line x1="${UOX}" y1="${UOY}" x2="${UOX}" y2="${fy.toFixed(2)}" stroke="var(--c-green)" stroke-width="9" opacity="0.4" stroke-linecap="butt"/>`;
+
+  /* dashed drop lines */
+  s += `<line x1="${fx.toFixed(2)}" y1="${fy.toFixed(2)}" x2="${fx.toFixed(2)}" y2="${UOY}" stroke="#cfcfcf" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  s += `<line x1="${fx.toFixed(2)}" y1="${fy.toFixed(2)}" x2="${UOX}" y2="${fy.toFixed(2)}" stroke="#cfcfcf" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+
+  /* the two radii */
+  s += `<line x1="${UOX}" y1="${UOY}" x2="${ux(Math.cos(a)).toFixed(2)}" y2="${uy(Math.sin(a)).toFixed(2)}" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+  s += `<circle cx="${ux(Math.cos(a)).toFixed(2)}" cy="${uy(Math.sin(a)).toFixed(2)}" r="6" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>`;
+  s += `<line x1="${UOX}" y1="${UOY}" x2="${fx.toFixed(2)}" y2="${fy.toFixed(2)}" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  /* angle arcs at the origin */
+  s += `<path d="${arcAt(UOX, UOY, 58, 0, a)}" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+  s += `<path d="${arcAt(UOX, UOY, 38, 0, h)}" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  /* point P */
+  s += `<circle cx="${fx.toFixed(2)}" cy="${fy.toFixed(2)}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  s += `<circle cx="${fx.toFixed(2)}" cy="${fy.toFixed(2)}" r="8" fill="none" stroke="var(--c-orange)" stroke-width="2.5" opacity="0.6"><animate attributeName="r" values="8;15;8" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="1.4s" repeatCount="indefinite"/></circle>`;
+
+  const halo = (x, y, t, col, anchor) => `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor||'start'}" font-size="14" font-weight="700" fill="${col}" stroke="#fff" stroke-width="3.5" paint-order="stroke">${t}</text>`;
+  s += halo(fx+13, fy-11, 'P', 'var(--c-orange)');
+  s += halo(UOX-20, UOY+22, 'O', '#888');
+
+  /* unit ticks */
+  s += `<line x1="${ux(1)}" y1="${UOY-5}" x2="${ux(1)}" y2="${UOY+5}" stroke="#999" stroke-width="1.5"/>`;
+  s += halo(ux(1), UOY+24, '1', '#999', 'middle');
+  s += `<line x1="${UOX-5}" y1="${uy(1)}" x2="${UOX+5}" y2="${uy(1)}" stroke="#999" stroke-width="1.5"/>`;
+  s += halo(UOX-11, uy(1)+5, '1', '#999', 'end');
+
+  /* numeric length readouts */
+  s += halo((UOX+fx)/2, UOY+24, f4(cH), 'var(--c-blue)', 'middle');
+  s += halo(UOX-11, (UOY+fy)/2 + 5, f4(sH), 'var(--c-green)', 'end');
+
+  /* fixed readout slot, far from every moving part */
+  const dh = deg/2;
+  s += `<foreignObject x="440" y="12" width="152" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#7b61ff;white-space:nowrap;height:100%;display:flex;align-items:center">${T(`\\alpha = ${deg.toFixed(1)}^\\circ`)}</div></foreignObject>`;
+  s += `<foreignObject x="440" y="58" width="152" height="56"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#2a6df4;white-space:nowrap;height:100%;display:flex;align-items:center">${T(`\\dfrac{\\alpha}{2} = ${dh.toFixed(2)}^\\circ`)}</div></foreignObject>`;
+  if(isHalfOf45()){
+    s += `<foreignObject x="440" y="118" width="152" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#e67e22;font-weight:700;white-space:nowrap">求めたい角です</div></foreignObject>`;
+  }
+
+  document.getElementById('circle').innerHTML = s;
+}
+
+function drawBars(){
+  let s = '';
+  const h = deg*D2R/2;
+  const rows = [
+    { y: 46,  v: Math.sin(h), col: 'var(--c-green)',  lab: '\\sin\\dfrac{\\alpha}{2}' },
+    { y: 106, v: Math.cos(h), col: 'var(--c-blue)',   lab: '\\cos\\dfrac{\\alpha}{2}' },
+    { y: 166, v: Math.tan(h), col: 'var(--c-orange)', lab: '\\tan\\dfrac{\\alpha}{2}' },
+  ];
+
+  /* grid */
+  for(let g=0; g<=BMAX+1e-9; g+=0.5){
+    s += `<line x1="${bx(g).toFixed(1)}" y1="18" x2="${bx(g).toFixed(1)}" y2="192" stroke="#f0f0f0" stroke-width="1"/>`;
+    s += `<text x="${bx(g).toFixed(1)}" y="208" text-anchor="middle" font-size="11" fill="#aaa">${g.toFixed(1)}</text>`;
+  }
+  s += `<line x1="${BX0}" y1="18" x2="${BX0}" y2="192" stroke="#999" stroke-width="1.5"/>`;
+
+  rows.forEach(r => {
+    const over = r.v > BMAX;
+    const end = bx(r.v);
+    s += `<rect x="${BX0}" y="${r.y-13}" width="${(end-BX0).toFixed(1)}" height="26" rx="4" fill="${r.col}" opacity="0.75"/>`;
+    s += `<foreignObject x="8" y="${r.y-22}" width="134" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#555;white-space:nowrap;height:100%;display:flex;align-items:center;justify-content:flex-end">${T(r.lab)}</div></foreignObject>`;
+    if(over){
+      s += `<path d="M ${BX1+4} ${r.y-11} L ${BX1+18} ${r.y} L ${BX1+4} ${r.y+11} Z" fill="${r.col}" opacity="0.75"/>`;
+      s += `<text x="${BX1-10}" y="${r.y+5}" text-anchor="end" font-size="13" font-weight="700" fill="#fff">${f4(r.v)}</text>`;
+    } else if(end + 52 > 596){
+      s += `<text x="${(end-9).toFixed(1)}" y="${r.y+5}" text-anchor="end" font-size="13" font-weight="700" fill="#fff">${f4(r.v)}</text>`;
+    } else {
+      s += `<text x="${(end+9).toFixed(1)}" y="${r.y+5}" font-size="13" font-weight="700" fill="${r.col}" stroke="#fff" stroke-width="3" paint-order="stroke">${f4(r.v)}</text>`;
+    }
+  });
+
+  document.getElementById('bars').innerHTML = s;
+}
+
+function updateLive(){
+  const a = deg*D2R, h = a/2;
+  const ca = Math.cos(a), ch = Math.cos(h);
+  let html =
+    `<div class="row">${T(`\\alpha = ${deg.toFixed(1)}^\\circ,\\quad \\dfrac{\\alpha}{2} = ${(deg/2).toFixed(2)}^\\circ`)}</div>` +
+    `<div class="row">${T(`\\cos\\alpha = ${f4(ca)}\\;\\Rightarrow\\;\\cos^2\\dfrac{\\alpha}{2} = \\dfrac{1+\\cos\\alpha}{2} = ${f4((1+ca)/2)}`)}</div>` +
+    `<div class="row">${T(`\\cos\\dfrac{\\alpha}{2} = ${f4(ch)},\\quad \\sin\\dfrac{\\alpha}{2} = ${f4(Math.sin(h))},\\quad \\tan\\dfrac{\\alpha}{2} = ${f4(Math.tan(h))}`)}</div>`;
+  if(isHalfOf45()){
+    html += `<div class="row hit">ぴったり ${T('\\alpha = 45^\\circ')} です</div>` +
+      `<div class="row">${T('\\dfrac{\\sqrt{2+\\sqrt{2}}}{2} = ' + f4(Math.sqrt(2+Math.SQRT2)/2) + ',\\quad \\sqrt{2}-1 = ' + f4(Math.SQRT2-1))}</div>`;
+  }
+  document.getElementById('live-calc').innerHTML = html;
+}
+
+function setupSlider(){
+  const slider = document.getElementById('a-slider');
+  slider.addEventListener('input', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    deg = parseFloat(slider.value);
+    syncSlider();
+    drawAll();
+  });
+}
+
+function syncSlider(){
+  document.getElementById('a-slider').value = deg;
+  document.getElementById('a-value').textContent = deg.toFixed(1) + '°';
+}
+
+function ease(p){ return p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2; }
+
+function runTo(from, to, duration){
+  if(animId){ cancelAnimationFrame(animId); animId = null; }
+  let startTime = null;
+  function animate(ts){
+    if(!startTime) startTime = ts;
+    const p = Math.min((ts - startTime)/duration, 1);
+    deg = from + (to - from)*ease(p);
+    if(p >= 1) deg = to;
+    syncSlider();
+    drawAll();
+    if(p < 1) animId = requestAnimationFrame(animate); else animId = null;
+  }
+  animId = requestAnimationFrame(animate);
+}
+
+function setupButtons(){
+  document.getElementById('anim-btn').addEventListener('click', ()=>{
+    deg = DMIN; syncSlider(); drawAll();
+    runTo(DMIN, DMAX, 6000);
+  });
+  document.getElementById('preset-btn').addEventListener('click', ()=>{
+    runTo(deg, 45, 900);
+  });
+}
+
+function setupDrag(){
+  const svg = document.getElementById('circle');
+  const wrap = document.getElementById('circle-wrap');
+  let dragging = false;
+
+  function toDeg(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const sx = (cx - rect.left)/rect.width*UW;
+    const sy = (cy - rect.top)/rect.height*UH;
+    let ang = Math.atan2(UOY - sy, sx - UOX);
+    if(ang < 0) ang = 0;
+    let d = ang/D2R*2;
+    return Math.min(DMAX, Math.max(DMIN, d));
+  }
+  function startDrag(cx, cy){
+    const rect = svg.getBoundingClientRect();
+    const sx = (cx - rect.left)/rect.width*UW;
+    const sy = (cy - rect.top)/rect.height*UH;
+    if(Math.hypot(sx - UOX, sy - UOY) < UR*0.4) return;
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    dragging = true;
+    deg = toDeg(cx, cy);
+    syncSlider(); drawAll();
+  }
+  function moveDrag(cx, cy){ deg = toDeg(cx, cy); syncSlider(); drawAll(); }
+  function endDrag(){ dragging = false; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

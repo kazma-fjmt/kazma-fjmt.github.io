@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>角の置き換えによる三角不等式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn { appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600; padding: .85rem 1.2rem;
+    border-radius: 10px; cursor: pointer; min-height: 48px; min-width: 110px; font-family: inherit; user-select: none; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+  .anim-btn-row { display: flex; justify-content: center; gap: .5rem; margin: .5rem 0; flex-wrap: wrap; }
+  .verdict { font-weight: 700; margin-top: .35rem; }
+  .verdict.yes { color: var(--c-green); }
+  .verdict.no { color: var(--c-red); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>角の置き換えによる三角不等式</h1>
+  <p class="subtitle">かっこの中をひとまとまりの角と見て、範囲ごとずらしてから弧を読み取りましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>かっこの中の角を <span id="f-t"></span> とおくと、単位円で解ける形になります。同時に角の動く範囲もそっくり平行移動することが決め手です。</p>
+  <div class="formula-box" id="f-idea"></div>
+  <div class="note" id="note-idea"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="formula-box" id="f-problem"></div>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>上のスライダーで <span id="f-th2"></span> を動かすと、青い動径が <span id="f-th3"></span>、太い動径が <span id="f-t2"></span> を表します。下のスライダーでずらす角 <span id="f-al"></span> を変えると、2 本の帯がそのまま横にずれて、答えの範囲も追いかけて変わります。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="0" max="6.28318" step="0.002" value="0">
+    <span class="slider-val" id="th-value">0.00</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-al"></span> =</label>
+    <input type="range" id="al-slider" min="-12" max="12" step="1" value="2">
+    <span class="slider-val" id="al-value"></span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="jump1">境界 1 へ</button>
+    <button class="btn" id="jump2">境界 2 へ</button>
+    <button class="btn" id="reset-al">問の設定へ</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 725" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const PI = Math.PI, TAU = 2*Math.PI, U = PI/12;
+const W = 600, CX = 300, CY = 175, R = 130;
+const GX0 = 60, GX1 = 560, GY = 450, GA = 76;
+const BY1 = 598, BY2 = 678;
+const C = Math.sqrt(3)/2, CTEX = '\\dfrac{\\sqrt{3}}{2}';
+const K0 = 2;
+
+let kAl = K0, thVal = 0, curStep = 0, animId = null;
+
+function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }
+/* LaTeX for m*pi/12, written the way the textbook does */
+function piFrac(m){
+  if(m === 0) return '0';
+  const s = m < 0 ? '-' : '', a0 = Math.abs(m), g = gcd(a0, 12), a = a0/g, q = 12/g;
+  if(q === 1) return s + (a === 1 ? '\\pi' : a + '\\pi');
+  if(a === 1) return s + '\\dfrac{\\pi}{' + q + '}';
+  return s + '\\dfrac{' + a + '}{' + q + '}\\pi';
+}
+/* theta-intervals of the solution set, in units of pi/12 over [0, 24] */
+function solIv(k){
+  const ma = ((4 - k) % 24 + 24) % 24;
+  if(ma + 4 < 24) return [{lo: 0, hi: ma, open: false}, {lo: ma + 4, hi: 24, open: true}];
+  if(ma + 4 === 24) return [{lo: 0, hi: ma, open: false}];
+  return [{lo: ma + 4 - 24, hi: ma, open: false}];
+}
+function shiftIv(iv, k){ return iv.map(function(a){ return {lo: a.lo + k, hi: a.hi + k, open: a.open}; }); }
+function ivTex(iv, name){
+  return iv.map(function(a){
+    if(a.lo === a.hi) return name + '=' + piFrac(a.lo);
+    return piFrac(a.lo) + '\\le ' + name + (a.open ? '<' : '\\le ') + piFrac(a.hi);
+  }).join(',\\;');
+}
+/* the two theta values where equality holds */
+function bounds(k){
+  const b = [((4 - k) % 24 + 24) % 24, ((8 - k) % 24 + 24) % 24];
+  return b.sort(function(x, y){ return x - y; });
+}
+function alTex(k){ return piFrac(k); }
+function sat(t){ return Math.sin(t) <= C + 1e-9; }
+
+function init(){
+  document.getElementById('f-t').innerHTML = T('t');
+  document.getElementById('f-t2').innerHTML = T('t=\\theta+\\alpha');
+  document.getElementById('f-th2').innerHTML = T('\\theta');
+  document.getElementById('f-th3').innerHTML = T('\\theta');
+  document.getElementById('f-al').innerHTML = T('\\alpha');
+  document.getElementById('lbl-th').innerHTML = T('\\theta');
+  document.getElementById('lbl-al').innerHTML = T('\\alpha');
+
+  tex('t=\\theta+\\alpha\\quad\\Longrightarrow\\quad 0\\le\\theta<2\\pi\\;\\text{ のとき }\\;\\alpha\\le t<\\alpha+2\\pi', document.getElementById('f-idea'), true);
+  tex('\\sin\\left(\\theta+\\dfrac{\\pi}{6}\\right)\\le' + CTEX + '\\quad(0\\le\\theta<2\\pi)', document.getElementById('f-problem'), true);
+  document.getElementById('note-idea').innerHTML =
+    '<strong>手順は 4 つ：</strong><br>' +
+    '1. かっこの中を ' + T('t') + ' とおき、' + T('t') + ' の動く範囲を求める<br>' +
+    '2. 不等号を等号に変えて、境界の ' + T('t') + ' を求める<br>' +
+    '3. 単位円で不等式が成り立つ側の弧をたどり、' + T('t') + ' の範囲を書く<br>' +
+    '4. ' + T('\\theta=t-\\alpha') + ' で範囲ごともとに戻す';
+
+  setupSliders();
+  setupButtons();
+  renderAll();
+}
+
+function steps(){
+  const k = K0, tIv = shiftIv(solIv(k), k);
+  return [
+    { label: 'Step 1: 解く不等式',
+      formula: '\\sin\\left(\\theta+\\dfrac{\\pi}{6}\\right)\\le' + CTEX + '\\quad(0\\le\\theta<2\\pi)' },
+    { label: 'Step 2: かっこの中を置き換える', formula: 't=\\theta+\\dfrac{\\pi}{6}\\quad\\text{とおく}' },
+    { label: 'Step 3: 置き換えた角の範囲',
+      formula: '0\\le\\theta<2\\pi\\;\\Longrightarrow\\;' + piFrac(k) + '\\le t<' + piFrac(k + 24) },
+    { label: 'Step 4: 置き換えた不等式', formula: '\\sin t\\le' + CTEX },
+    { label: 'Step 5: 等号のときの角を単位円で読む',
+      formula: '\\sin t=' + CTEX + '\\;\\Longrightarrow\\;t=\\dfrac{\\pi}{3},\\;\\dfrac{2}{3}\\pi\\;(+2n\\pi)' },
+    { label: 'Step 6: 成り立つ側の弧をたどる',
+      formula: '\\sin t\\le' + CTEX + '\\;\\text{ となるのは }\\;' + ivTex(tIv, 't') },
+    { label: 'Step 7: もとの角に戻す',
+      formula: '\\theta=t-\\dfrac{\\pi}{6}\\;\\Longrightarrow\\;' + ivTex(solIv(k), '\\theta') },
+    { label: 'Step 8: 答え', formula: ivTex(solIv(k), '\\theta') }
+  ];
+}
+
+function renderSteps(){
+  const st = steps();
+  if(curStep > st.length - 1) curStep = st.length - 1;
+  let html = '';
+  for(let i = 0; i <= curStep; i++){
+    html += '<div class="step ' + (i === curStep ? 'current' : '') + '"><div class="label">' +
+      st[i].label + '</div><div class="formula-line">' + T(st[i].formula) + '</div></div>';
+  }
+  document.getElementById('walkthrough').innerHTML = html;
+  document.getElementById('counter').textContent = (curStep + 1) + ' / ' + st.length;
+  document.getElementById('prev').disabled = curStep === 0;
+  document.getElementById('next').disabled = curStep === st.length - 1;
+}
+
+function ptx(a){ return CX + R*Math.cos(a); }
+function pty(a){ return CY - R*Math.sin(a); }
+function arcD(r, a1, a2){
+  const x1 = CX + r*Math.cos(a1), y1 = CY - r*Math.sin(a1);
+  const x2 = CX + r*Math.cos(a2), y2 = CY - r*Math.sin(a2);
+  const d = a2 - a1;
+  return 'M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + (Math.abs(d) > PI ? 1 : 0) + ' ' + (d > 0 ? 0 : 1) + ' ' + x2 + ' ' + y2;
+}
+function gx(th){ return GX0 + (th/TAU)*(GX1 - GX0); }
+function ux(m){ return gx(m*U); }
+function gy(v){ return GY - v*GA; }
+/* --- label collision bookkeeping (SVG user units) --- */
+let LBOX = [];
+function keep(x, y, w, h){ LBOX.push([x, y, x+w, y+h]); return [x, y]; }
+function busy(x, y, w, h){
+  return LBOX.some(function(b){ return x < b[2]-2 && x+w > b[0]+2 && y < b[3]-2 && y+h > b[1]+2; });
+}
+/* place a label near (ax, ay), trying offsets until a free slot is found */
+function place(ax, ay, w, h){
+  const cand = [[13,-h-2],[-w-13,-h-2],[13,4],[-w-13,4],[-w/2,-h-14],[-w/2,16],[21,-h/2],[-w-21,-h/2],[13,-h-20],[-w-13,-h-20]];
+  for(let i = 0; i < cand.length; i++){
+    const x = Math.max(2, Math.min(ax + cand[i][0], W-w-2)), y = ay + cand[i][1];
+    if(!busy(x, y, w, h)){ keep(x, y, w, h); return [x, y, cand[i][0] < 0 ? 'right' : 'left']; }
+  }
+  const fx = Math.max(2, Math.min(ax+13, W-w-2));
+  keep(fx, ay-h-2, w, h);
+  return [fx, ay-h-2, 'left'];
+}
+
+function fo(x, y, w, h, css, body){
+  return '<foreignObject x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+    '"><div xmlns="http://www.w3.org/1999/xhtml" style="' + css + '">' + body + '</div></foreignObject>';
+}
+
+function drawBar(y, iv, marks, name, k){
+  let s = fo(GX0, y - 32, 260, 26, 'font-size:12px;color:#777;font-weight:600;white-space:nowrap',
+    T(name) + ' の動く範囲');
+  s += '<line x1="' + GX0 + '" y1="' + y + '" x2="' + GX1 + '" y2="' + y + '" stroke="#ccc" stroke-width="4" stroke-linecap="round"/>';
+  iv.forEach(function(a){
+    s += '<line x1="' + ux(a.lo - k) + '" y1="' + y + '" x2="' + ux(a.hi - k) + '" y2="' + y +
+      '" stroke="var(--c-green)" stroke-width="9" opacity="0.75" stroke-linecap="round"/>';
+  });
+  marks.forEach(function(m){
+    s += '<line x1="' + ux(m.at) + '" y1="' + (y - 11) + '" x2="' + ux(m.at) + '" y2="' + (y + 11) +
+      '" stroke="' + m.col + '" stroke-width="2"/>';
+    s += fo(Math.max(2, Math.min(ux(m.at) - 34, W - 70)), y + 12, 68, 34,
+      'font-size:12px;color:' + m.col + ';font-weight:700;text-align:center', T(m.tex));
+  });
+  return s;
+}
+
+function draw(){
+  const k = kAl, al = k*U, th = thVal, t = th + al, ok = sat(t);
+  const AC = ok ? 'var(--c-green)' : 'var(--c-red)';
+  const iv = solIv(k), tIv = shiftIv(iv, k), bd = bounds(k);
+  let s = '';
+  LBOX = [];
+
+  s += '<line x1="' + (CX-R-38) + '" y1="' + CY + '" x2="' + (CX+R+38) + '" y2="' + CY + '" stroke="#bbb" stroke-width="1.5"/>';
+  s += '<line x1="' + CX + '" y1="' + (CY-R-38) + '" x2="' + CX + '" y2="' + (CY+R+38) + '" stroke="#bbb" stroke-width="1.5"/>';
+  s += fo(CX+R+26, CY-26, 26, 24, 'font-size:14px;color:#999', T('x'));
+  keep(CX+R+26, CY-26, 26, 24);
+  s += fo(CX+8, CY-R-42, 26, 24, 'font-size:14px;color:#999', T('y'));
+  keep(CX+8, CY-R-42, 26, 24);
+  s += '<text x="' + (CX-15) + '" y="' + (CY+18) + '" font-size="13" fill="#999">O</text>';
+  keep(CX-15, CY+5, 16, 16);
+  /* reserve the point markers so no label is dropped on top of one */
+  [PI/3, 2*PI/3].forEach(function(b){ keep(ptx(b)-10, pty(b)-10, 20, 20); });
+  keep(ptx(th)-9, pty(th)-9, 18, 18);
+  keep(ptx(t)-13, pty(t)-13, 26, 26);
+
+  /* the arc where sin t <= sqrt(3)/2 : from 2pi/3 round to pi/3 + 2pi */
+  s += '<path d="' + arcD(R, 2*PI/3, PI/3 + TAU) + ' Z" fill="rgba(40,167,69,0.13)" stroke="none"/>';
+  s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#999" stroke-width="1.5"/>';
+  s += '<path d="' + arcD(R, 2*PI/3, PI/3 + TAU) + '" fill="none" stroke="var(--c-green)" stroke-width="8" opacity="0.75" stroke-linecap="round"/>';
+  s += '<path d="' + arcD(R, PI/3, 2*PI/3) + '" fill="none" stroke="var(--c-red)" stroke-width="8" opacity="0.5" stroke-linecap="round"/>';
+
+  const ly = CY - C*R;
+  s += '<line x1="' + (CX-R-34) + '" y1="' + ly + '" x2="' + (CX+R+34) + '" y2="' + ly + '" stroke="var(--c-blue)" stroke-width="2" stroke-dasharray="7 5"/>';
+  s += fo(CX+R+2, ly-32, 96, 38, 'font-size:12px;color:var(--c-blue);font-weight:600;white-space:nowrap', T('y=' + CTEX));
+  keep(CX+R+2, ly-32, 96, 38);
+  [PI/3, 2*PI/3].forEach(function(b, i){
+    s += '<circle cx="' + ptx(b) + '" cy="' + pty(b) + '" r="7" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>';
+    const bp = place(ptx(b), pty(b), 62, 38);
+    s += fo(bp[0], bp[1], 62, 38, 'font-size:12px;color:var(--c-blue);font-weight:700;text-align:' + bp[2],
+      T('t=' + (i === 0 ? '\\dfrac{\\pi}{3}' : '\\dfrac{2}{3}\\pi')));
+  });
+
+  /* shift sector: from theta round to t */
+  s += '<path d="' + arcD(R*0.34, th, t) + ' L ' + CX + ' ' + CY + ' Z" fill="rgba(230,126,34,0.18)" stroke="var(--c-orange)" stroke-width="1"/>';
+  s += '<line x1="' + CX + '" y1="' + CY + '" x2="' + ptx(th) + '" y2="' + pty(th) + '" stroke="var(--c-blue)" stroke-width="2"/>';
+  s += '<circle cx="' + ptx(th) + '" cy="' + pty(th) + '" r="5.5" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>';
+  const thp = place(ptx(th), pty(th), 26, 26);
+  s += fo(thp[0], thp[1], 26, 26, 'font-size:13px;color:var(--c-blue);font-weight:700;text-align:' + thp[2], T('\\theta'));
+  s += '<line x1="' + CX + '" y1="' + CY + '" x2="' + ptx(t) + '" y2="' + pty(t) + '" stroke="' + AC + '" stroke-width="3.5"/>';
+  s += '<line x1="' + ptx(t) + '" y1="' + pty(t) + '" x2="' + CX + '" y2="' + pty(t) + '" stroke="' + AC + '" stroke-width="1.5" stroke-dasharray="4 3"/>';
+  const pr = ok ? 10 : 8;
+  s += '<circle cx="' + ptx(t) + '" cy="' + pty(t) + '" r="' + pr + '" fill="' + AC + '" stroke="#fff" stroke-width="2.5"/>';
+  if(ok){
+    s += '<circle cx="' + ptx(t) + '" cy="' + pty(t) + '" r="' + pr + '" fill="none" stroke="var(--c-green)" stroke-width="3">' +
+      '<animate attributeName="r" values="' + pr + ';' + (pr + 9) + ';' + pr + '" dur="1.2s" repeatCount="indefinite"/></circle>';
+  }
+  const tp = place(ptx(t), pty(t), 24, 28);
+  s += fo(tp[0], tp[1], 24, 28, 'font-size:14px;color:' + AC + ';font-weight:700;text-align:' + tp[2], T('t'));
+
+  /* graph of y = sin(theta + alpha) over 0 <= theta < 2pi */
+  iv.forEach(function(a){
+    s += '<rect x="' + ux(a.lo) + '" y="' + (GY-GA-14) + '" width="' + Math.max(0, ux(a.hi) - ux(a.lo)) +
+      '" height="' + (2*GA + 28) + '" fill="rgba(40,167,69,0.11)"/>';
+  });
+  s += '<line x1="' + (GX0-26) + '" y1="' + GY + '" x2="' + (GX1+20) + '" y2="' + GY + '" stroke="#bbb" stroke-width="1.5"/>';
+  s += '<line x1="' + GX0 + '" y1="' + (GY-GA-26) + '" x2="' + GX0 + '" y2="' + (GY+GA+26) + '" stroke="#bbb" stroke-width="1.5"/>';
+  s += '<text x="' + (GX0-10) + '" y="' + (gy(1)+4) + '" text-anchor="end" font-size="11" fill="#aaa">1</text>';
+  s += '<text x="' + (GX0-10) + '" y="' + (gy(-1)+4) + '" text-anchor="end" font-size="11" fill="#aaa">-1</text>';
+  s += fo(GX1+4, GY-30, 32, 28, 'font-size:13px;color:#999', T('\\theta'));
+  s += '<line x1="' + GX0 + '" y1="' + gy(C) + '" x2="' + GX1 + '" y2="' + gy(C) + '" stroke="var(--c-blue)" stroke-width="2" stroke-dasharray="7 5"/>';
+  let d = '';
+  for(let i = 0; i <= 240; i++){
+    const q = i/240*TAU;
+    d += (i === 0 ? 'M ' : 'L ') + gx(q) + ' ' + gy(Math.sin(q + al)) + ' ';
+  }
+  s += '<path d="' + d + '" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>';
+  let seg = null;
+  for(let i = 0; i <= 240; i++){
+    const q = i/240*TAU;
+    if(sat(q + al)){ if(seg === null) seg = ''; seg += (seg === '' ? 'M ' : 'L ') + gx(q) + ' ' + gy(Math.sin(q + al)) + ' '; }
+    else { if(seg) s += '<path d="' + seg + '" fill="none" stroke="var(--c-green)" stroke-width="5" opacity="0.85"/>'; seg = null; }
+  }
+  if(seg) s += '<path d="' + seg + '" fill="none" stroke="var(--c-green)" stroke-width="5" opacity="0.85"/>';
+  s += fo(GX1-200, GY-GA-44, 208, 30, 'font-size:12px;color:var(--c-purple);font-weight:600;text-align:right;white-space:nowrap',
+    T('y=\\sin(\\theta+\\alpha)'));
+  s += fo(GX0+10, gy(C)-42, 100, 38, 'font-size:12px;color:var(--c-blue);font-weight:600;white-space:nowrap;background:rgba(250,250,250,0.9);border-radius:4px', T('y=' + CTEX));
+  s += '<line x1="' + gx(th) + '" y1="' + (GY-GA-16) + '" x2="' + gx(th) + '" y2="' + (GY+GA+16) + '" stroke="' + AC + '" stroke-width="1.5" opacity="0.65"/>';
+  s += '<circle cx="' + gx(th) + '" cy="' + gy(Math.sin(t)) + '" r="7" fill="' + AC + '" stroke="#fff" stroke-width="2.5"/>';
+
+  /* two range bars: theta above, t below, aligned column by column */
+  const thMarks = [{at: 0, tex: '0', col: '#999'}, {at: 24, tex: '2\\pi', col: '#999'}];
+  bd.forEach(function(m){ if(m !== 0 && m !== 24) thMarks.push({at: m, tex: piFrac(m), col: 'var(--c-blue)'}); });
+  s += drawBar(BY1, iv, thMarks, '\\theta', 0);
+  const tMarks = [{at: 0, tex: piFrac(k), col: '#999'}, {at: 24, tex: piFrac(k + 24), col: '#999'}];
+  bd.forEach(function(m){ if(m !== 0 && m !== 24) tMarks.push({at: m, tex: piFrac(m + k), col: 'var(--c-blue)'}); });
+  s += drawBar(BY2, tIv, tMarks, 't', k);
+  [BY1, BY2].forEach(function(y){
+    s += '<circle cx="' + gx(th) + '" cy="' + y + '" r="6" fill="' + AC + '" stroke="#fff" stroke-width="2"/>';
+  });
+  s += '<line x1="' + gx(th) + '" y1="' + (BY1 + 8) + '" x2="' + gx(th) + '" y2="' + (BY2 - 8) + '" stroke="' + AC + '" stroke-width="1.5" stroke-dasharray="4 3"/>';
+
+  document.getElementById('graph').innerHTML = s;
+
+  const f2 = function(v){ return (Math.round(v*100)/100).toFixed(2); };
+  document.getElementById('live-calc').innerHTML =
+    T('\\theta=' + f2(th)) + '&nbsp;&nbsp;' + T('t=\\theta+\\alpha=' + f2(t)) + '&nbsp;&nbsp;' +
+    T('\\sin t=' + f2(Math.sin(t))) +
+    '<div class="verdict ' + (ok ? 'yes' : 'no') + '">' + T('\\sin t\\le' + CTEX) +
+    (ok ? ' &nbsp;は成り立ちます（緑の弧の上）' : ' &nbsp;は成り立ちません（赤い弧の上）') + '</div>';
+
+  const head = (k === K0) ? '\\text{答え：}' : '\\text{いまの }\\alpha\\text{ での答え：}';
+  tex(head + ivTex(iv, '\\theta'), document.getElementById('result-box'), true);
+}
+
+function renderAll(){ renderSteps(); draw(); }
+
+function setSlider(v){
+  thVal = v;
+  document.getElementById('th-slider').value = v;
+  document.getElementById('th-value').textContent = v.toFixed(2);
+  draw();
+}
+function setAlpha(k){
+  kAl = k;
+  document.getElementById('al-slider').value = k;
+  document.getElementById('al-value').innerHTML = T(alTex(k));
+  draw();
+}
+function setupSliders(){
+  const sl = document.getElementById('th-slider');
+  sl.addEventListener('input', function(){ stopAnim(); setSlider(parseFloat(sl.value)); });
+  const al = document.getElementById('al-slider');
+  al.addEventListener('input', function(){ stopAnim(); setAlpha(parseInt(al.value, 10)); });
+  setAlpha(K0);
+}
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId = null; } }
+
+function glide(target){
+  stopAnim();
+  const start = thVal, dur = 900;
+  let t0 = null;
+  function frame(ts){
+    if(!t0) t0 = ts;
+    const pr = Math.min((ts - t0)/dur, 1);
+    const e = pr < 0.5 ? 2*pr*pr : 1 - Math.pow(-2*pr + 2, 2)/2;
+    setSlider(start + (target - start)*e);
+    if(pr < 1) animId = requestAnimationFrame(frame); else { animId = null; setSlider(target); }
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+function setupButtons(){
+  document.getElementById('prev').addEventListener('click', function(){ if(curStep > 0){ curStep--; renderSteps(); } });
+  document.getElementById('next').addEventListener('click', function(){ if(curStep < steps().length - 1){ curStep++; renderSteps(); } });
+  document.getElementById('jump1').addEventListener('click', function(){ glide(bounds(kAl)[0]*U); });
+  document.getElementById('jump2').addEventListener('click', function(){ glide(bounds(kAl)[1]*U); });
+  document.getElementById('reset-al').addEventListener('click', function(){ stopAnim(); setAlpha(K0); });
+  document.getElementById('anim-btn').addEventListener('click', function(){
+    stopAnim();
+    const dur = 7000;
+    let t0 = null;
+    function frame(ts){
+      if(!t0) t0 = ts;
+      const pr = Math.min((ts - t0)/dur, 1);
+      setSlider(pr*TAU*0.9999);
+      if(pr < 1) animId = requestAnimationFrame(frame); else animId = null;
+    }
+    setSlider(0);
+    animId = requestAnimationFrame(frame);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

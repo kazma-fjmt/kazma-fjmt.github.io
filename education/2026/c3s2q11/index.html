@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>2倍角を用いた三角方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.05rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0 0; flex-wrap: wrap; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; font-family: inherit; padding: .7rem 1.1rem;
+    border-radius: 10px 10px 0 0; cursor: pointer; min-height: 48px; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 0 10px 10px 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 7rem; overflow-x: auto;
+  }
+  .step { padding: .7rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .7rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .label .katex { font-size: .85rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.02rem; }
+  .step.current .formula-line .katex { font-size: 1.12rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.02rem; }
+  .live-calc .row { margin: .3rem 0; }
+  .live-calc .row.hit { color: var(--c-green); font-weight: 700; }
+
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; justify-content: center; margin: .5rem 0; font-size: .9rem; }
+  .legend .item { display: flex; align-items: center; gap: .4rem; }
+  .legend .swatch { width: 24px; height: 5px; border-radius: 3px; display: inline-block; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>2倍角を用いた三角方程式</h1>
+  <p class="subtitle"><span id="i-c2"></span> を置き換えて 2 次方程式に直し、単位円で角を読み取れるようになりましょう。</p>
+
+  <h2>解く方程式</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>どの形に直すか</h2>
+  <p><span id="i-c2b"></span> には 3 通りの形があります。<strong>方程式にもう 1 つ現れている関数だけが残る形</strong>を選ぶのがこつです。</p>
+  <div class="formula-box" id="f-forms"></div>
+  <p class="note">(1) には <span id="i-cost"></span> があるので <span id="i-form1"></span> を、(2) には <span id="i-sint"></span> があるので <span id="i-form2"></span> を選びます。どちらも 1 種類の関数だけの 2 次方程式になります。</p>
+
+  <h2>解法ウォークスルー</h2>
+  <p>タブで (1) と (2) を切り替えられます。</p>
+  <div class="tabs">
+    <button class="tab active" id="tab-c" data-mode="c"></button>
+    <button class="tab" id="tab-s" data-mode="s"></button>
+  </div>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>左は 2 次式のグラフ、右は単位円です。<span id="i-th"></span> を動かすと、円上の点 <span id="i-p"></span> と、その <span id="i-projname"></span> が作る値 <span id="i-t"></span> が連動します。<span id="i-t2"></span> が 2 次方程式の解になる瞬間が、求める角です。</p>
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background:var(--c-purple)"></span><span id="lg-g"></span></span>
+    <span class="item"><span class="swatch" style="background:var(--c-orange)"></span><span id="lg-t"></span></span>
+    <span class="item"><span class="dot" style="background:var(--c-green)"></span><span id="lg-sol"></span></span>
+    <span class="item"><span class="dot" style="background:var(--c-blue)"></span><span id="lg-p"></span></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="t-slider" min="0" max="6.2832" step="0.004" value="1.0472">
+    <span class="slider-val" id="t-value">60&deg;</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="sol-btn">解の角へ</button>
+  </div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="fig" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">右の円の中をドラッグしても角を変えられます</p>
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="hint-note"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=340;
+const AXC=155,AXR=110,YT=44,GMAX=3.2,GMIN=-1.5,GS=(300-44)/(3.2+1.5);
+const BCX=448,BCY=176,BR=88;
+const TAU=2*Math.PI, PI=Math.PI;
+let mode='c', th=PI/3, animId=null, dragging=false, solIdx=0;
+const curStep={c:0,s:0};
+
+const MODES={
+  c:{
+    tabLat:'(1)\\;\\cos 2\\theta-\\cos\\theta+1=0',
+    varLat:'\\cos\\theta', projName:'横の位置',
+    gLat:'2t^2-t', gFactorLat:'t(2t-1)',
+    proj:function(t){return Math.cos(t);},
+    g:function(t){return 2*t*t-t;},
+    lhs:function(t){return Math.cos(2*t)-Math.cos(t)+1;},
+    roots:[0,0.5], rootsLat:'t=0,\\;\\dfrac{1}{2}',
+    sols:[PI/3,PI/2,3*PI/2,5*PI/3],
+    solsLat:['\\dfrac{\\pi}{3}','\\dfrac{\\pi}{2}','\\dfrac{3}{2}\\pi','\\dfrac{5}{3}\\pi'],
+    ansLat:'\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{\\pi}{2},\\;\\dfrac{3}{2}\\pi,\\;\\dfrac{5}{3}\\pi',
+    vertical:true
+  },
+  s:{
+    tabLat:'(2)\\;\\cos 2\\theta+\\sin\\theta=0',
+    varLat:'\\sin\\theta', projName:'縦の高さ',
+    gLat:'2t^2-t-1', gFactorLat:'(2t+1)(t-1)',
+    proj:function(t){return Math.sin(t);},
+    g:function(t){return 2*t*t-t-1;},
+    lhs:function(t){return Math.cos(2*t)+Math.sin(t);},
+    roots:[-0.5,1], rootsLat:'t=-\\dfrac{1}{2},\\;1',
+    sols:[PI/2,7*PI/6,11*PI/6],
+    solsLat:['\\dfrac{\\pi}{2}','\\dfrac{7}{6}\\pi','\\dfrac{11}{6}\\pi'],
+    ansLat:'\\theta=\\dfrac{\\pi}{2},\\;\\dfrac{7}{6}\\pi,\\;\\dfrac{11}{6}\\pi',
+    vertical:false
+  }
+};
+
+function fmt(v){ if(!isFinite(v)) return '-'; if(Math.abs(v)<5e-4) return '0.000'; return v.toFixed(3); }
+function xt(t){ return AXC+t*AXR; }
+function yg(g){ return YT+(GMAX-Math.max(GMIN,Math.min(GMAX,g)))*GS; }
+
+function stepsFor(m){
+  if(m==='c') return [
+    {label:'Step 1: 与えられた方程式', formula:'\\cos 2\\theta-\\cos\\theta+1=0\\qquad(0\\le\\theta<2\\pi)'},
+    {label:'Step 2: '+T('\\cos\\theta')+' が残る形を選ぶ', formula:'\\cos 2\\theta=2\\cos^2\\theta-1'},
+    {label:'Step 3: 代入する', formula:'(2\\cos^2\\theta-1)-\\cos\\theta+1=0'},
+    {label:'Step 4: 整理する', formula:'2\\cos^2\\theta-\\cos\\theta=0'},
+    {label:'Step 5: '+T('t=\\cos\\theta')+' とおくと 2 次方程式', formula:'2t^2-t=0\\;\\Longleftrightarrow\\;t(2t-1)=0'},
+    {label:'Step 6: 2 次方程式を解く', formula:'t=0\\;\\text{ または }\\;t=\\dfrac{1}{2}'},
+    {label:'Step 7: '+T('\\cos\\theta=0')+' の角を単位円で読む', formula:'\\theta=\\dfrac{\\pi}{2},\\;\\dfrac{3}{2}\\pi'},
+    {label:'Step 8: '+T('\\cos\\theta=\\dfrac{1}{2}')+' の角を単位円で読む', formula:'\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{5}{3}\\pi'},
+    {label:'Step 9: 小さい順に並べて答え', formula:'\\theta=\\dfrac{\\pi}{3},\\;\\dfrac{\\pi}{2},\\;\\dfrac{3}{2}\\pi,\\;\\dfrac{5}{3}\\pi'}
+  ];
+  return [
+    {label:'Step 1: 与えられた方程式', formula:'\\cos 2\\theta+\\sin\\theta=0\\qquad(0\\le\\theta<2\\pi)'},
+    {label:'Step 2: '+T('\\sin\\theta')+' が残る形を選ぶ', formula:'\\cos 2\\theta=1-2\\sin^2\\theta'},
+    {label:'Step 3: 代入する', formula:'(1-2\\sin^2\\theta)+\\sin\\theta=0'},
+    {label:'Step 4: 両辺に '+T('-1')+' を掛けて整理する', formula:'2\\sin^2\\theta-\\sin\\theta-1=0'},
+    {label:'Step 5: '+T('t=\\sin\\theta')+' とおくと 2 次方程式', formula:'2t^2-t-1=0\\;\\Longleftrightarrow\\;(2t+1)(t-1)=0'},
+    {label:'Step 6: 2 次方程式を解く', formula:'t=-\\dfrac{1}{2}\\;\\text{ または }\\;t=1'},
+    {label:'Step 7: '+T('\\sin\\theta=-\\dfrac{1}{2}')+' の角を単位円で読む', formula:'\\theta=\\dfrac{7}{6}\\pi,\\;\\dfrac{11}{6}\\pi'},
+    {label:'Step 8: '+T('\\sin\\theta=1')+' の角を単位円で読む', formula:'\\theta=\\dfrac{\\pi}{2}'},
+    {label:'Step 9: 小さい順に並べて答え', formula:'\\theta=\\dfrac{\\pi}{2},\\;\\dfrac{7}{6}\\pi,\\;\\dfrac{11}{6}\\pi'}
+  ];
+}
+
+function init(){
+  document.getElementById('i-c2').innerHTML=T('\\cos 2\\theta');
+  document.getElementById('i-c2b').innerHTML=T('\\cos 2\\theta');
+  document.getElementById('i-cost').innerHTML=T('\\cos\\theta');
+  document.getElementById('i-sint').innerHTML=T('\\sin\\theta');
+  document.getElementById('i-form1').innerHTML=T('2\\cos^2\\theta-1');
+  document.getElementById('i-form2').innerHTML=T('1-2\\sin^2\\theta');
+  document.getElementById('i-th').innerHTML=T('\\theta');
+  document.getElementById('i-p').innerHTML=T('\\mathrm{P}');
+  document.getElementById('i-t').innerHTML=T('t');
+  document.getElementById('i-t2').innerHTML=T('t');
+  document.getElementById('lbl-th').innerHTML=T('\\theta');
+  tex('\\begin{aligned}'+
+      '&0\\le\\theta<2\\pi\\;\\text{ のとき、次の方程式を解く} \\\\[6pt]'+
+      '(1)\\;\\; &\\cos 2\\theta-\\cos\\theta+1=0 \\\\[4pt]'+
+      '(2)\\;\\; &\\cos 2\\theta+\\sin\\theta=0'+
+      '\\end{aligned}', document.getElementById('f-problem'), true);
+  tex('\\cos 2\\theta=\\cos^2\\theta-\\sin^2\\theta=1-2\\sin^2\\theta=2\\cos^2\\theta-1',
+      document.getElementById('f-forms'), true);
+  document.getElementById('tab-c').innerHTML=T(MODES.c.tabLat);
+  document.getElementById('tab-s').innerHTML=T(MODES.s.tabLat);
+  setupTabs();
+  setupWalkthrough();
+  setupSlider();
+  setupButtons();
+  setupDrag();
+  syncMode();
+}
+
+function syncMode(){
+  const M=MODES[mode];
+  document.getElementById('i-projname').textContent=M.projName;
+  document.getElementById('lg-g').innerHTML=T('y='+M.gLat+'\\;\\text{（2次式）}');
+  document.getElementById('lg-t').innerHTML=T('t='+M.varLat);
+  document.getElementById('lg-sol').innerHTML=T('\\text{解の角}');
+  document.getElementById('lg-p').innerHTML=T('\\mathrm{P}\\;\\text{（いまの角）}');
+  renderSteps();
+  draw();
+}
+
+function setupTabs(){
+  const tabs=document.querySelectorAll('.tab');
+  for(const b of tabs){
+    b.addEventListener('click',function(){
+      mode=b.dataset.mode; solIdx=0;
+      for(const o of tabs) o.classList.toggle('active',o===b);
+      syncMode();
+    });
+  }
+}
+
+let renderSteps=function(){};
+function setupWalkthrough(){
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  renderSteps=function(){
+    const steps=stepsFor(mode), cur=curStep[mode];
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  };
+  prevBtn.addEventListener('click',function(){ if(curStep[mode]>0){curStep[mode]--;renderSteps();} });
+  nextBtn.addEventListener('click',function(){ if(curStep[mode]<stepsFor(mode).length-1){curStep[mode]++;renderSteps();} });
+}
+
+function draw(){
+  const M=MODES[mode];
+  const tv=M.proj(th), gv=M.g(tv);
+  let s='';
+  s+=`<line x1="302" y1="18" x2="302" y2="322" stroke="#eee" stroke-width="1.5"/>`;
+  /* ---- left panel: the quadratic ---- */
+  s+=`<foreignObject x="18" y="5" width="272" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#666">${T('y='+M.gLat+',\\;\\;t='+M.varLat)}</div></foreignObject>`;
+  const y0=yg(0);
+  s+=`<line x1="32" y1="${y0.toFixed(1)}" x2="284" y2="${y0.toFixed(1)}" stroke="#bbb" stroke-width="1.5"/>`;
+  s+=`<line x1="${AXC}" y1="${YT}" x2="${AXC}" y2="300" stroke="#bbb" stroke-width="1.5"/>`;
+  s+=`<foreignObject x="276" y="${(y0-30).toFixed(1)}" width="24" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('t')}</div></foreignObject>`;
+  s+=`<foreignObject x="${AXC+8}" y="38" width="24" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${xt(-1)}" y="${(y0+20).toFixed(1)}" text-anchor="middle" font-size="11" fill="#aaa">−1</text>`;
+  s+=`<text x="${xt(1)}" y="${(y0+20).toFixed(1)}" text-anchor="middle" font-size="11" fill="#aaa">1</text>`;
+  s+=`<text x="${AXC-6}" y="${(y0+20).toFixed(1)}" text-anchor="end" font-size="11" fill="#aaa">O</text>`;
+  let d='';
+  for(let i=0;i<=160;i++){
+    const t=-1+2*i/160;
+    d+=(i?'L':'M')+` ${xt(t).toFixed(2)} ${yg(M.g(t)).toFixed(2)}`;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--c-purple)" stroke-width="3"/>`;
+  for(const r of M.roots){
+    s+=`<line x1="${xt(r).toFixed(1)}" y1="${YT}" x2="${xt(r).toFixed(1)}" y2="300" stroke="var(--c-green)" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.65"/>`;
+    s+=`<circle cx="${xt(r).toFixed(1)}" cy="${y0.toFixed(1)}" r="6" fill="var(--c-green)" stroke="#fff" stroke-width="2"/>`;
+  }
+  s+=`<line x1="${xt(tv).toFixed(1)}" y1="${y0.toFixed(1)}" x2="${xt(tv).toFixed(1)}" y2="${yg(gv).toFixed(1)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="4 4"/>`;
+  s+=`<circle cx="${xt(tv).toFixed(1)}" cy="${yg(gv).toFixed(1)}" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<path d="M ${(xt(tv)-6).toFixed(1)} ${(y0+7).toFixed(1)} L ${(xt(tv)+6).toFixed(1)} ${(y0+7).toFixed(1)} L ${xt(tv).toFixed(1)} ${(y0+1).toFixed(1)} Z" fill="var(--c-orange)"/>`;
+  /* ---- right panel: the unit circle ---- */
+  s+=`<line x1="${BCX-BR-30}" y1="${BCY}" x2="${BCX+BR+30}" y2="${BCY}" stroke="#bbb" stroke-width="1.5"/>`;
+  s+=`<line x1="${BCX}" y1="${BCY-BR-48}" x2="${BCX}" y2="${BCY+BR+30}" stroke="#bbb" stroke-width="1.5"/>`;
+  s+=`<circle cx="${BCX}" cy="${BCY}" r="${BR}" fill="none" stroke="#ccc" stroke-width="2"/>`;
+  s+=`<foreignObject x="${BCX+BR+40}" y="${BCY-30}" width="24" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${BCX+14}" y="${BCY-BR-60}" width="24" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<text x="${BCX-8}" y="${BCY+16}" text-anchor="end" font-size="11" fill="#aaa">O</text>`;
+  for(const r of M.roots){
+    if(M.vertical) s+=`<line x1="${(BCX+r*BR).toFixed(1)}" y1="${BCY-BR-14}" x2="${(BCX+r*BR).toFixed(1)}" y2="${BCY+BR+14}" stroke="var(--c-green)" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.65"/>`;
+    else s+=`<line x1="${BCX-BR-10}" y1="${(BCY-r*BR).toFixed(1)}" x2="${BCX+BR+6}" y2="${(BCY-r*BR).toFixed(1)}" stroke="var(--c-green)" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.65"/>`;
+  }
+  if(M.vertical) s+=`<line x1="${(BCX+tv*BR).toFixed(1)}" y1="${BCY-BR-14}" x2="${(BCX+tv*BR).toFixed(1)}" y2="${BCY+BR+14}" stroke="var(--c-orange)" stroke-width="2"/>`;
+  else s+=`<line x1="${BCX-BR-10}" y1="${(BCY-tv*BR).toFixed(1)}" x2="${BCX+BR+6}" y2="${(BCY-tv*BR).toFixed(1)}" stroke="var(--c-orange)" stroke-width="2"/>`;
+  s+=`<line x1="${BCX}" y1="${BCY}" x2="${(BCX+BR*Math.cos(th)).toFixed(1)}" y2="${(BCY-BR*Math.sin(th)).toFixed(1)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+  for(let i=0;i<M.sols.length;i++){
+    const a=M.sols[i];
+    const sx=BCX+BR*Math.cos(a), sy=BCY-BR*Math.sin(a);
+    s+=`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2"/>`;
+    if(Math.abs(Math.cos(th-a)-1)<2e-4){
+      s+=`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7" fill="none" stroke="var(--c-green)" stroke-width="3"><animate attributeName="r" values="7;18;7" dur="1.2s" repeatCount="indefinite"/></circle>`;
+    }
+  }
+  s+=`<circle cx="${(BCX+BR*Math.cos(th)).toFixed(1)}" cy="${(BCY-BR*Math.sin(th)).toFixed(1)}" r="7" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<text x="${(BCX+(BR+20)*Math.cos(th)).toFixed(1)}" y="${(BCY-(BR+20)*Math.sin(th)+5).toFixed(1)}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--c-blue)" stroke="#fff" stroke-width="4" paint-order="stroke">P</text>`;
+  document.getElementById('fig').innerHTML=s;
+  updateReadout(tv,gv);
+}
+
+function updateReadout(tv,gv){
+  const M=MODES[mode];
+  const lc=document.getElementById('live-calc');
+  let hit=-1;
+  for(let i=0;i<M.sols.length;i++){ if(Math.abs(Math.cos(th-M.sols[i])-1)<2e-4) hit=i; }
+  let rows='';
+  rows+=`<div class="row">${T('\\theta='+(th*180/PI).toFixed(1)+'^\\circ')}</div>`;
+  rows+=`<div class="row">${T('t='+M.varLat+'='+fmt(tv))}</div>`;
+  rows+=`<div class="row">${T('2\\text{次式 }'+M.gLat+'='+fmt(gv))}</div>`;
+  rows+=`<div class="row">${T('\\text{2次方程式の解 }'+M.rootsLat)}</div>`;
+  if(hit>=0) rows+=`<div class="row hit">${T('\\theta='+M.solsLat[hit]+'\\;\\text{ は解のひとつ}')}</div>`;
+  else rows+=`<div class="row">${T('\\text{元の左辺}='+fmt(M.lhs(th)))}</div>`;
+  lc.innerHTML=rows;
+  const note=document.getElementById('hint-note');
+  if(hit>=0){
+    note.innerHTML='橙の直線がちょうど緑の直線に重なり、'+T('\\mathrm{P}')+' が緑の点に乗りました。'+
+      'このとき左のグラフでも橙の点が '+T('t')+' 軸上にあります。<br>この方程式の答えは '+T(M.ansLat)+' です。';
+  } else {
+    note.innerHTML='橙の直線を緑の直線に重ねてみましょう。重なる角が答えです。'+
+      '緑の直線の位置は、2 次方程式 '+T(M.gLat+'=0')+' の解 '+T(M.rootsLat)+' から決まります。';
+  }
+}
+
+function setSlider(){
+  document.getElementById('t-slider').value=th;
+  document.getElementById('t-value').textContent=Math.round(th*180/PI)+'°';
+}
+
+function setupSlider(){
+  const sl=document.getElementById('t-slider');
+  sl.addEventListener('input',function(){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    th=parseFloat(sl.value);
+    document.getElementById('t-value').textContent=Math.round(th*180/PI)+'°';
+    draw();
+  });
+  setSlider();
+}
+
+function setupButtons(){
+  document.getElementById('sol-btn').addEventListener('click',function(){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const M=MODES[mode];
+    th=M.sols[solIdx%M.sols.length]; solIdx++;
+    setSlider(); draw();
+  });
+  document.getElementById('anim-btn').addEventListener('click',function(){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const dur=7000; let t0=null;
+    function step(ts){
+      if(!t0) t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      th=TAU*p;
+      setSlider(); draw();
+      if(p<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+}
+
+function toAngle(clientX,clientY){
+  const svg=document.getElementById('fig');
+  const rect=svg.getBoundingClientRect();
+  const sx=(clientX-rect.left)/rect.width*W;
+  const sy=(clientY-rect.top)/rect.height*H;
+  const a=Math.atan2(BCY-sy,sx-BCX);
+  return ((a%TAU)+TAU)%TAU;
+}
+function moveDrag(x,y){ th=toAngle(x,y); setSlider(); draw(); }
+function inCirclePanel(clientX){
+  const rect=document.getElementById('fig').getBoundingClientRect();
+  return (clientX-rect.left)/rect.width*W > 302;
+}
+function setupDrag(){
+  const wrap=document.getElementById('svg-wrap');
+  function startDrag(x,y){
+    if(!inCirclePanel(x)) return;
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    dragging=true; moveDrag(x,y);
+  }
+  wrap.addEventListener('mousedown',function(e){ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove',function(e){ if(dragging){ e.preventDefault(); moveDrag(e.clientX,e.clientY); } });
+  window.addEventListener('mouseup',function(){ dragging=false; });
+  wrap.addEventListener('touchstart',function(e){ const p=e.touches[0]; startDrag(p.clientX,p.clientY); },{passive:true});
+  wrap.addEventListener('touchmove',function(e){ if(dragging){ e.preventDefault(); const p=e.touches[0]; moveDrag(p.clientX,p.clientY); } },{passive:false});
+  wrap.addEventListener('touchend',function(){ dragging=false; });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

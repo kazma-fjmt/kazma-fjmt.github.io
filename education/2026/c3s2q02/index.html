@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>角の和の正弦と余弦</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.1rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.small { min-width: 0; padding: .7rem 1rem; font-size: .95rem; }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    flex: 1; text-align: center; appearance: none; font-family: inherit; font-size: 1rem;
+    padding: .75rem .5rem; border: 1px solid #d4dbeb; border-radius: 10px;
+    background: #fff; color: var(--accent); font-weight: 600; cursor: pointer; min-height: 48px;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+  .preset-row { display: flex; justify-content: center; gap: .5rem; flex-wrap: wrap; margin: .75rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: center; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .9rem; }
+  .legend span.key { display: inline-block; width: 1.1rem; height: .35rem; border-radius: 2px; margin-right: .4rem; vertical-align: 3px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>角の和の正弦と余弦</h1>
+  <p class="subtitle">直角三角形の組み立てから加法定理を読み取り、<span id="s-goal"></span> を求めましょう。</p>
+
+  <h2>和の角に使う2つの公式</h2>
+  <div class="formula-box" id="f-sum"></div>
+  <p><span id="s-split"></span> のように、値の分かっている2つの角の和に分ければ、この2式だけで計算できます。まずは公式そのものが図の上でどう組み上がるのかを見ます。</p>
+
+  <h2>図で組み立てる</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab-sin">正弦を組み立てる</button>
+    <button class="tab" id="tab-cos">余弦を組み立てる</button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="15" max="80" step="1" value="45">
+    <span class="slider-val" id="a-value">45°</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-b"></span> =</label>
+    <input type="range" id="b-slider" min="15" max="80" step="1" value="60">
+    <span class="slider-val" id="b-value">60°</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">重ねる</button>
+    <button class="btn" id="reset-btn">もどす</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 560" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend" id="legend"></div>
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note1"></div>
+
+  <h2>値を代入する</h2>
+  <p>下のボタンをタップすると、その組み合わせが図と式の両方に入ります。</p>
+  <div class="preset-row">
+    <button class="btn small" id="p1">45° と 60°</button>
+    <button class="btn small" id="p2">45° と 30°</button>
+    <button class="btn small" id="p3">30° と 60°</button>
+  </div>
+  <div class="formula-box" id="exact-box"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=560,ox=250,oy=490,S=210,D2R=Math.PI/180;
+let alphaDeg=45, betaDeg=60, mode='sin', slideT=0, animId=null;
+
+function f4(v){let s=v.toFixed(4);if(s==='-0.0000')s='0.0000';return s;}
+function PX(x){return ox+x*S;}
+function PY(y){return oy-y*S;}
+function clampX(x,w){return Math.max(2,Math.min(x,W-w-2));}
+function clampY(y,h){return Math.max(2,Math.min(y,H-h-2));}
+function fo(x,y,w,h,inner,style){
+  return `<foreignObject x="${clampX(x,w)}" y="${clampY(y,h)}" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="${style}">${inner}</div></foreignObject>`;
+}
+function halo(x,y,txt,col){
+  return `<text x="${Math.max(12,Math.min(x,W-12))}" y="${Math.max(18,Math.min(y,H-6))}" text-anchor="middle" font-size="18" font-weight="700" fill="${col}" stroke="#fff" stroke-width="3.5" paint-order="stroke">${txt}</text>`;
+}
+function nrm(x,y){const d=Math.hypot(x,y)||1;return {x:x/d,y:y/d};}
+function ra(p,q,r,sz){
+  const u=nrm(q.x-p.x,q.y-p.y), v=nrm(r.x-p.x,r.y-p.y);
+  return `<path d="M ${p.x+u.x*sz} ${p.y+u.y*sz} L ${p.x+(u.x+v.x)*sz} ${p.y+(u.y+v.y)*sz} L ${p.x+v.x*sz} ${p.y+v.y*sz}" fill="none" stroke="#bbb" stroke-width="1.6"/>`;
+}
+function seg(p,q,col,w,extra){
+  return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${extra||''}/>`;
+}
+
+const SIN15={0:'0',15:'\\dfrac{\\sqrt{6}-\\sqrt{2}}{4}',30:'\\dfrac{1}{2}',45:'\\dfrac{\\sqrt{2}}{2}',60:'\\dfrac{\\sqrt{3}}{2}',
+  75:'\\dfrac{\\sqrt{6}+\\sqrt{2}}{4}',90:'1',105:'\\dfrac{\\sqrt{6}+\\sqrt{2}}{4}',120:'\\dfrac{\\sqrt{3}}{2}',
+  135:'\\dfrac{\\sqrt{2}}{2}',150:'\\dfrac{1}{2}',165:'\\dfrac{\\sqrt{6}-\\sqrt{2}}{4}',180:'0'};
+const COS15={0:'1',15:'\\dfrac{\\sqrt{6}+\\sqrt{2}}{4}',30:'\\dfrac{\\sqrt{3}}{2}',45:'\\dfrac{\\sqrt{2}}{2}',60:'\\dfrac{1}{2}',
+  75:'\\dfrac{\\sqrt{6}-\\sqrt{2}}{4}',90:'0',105:'-\\dfrac{\\sqrt{6}-\\sqrt{2}}{4}',120:'-\\dfrac{1}{2}',
+  135:'-\\dfrac{\\sqrt{2}}{2}',150:'-\\dfrac{\\sqrt{3}}{2}',165:'-\\dfrac{\\sqrt{6}+\\sqrt{2}}{4}',180:'-1'};
+const SPECIAL={30:{s:'\\dfrac{1}{2}',c:'\\dfrac{\\sqrt{3}}{2}'},45:{s:'\\dfrac{\\sqrt{2}}{2}',c:'\\dfrac{\\sqrt{2}}{2}'},
+  60:{s:'\\dfrac{\\sqrt{3}}{2}',c:'\\dfrac{1}{2}'},90:{s:'1',c:'0'}};
+
+function geom(){
+  const a=alphaDeg*D2R,b=betaDeg*D2R,g=a+b;
+  const A={x:Math.cos(g),y:Math.sin(g)};
+  const B={x:Math.cos(a)*Math.cos(b),y:Math.cos(a)*Math.sin(b)};
+  return {a:a,b:b,g:g,A:A,B:B,C:{x:B.x,y:0},Hp:{x:A.x,y:0},I:{x:B.x,y:A.y}};
+}
+
+function init(){
+  document.getElementById('s-goal').innerHTML=T('\\sin 105^\\circ')+'、'+T('\\cos 105^\\circ');
+  document.getElementById('s-split').innerHTML=T('105^\\circ=45^\\circ+60^\\circ');
+  document.getElementById('lbl-a').innerHTML=T('\\alpha');
+  document.getElementById('lbl-b').innerHTML=T('\\beta');
+
+  tex('\\begin{aligned}\\sin(\\alpha+\\beta)&=\\sin\\alpha\\cos\\beta+\\cos\\alpha\\sin\\beta\\\\ \\cos(\\alpha+\\beta)&=\\cos\\alpha\\cos\\beta-\\sin\\alpha\\sin\\beta\\end{aligned}',
+    document.getElementById('f-sum'), true);
+
+  setupTabs();
+  setupSliders();
+  setupAnim();
+  setupPresets();
+  initWalkthrough();
+  refreshMode();
+}
+
+function refreshMode(){
+  document.getElementById('tab-sin').classList.toggle('active',mode==='sin');
+  document.getElementById('tab-cos').classList.toggle('active',mode==='cos');
+  if(mode==='sin'){
+    document.getElementById('mode-desc').innerHTML=
+      '半径 '+T('\\mathrm{OA}=1')+' の動径を角 '+T('\\alpha+\\beta')+' の向きに置くと、高さ '+T('\\mathrm{AH}')+' がそのまま '+T('\\sin(\\alpha+\\beta)')+
+      ' です。長方形 '+T('\\mathrm{AHCI}')+' の反対側の辺 '+T('\\mathrm{IC}')+' は点 '+T('\\mathrm{B}')+' で2つに切れていて、この2本が公式の右辺の2項になります。「高さを重ねる」で '+T('\\mathrm{AH}')+' を右へ運んでください。';
+    document.getElementById('anim-btn').innerHTML='高さを重ねる';
+  }else{
+    document.getElementById('mode-desc').innerHTML=
+      '同じ図の横の辺を見ます。'+T('\\mathrm{OC}')+' から長方形の上辺 '+T('\\mathrm{AI}')+' の分だけ戻った位置が '+T('\\mathrm{H}')+' で、その符号つきの座標が '+T('\\cos(\\alpha+\\beta)')+
+      ' です。「横幅を重ねる」で '+T('\\mathrm{AI}')+' を軸まで下ろしてください。';
+    document.getElementById('anim-btn').innerHTML='横幅を重ねる';
+  }
+  draw();
+}
+
+function draw(){
+  const G=geom();
+  const A={x:PX(G.A.x),y:PY(G.A.y)}, B={x:PX(G.B.x),y:PY(G.B.y)},
+        C={x:PX(G.C.x),y:oy}, Hp={x:PX(G.Hp.x),y:oy}, I={x:PX(G.I.x),y:PY(G.I.y)}, O={x:ox,y:oy};
+  let s='';
+
+  /* axes and unit arc */
+  s+=`<line x1="20" y1="${oy}" x2="${W-20}" y2="${oy}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${ox}" y1="${oy+34}" x2="${ox}" y2="200" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<path d="M ${ox+S} ${oy} A ${S} ${S} 0 0 0 ${ox+S*Math.cos(170*D2R)} ${oy-S*Math.sin(170*D2R)}" fill="none" stroke="#e8e8e8" stroke-width="2"/>`;
+  s+=fo(W-40,oy-26,26,24,T('x'),'font-size:14px;color:#aaa');
+  s+=fo(ox+30,205,26,24,T('y'),'font-size:14px;color:#aaa');
+
+  /* rectangle AHCI */
+  s+=`<polygon points="${A.x},${A.y} ${Hp.x},${Hp.y} ${C.x},${C.y} ${I.x},${I.y}" fill="#f4f2ff" stroke="#d7d0f5" stroke-width="1.5"/>`;
+
+  /* angle arcs */
+  s+=`<path d="M ${ox+62} ${oy} A 62 62 0 0 0 ${ox+62*Math.cos(G.b)} ${oy-62*Math.sin(G.b)}" fill="none" stroke="var(--c-green)" stroke-width="2.5"/>`;
+  s+=`<path d="M ${ox+96*Math.cos(G.b)} ${oy-96*Math.sin(G.b)} A 96 96 0 0 0 ${ox+96*Math.cos(G.g)} ${oy-96*Math.sin(G.g)}" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+  const lb={x:ox+40*Math.cos(G.b/2),y:oy-40*Math.sin(G.b/2)};
+  const la={x:ox+124*Math.cos((G.b+G.g)/2),y:oy-124*Math.sin((G.b+G.g)/2)};
+  s+=fo(lb.x-17,lb.y-14,34,28,T('\\beta'),'font-size:15px;color:var(--c-green);font-weight:700;text-align:center;background:rgba(255,255,255,.88);border-radius:5px');
+  s+=fo(la.x-17,la.y-14,34,28,T('\\alpha'),'font-size:15px;color:var(--c-purple);font-weight:700;text-align:center;background:rgba(255,255,255,.88);border-radius:5px');
+
+  /* frame segments */
+  s+=seg(O,A,'var(--c-purple)',3);
+  s+=seg(O,B,'#9aa4b5',2.5);
+  s+=seg(B,A,'#9aa4b5',2.5);
+  s+=seg(B,C,'#c9cfd8',1.5,'stroke-dasharray="5 4"');
+  s+=ra(B,O,A,13);
+  s+=ra(Hp,O,A,13);
+  s+=ra(C,{x:C.x,y:C.y-30},{x:ox,y:oy},13);
+
+  /* mode-specific highlighted segments */
+  if(mode==='sin'){
+    s+=seg({x:C.x,y:PY(G.I.y)},B,'var(--c-blue)',7);
+    s+=seg(B,C,'var(--c-green)',7);
+    s+=seg(A,Hp,'var(--c-orange)',5);
+  }else{
+    s+=seg(O,C,'var(--c-green)',7);
+    s+=seg(A,I,'var(--c-red)',7);
+    s+=seg(O,Hp,'var(--c-orange)',5);
+  }
+
+  /* sliding copy */
+  if(slideT>0.001){
+    let p1,p2;
+    if(mode==='sin'){
+      const gx=A.x+(C.x-A.x)*slideT;
+      p1={x:gx,y:A.y}; p2={x:gx,y:oy};
+    }else{
+      const gy=A.y+(oy-A.y)*slideT;
+      p1={x:A.x,y:gy}; p2={x:I.x,y:gy};
+    }
+    /* the ghost keeps the colour of the segment it copies (AH in sin mode, AI in cos mode) */
+    const gcol = mode==='sin' ? 'var(--c-orange)' : 'var(--c-red)';
+    s+=seg(p1,p2,gcol,9,'opacity="0.55"');
+    if(slideT>0.999){
+      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+      s+=`<circle cx="${mid.x}" cy="${mid.y}" r="10" fill="none" stroke="${gcol}" stroke-width="3"><animate attributeName="r" values="10;18;10" dur="1.2s" repeatCount="indefinite"/></circle>`;
+    }
+  }
+
+  /* points */
+  const pts=[[O,'#666'],[A,'var(--c-purple)'],[B,'#5b6472'],[C,'var(--c-green)'],[Hp,'var(--c-orange)'],[I,'#8a7fd0']];
+  for(const q of pts) s+=`<circle cx="${q[0].x}" cy="${q[0].y}" r="6" fill="${q[1]}" stroke="#fff" stroke-width="2"/>`;
+
+  /* labels: single letters only, then pushed apart so none of the six collide */
+  const L=[
+    {n:'O',c:'#666',x:ox-18,y:oy+26},
+    {n:'H',c:'var(--c-orange)',x:Hp.x,y:oy+26},
+    {n:'C',c:'var(--c-green)',x:C.x,y:oy+26},
+    {n:'A',c:'var(--c-purple)',x:ox+(S+30)*Math.cos(G.g),y:oy-(S+30)*Math.sin(G.g)+6},
+    {n:'B',c:'#5b6472',x:ox+(Math.cos(G.a)*S+28)*Math.cos(G.b),y:oy-(Math.cos(G.a)*S+28)*Math.sin(G.b)+6},
+    {n:'I',c:'#8a7fd0',x:I.x+20,y:I.y-8}
+  ];
+  for(let it=0;it<30;it++){
+    let moved=false;
+    for(let i=0;i<L.length;i++) for(let j=i+1;j<L.length;j++){
+      let dx=L[j].x-L[i].x, dy=L[j].y-L[i].y, d=Math.hypot(dx,dy);
+      if(d<30){
+        if(d<0.01){dx=0;dy=1;d=1;}
+        const k=(30-d)/(2*d);
+        L[i].x-=dx*k; L[i].y-=dy*k; L[j].x+=dx*k; L[j].y+=dy*k; moved=true;
+      }
+    }
+    if(!moved) break;
+  }
+  for(const q of L) s+=halo(q.x,q.y,q.n,q.c);
+
+  document.getElementById('graph').innerHTML=s;
+  updateReadouts();
+}
+
+function updateReadouts(){
+  const a=alphaDeg*D2R,b=betaDeg*D2R,g=alphaDeg+betaDeg;
+  const t1=Math.sin(a)*Math.cos(b), t2=Math.cos(a)*Math.sin(b);
+  const u1=Math.cos(a)*Math.cos(b), u2=Math.sin(a)*Math.sin(b);
+  const L=document.getElementById('legend'), Lc=document.getElementById('live-calc'), N=document.getElementById('note1');
+  function key(c){return `<span class="key" style="background:${c}"></span>`;}
+  if(mode==='sin'){
+    L.innerHTML=`<div>${key('var(--c-orange)')}${T('\\mathrm{AH}=\\sin(\\alpha+\\beta)')}</div>`+
+      `<div>${key('var(--c-blue)')}${T('\\mathrm{IB}=\\sin\\alpha\\cos\\beta')}</div>`+
+      `<div>${key('var(--c-green)')}${T('\\mathrm{BC}=\\cos\\alpha\\sin\\beta')}</div>`;
+    Lc.innerHTML=T(`\\sin\\alpha\\cos\\beta+\\cos\\alpha\\sin\\beta=${f4(t1)}+${f4(t2)}=${f4(t1+t2)}`)+'<br>'+
+      T(`\\sin(\\alpha+\\beta)=\\sin ${g}^\\circ=${f4(Math.sin(g*D2R))}`);
+    N.innerHTML='長方形の向かい合う辺だから '+T('\\mathrm{AH}=\\mathrm{IC}')+' で、点 '+T('\\mathrm{B}')+' が '+T('\\mathrm{IC}')+
+      ' を2つに分けています。'+T('\\mathrm{AB}=\\sin\\alpha')+'、'+T('\\mathrm{OB}=\\cos\\alpha')+' を使うと、上の '+T('\\mathrm{IB}')+' は '+
+      T('\\sin\\alpha\\cos\\beta')+'、下の '+T('\\mathrm{BC}')+' は '+T('\\cos\\alpha\\sin\\beta')+' になります。';
+  }else{
+    L.innerHTML=`<div>${key('var(--c-orange)')}${T('\\mathrm{OH}=\\cos(\\alpha+\\beta)')}</div>`+
+      `<div>${key('var(--c-green)')}${T('\\mathrm{OC}=\\cos\\alpha\\cos\\beta')}</div>`+
+      `<div>${key('var(--c-red)')}${T('\\mathrm{AI}=\\sin\\alpha\\sin\\beta')}</div>`;
+    Lc.innerHTML=T(`\\cos\\alpha\\cos\\beta-\\sin\\alpha\\sin\\beta=${f4(u1)}-${f4(u2)}=${f4(u1-u2)}`)+'<br>'+
+      T(`\\cos(\\alpha+\\beta)=\\cos ${g}^\\circ=${f4(Math.cos(g*D2R))}`);
+    N.innerHTML=(u1-u2<-1e-9)
+      ? T('\\mathrm{AI}')+' が '+T('\\mathrm{OC}')+' より長いので、引き算の結果は原点より左に出ます。つまり '+T('\\alpha+\\beta>90^\\circ')+' のとき '+T('\\cos(\\alpha+\\beta)')+' は負の値です。'
+      : T('\\mathrm{OC}')+' から長方形の横幅 '+T('\\mathrm{AI}')+' を引いた残りが '+T('\\mathrm{OH}')+' です。'+T('\\alpha+\\beta')+' を大きくして、この残りが原点を越えて負になる様子も見てください。';
+  }
+}
+
+function setupTabs(){
+  document.getElementById('tab-sin').addEventListener('click',()=>{if(mode!=='sin'){mode='sin';slideT=0;stopAnim();refreshMode();}});
+  document.getElementById('tab-cos').addEventListener('click',()=>{if(mode!=='cos'){mode='cos';slideT=0;stopAnim();refreshMode();}});
+}
+function setupSliders(){
+  const sa=document.getElementById('a-slider'), sb=document.getElementById('b-slider');
+  sa.addEventListener('input',()=>{alphaDeg=parseFloat(sa.value);document.getElementById('a-value').textContent=alphaDeg+'°';updateExact();draw();});
+  sb.addEventListener('input',()=>{betaDeg=parseFloat(sb.value);document.getElementById('b-value').textContent=betaDeg+'°';updateExact();draw();});
+}
+function setPair(a,b){
+  alphaDeg=a; betaDeg=b;
+  document.getElementById('a-slider').value=a;
+  document.getElementById('b-slider').value=b;
+  document.getElementById('a-value').textContent=a+'°';
+  document.getElementById('b-value').textContent=b+'°';
+  updateExact(); draw();
+}
+function setupPresets(){
+  document.getElementById('p1').addEventListener('click',()=>setPair(45,60));
+  document.getElementById('p2').addEventListener('click',()=>setPair(45,30));
+  document.getElementById('p3').addEventListener('click',()=>setPair(30,60));
+}
+
+function updateExact(){
+  const box=document.getElementById('exact-box');
+  const A=SPECIAL[alphaDeg], B=SPECIAL[betaDeg], g=alphaDeg+betaDeg;
+  if(!A||!B){
+    box.innerHTML='<div style="color:#888;font-size:.92rem">'+
+      T('\\alpha')+' と '+T('\\beta')+' の両方が '+T('30^\\circ')+'、'+T('45^\\circ')+'、'+T('60^\\circ')+
+      ' のいずれかのとき、値が分数と根号のままで求まります。上のボタンで組を選んでください。</div>';
+    return;
+  }
+  const sExact=SIN15[g]||null, cExact=COS15[g]||null;
+  let h=T(`\\alpha+\\beta=${alphaDeg}^\\circ+${betaDeg}^\\circ=${g}^\\circ`)+'<br>';
+  h+=T(`\\sin ${g}^\\circ=${A.s}\\cdot ${B.c}+${A.c}\\cdot ${B.s}`+(sExact?`=${sExact}`:''))+'<br>';
+  h+=T(`\\cos ${g}^\\circ=${A.c}\\cdot ${B.c}-${A.s}\\cdot ${B.s}`+(cExact?`=${cExact}`:''))+'<br>';
+  h+='<div style="font-size:.85rem;color:#888;margin-top:.4rem">'+
+      T(`\\sin ${g}^\\circ=${f4(Math.sin(g*D2R))}`)+'、'+T(`\\cos ${g}^\\circ=${f4(Math.cos(g*D2R))}`)+'</div>';
+  box.innerHTML=h;
+}
+
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+function setupAnim(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    let st=null; const dur=1600;
+    function stepFn(ts){
+      if(!st) st=ts;
+      const p=Math.min((ts-st)/dur,1);
+      slideT = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+      draw();
+      if(p<1){ animId=requestAnimationFrame(stepFn); }
+      else { animId=null; slideT=1; draw(); }
+    }
+    animId=requestAnimationFrame(stepFn);
+  });
+  document.getElementById('reset-btn').addEventListener('click',()=>{ stopAnim(); slideT=0; draw(); });
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 値の分かる2つの角の和に分ける',
+     formula:'105^\\circ=45^\\circ+60^\\circ'},
+    {label:'Step 2: 正弦の加法定理を用意する',
+     formula:'\\sin(\\alpha+\\beta)=\\sin\\alpha\\cos\\beta+\\cos\\alpha\\sin\\beta'},
+    {label:'Step 3: 45° と 60° を代入する',
+     formula:'\\sin 105^\\circ=\\sin 45^\\circ\\cos 60^\\circ+\\cos 45^\\circ\\sin 60^\\circ'},
+    {label:'Step 4: それぞれの値を入れる',
+     formula:'=\\dfrac{\\sqrt{2}}{2}\\cdot\\dfrac{1}{2}+\\dfrac{\\sqrt{2}}{2}\\cdot\\dfrac{\\sqrt{3}}{2}'},
+    {label:'Step 5: 通分して整理する',
+     formula:'=\\dfrac{\\sqrt{2}}{4}+\\dfrac{\\sqrt{6}}{4}=\\dfrac{\\sqrt{6}+\\sqrt{2}}{4}'},
+    {label:'Step 6: 余弦の加法定理に切り替える（符号が引き算になる）',
+     formula:'\\cos(\\alpha+\\beta)=\\cos\\alpha\\cos\\beta-\\sin\\alpha\\sin\\beta'},
+    {label:'Step 7: 同じ2角を代入する',
+     formula:'\\cos 105^\\circ=\\cos 45^\\circ\\cos 60^\\circ-\\sin 45^\\circ\\sin 60^\\circ=\\dfrac{\\sqrt{2}}{2}\\cdot\\dfrac{1}{2}-\\dfrac{\\sqrt{2}}{2}\\cdot\\dfrac{\\sqrt{3}}{2}'},
+    {label:'Step 8: 整理する（105° は鈍角なので余弦は負）',
+     formula:'=\\dfrac{\\sqrt{2}}{4}-\\dfrac{\\sqrt{6}}{4}=\\dfrac{\\sqrt{2}-\\sqrt{6}}{4}=-\\dfrac{\\sqrt{6}-\\sqrt{2}}{4}'},
+    {label:'Step 9: 答え',
+     formula:'\\sin 105^\\circ=\\dfrac{\\sqrt{6}+\\sqrt{2}}{4},\\qquad \\cos 105^\\circ=\\dfrac{\\sqrt{2}-\\sqrt{6}}{4}'},
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+  updateExact();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

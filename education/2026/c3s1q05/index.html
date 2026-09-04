@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>扇形の弧の長さと面積</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>扇形の弧の長さと面積</h1>
+  <p class="subtitle">中心角を弧度で表すと、扇形の弧の長さと面積がかけ算だけで求められることを確かめましょう。</p>
+
+  <h2>公式のなりたち</h2>
+  <p>1 つの円において、扇形の弧の長さと面積はともに中心角に比例します。半径 <span id="f-r"></span>、中心角 <span id="f-th"></span> の扇形の弧の長さを <span id="f-ll"></span>、面積を <span id="f-SS"></span> とすると、次の比例式が成り立ちます。</p>
+  <div class="formula-box" id="f-prop"></div>
+  <p>ここから、次の 2 つの公式が得られます。</p>
+  <div class="formula-box" id="f-main"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>動かして確かめよう</h2>
+  <p>半径と中心角のスライダーを動かすか、図の弧の端をドラッグしてください。「弧をのばす」をタップすると、弧がまっすぐに伸びて長さが半径の <span id="f-thn"></span> 倍であることが見えます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-r"></span> =</label>
+    <input type="range" id="r-slider" min="1" max="10" step="1" value="6">
+    <span class="slider-val" id="r-value">6</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="k-slider" min="1" max="24" step="1" value="9">
+    <span class="slider-val" id="k-value"></span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="unroll-btn">弧をのばす</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 560" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">弧の端の点をドラッグすると中心角が変わります</p>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>半径 <span id="f-q1"></span>、中心角 <span id="f-q2"></span> の扇形の弧の長さと面積を求めましょう。</p>
+
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=560,cx=190,cy=250;
+let rVal=6, kVal=9, unroll=0, animId=null, unrollId=null;
+
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
+
+/* LaTeX for (n/d) * pi, reduced */
+function fracPi(n,d){
+  if(n===0) return '0';
+  const g=gcd(n,d); n=n/g; d=d/g;
+  if(d===1) return (n===1?'\\pi':n+'\\pi');
+  if(n===1) return '\\dfrac{\\pi}{'+d+'}';
+  return '\\dfrac{'+n+'}{'+d+'}\\pi';
+}
+function thetaTex(){ return fracPi(kVal,12); }
+function arcTex(){ return fracPi(rVal*kVal,12); }
+function areaTex(){ return fracPi(rVal*rVal*kVal,24); }
+
+function theta(){ return kVal*Math.PI/12; }
+function arcLen(){ return rVal*theta(); }
+function area(){ return 0.5*rVal*rVal*theta(); }
+
+function init(){
+  document.getElementById('f-r').innerHTML=T('r');
+  document.getElementById('f-th').innerHTML=T('\\theta');
+  document.getElementById('f-ll').innerHTML=T('l');
+  document.getElementById('f-SS').innerHTML=T('S');
+  document.getElementById('f-thn').innerHTML=T('\\theta');
+  document.getElementById('lbl-r').innerHTML=T('r');
+  document.getElementById('lbl-t').innerHTML=T('\\theta');
+  document.getElementById('f-q1').innerHTML=T('6');
+  document.getElementById('f-q2').innerHTML=T('\\dfrac{3}{4}\\pi');
+
+  tex('l : 2\\pi r = \\theta : 2\\pi, \\qquad S : \\pi r^2 = \\theta : 2\\pi', document.getElementById('f-prop'), true);
+  tex('l = r\\theta, \\qquad S = \\dfrac{1}{2} r^2 \\theta = \\dfrac{1}{2} l r', document.getElementById('f-main'), true);
+  document.getElementById('f-note').innerHTML =
+    '中心角 ' + T('\\theta') + ' は弧度で測った値です。円全体は ' + T('\\theta = 2\\pi') + ' なので、'
+    + T('l = 2\\pi r') + '、' + T('S = \\pi r^2') + ' と、よく知っている円周と円の面積に戻ります。';
+
+  initWalkthrough();
+  setupSliders();
+  setupButtons();
+  setupDrag();
+  draw();
+
+  tex('l = \\dfrac{9}{2}\\pi, \\qquad S = \\dfrac{27}{2}\\pi', document.getElementById('result-box'), true);
+}
+
+function scaleOf(){
+  return Math.min(150/rVal, 470/Math.max(arcLen(),0.5), 46);
+}
+
+function draw(){
+  const svg=document.getElementById('graph');
+  const th=theta(), sc=scaleOf(), R=rVal*sc, L=arcLen()*sc;
+  const lineY=490, lineX=55;
+  let s='';
+
+  /* faint full circle */
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R.toFixed(2)+'" fill="none" stroke="#eee" stroke-width="2" stroke-dasharray="6 5"/>';
+
+  /* sector fill */
+  const N=140;
+  let pts='M '+cx+' '+cy;
+  for(let i=0;i<=N;i++){
+    const t=th*i/N;
+    pts+=' L '+(cx+R*Math.cos(t)).toFixed(2)+' '+(cy-R*Math.sin(t)).toFixed(2);
+  }
+  pts+=' Z';
+  s+='<path d="'+pts+'" fill="rgba(42,109,244,0.14)" stroke="none" opacity="'+(1-unroll*0.75).toFixed(3)+'"/>';
+
+  /* radii */
+  const endX=cx+R*Math.cos(th), endY=cy-R*Math.sin(th);
+  s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+R)+'" y2="'+cy+'" stroke="var(--c-blue)" stroke-width="3"/>';
+  s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+endX.toFixed(2)+'" y2="'+endY.toFixed(2)+'" stroke="var(--c-blue)" stroke-width="3" opacity="'+(1-unroll*0.6).toFixed(3)+'"/>';
+
+  /* central angle mark */
+  const ar=Math.min(34, R*0.30);
+  let apath='M '+(cx+ar)+' '+cy;
+  for(let i=0;i<=60;i++){ const t=th*i/60; apath+=' L '+(cx+ar*Math.cos(t)).toFixed(2)+' '+(cy-ar*Math.sin(t)).toFixed(2); }
+  s+='<path d="'+apath+'" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>';
+  const thR=ar+18;
+  const alx=cx+thR*Math.cos(th/2), aly=cy-thR*Math.sin(th/2);
+  s+='<foreignObject x="'+(alx-9).toFixed(1)+'" y="'+(aly-14).toFixed(1)+'" width="40" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-purple);font-weight:700;white-space:nowrap;display:inline-block">'+T('\\theta')+'</div></foreignObject>';
+
+  /* radius label */
+  s+='<foreignObject x="'+(cx+R/2-8)+'" y="'+(cy+12)+'" width="40" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-blue);font-weight:700;display:inline-block">'+T('r')+'</div></foreignObject>';
+
+  /* area label inside sector */
+  const sR=R*0.74;
+  if(sR-thR>32){
+    const slx=cx+sR*Math.cos(th/2), sly=cy-sR*Math.sin(th/2);
+    s+='<foreignObject x="'+(slx-9).toFixed(1)+'" y="'+(sly-15).toFixed(1)+'" width="40" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;color:var(--c-blue);font-weight:700;display:inline-block">'+T('S')+'</div></foreignObject>';
+  }
+
+  /* morphing arc: circle arc -> straight segment */
+  let arcPath='';
+  for(let i=0;i<=N;i++){
+    const u=i/N, t=th*u;
+    const ax=cx+R*Math.cos(t), ay=cy-R*Math.sin(t);
+    const bx=lineX+L*u, by=lineY;
+    const x=ax+(bx-ax)*unroll, y=ay+(by-ay)*unroll;
+    arcPath+=(i===0?'M ':'L ')+x.toFixed(2)+' '+y.toFixed(2)+' ';
+  }
+  s+='<path d="'+arcPath+'" fill="none" stroke="var(--c-orange)" stroke-width="6" stroke-linecap="round"/>';
+
+  /* ruler of radius-length ticks under the straightened arc */
+  if(unroll>0.02){
+    const op=unroll.toFixed(3);
+    s+='<line x1="'+lineX+'" y1="'+(lineY+30)+'" x2="'+(lineX+L).toFixed(2)+'" y2="'+(lineY+30)+'" stroke="var(--c-green)" stroke-width="2" opacity="'+op+'"/>';
+    for(let j=0;j*rVal<=arcLen()+1e-9;j++){
+      const xj=lineX+j*rVal*sc;
+      s+='<line x1="'+xj.toFixed(2)+'" y1="'+(lineY+22)+'" x2="'+xj.toFixed(2)+'" y2="'+(lineY+38)+'" stroke="var(--c-green)" stroke-width="2.5" opacity="'+op+'"/>';
+      if(j*rVal+rVal<=arcLen()+1e-9){
+        s+='<foreignObject x="'+(xj+rVal*sc/2-8).toFixed(2)+'" y="'+(lineY+38)+'" width="40" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-green);font-weight:700;opacity:'+op+'">'+T('r')+'</div></foreignObject>';
+      }
+    }
+    s+='<foreignObject x="'+lineX+'" y="'+(lineY-42)+'" width="330" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-orange);font-weight:700;white-space:nowrap;display:inline-block;opacity:'+op+'">'+T('l = r\\theta = '+arcTex())+'</div></foreignObject>';
+  }
+
+  /* endpoints */
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#666"/>';
+  s+='<text x="'+(cx-20)+'" y="'+(cy+20)+'" font-size="14" fill="#666" font-weight="700">O</text>';
+  const hx=endX+((lineX+L)-endX)*unroll, hy=endY+(lineY-endY)*unroll;
+  s+='<circle cx="'+hx.toFixed(2)+'" cy="'+hy.toFixed(2)+'" r="10" fill="var(--c-orange)" stroke="#fff" stroke-width="3"><animate attributeName="r" values="10;14;10" dur="1.6s" repeatCount="indefinite"/></circle>';
+
+  /* headline values */
+  s+='<foreignObject x="356" y="20" width="240" height="212"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;color:var(--fg);font-weight:700;line-height:2.9;white-space:nowrap;background:rgba(255,255,255,0.9);border-radius:8px;padding:6px 10px;">'
+    +T('r = '+rVal)+'<br/>'+T('\\theta = '+thetaTex())+'<br/>'+T('l = '+arcTex())+'<br/>'+T('S = '+areaTex())+'</div></foreignObject>';
+
+  svg.innerHTML=s;
+
+  document.getElementById('r-value').textContent=rVal;
+  document.getElementById('k-value').innerHTML=T(thetaTex());
+  document.getElementById('live-calc').innerHTML=
+    T('l = r\\theta = '+rVal+'\\times '+thetaTex()+' = '+arcTex())+'<br>'+
+    T('S = \\dfrac{1}{2}r^2\\theta = \\dfrac{1}{2}\\times '+rVal+'^2 \\times '+thetaTex()+' = '+areaTex())+'<br>'+
+    T('S = \\dfrac{1}{2}lr = \\dfrac{1}{2}\\times '+arcTex()+'\\times '+rVal+' = '+areaTex())+'<br>'+
+    '<span style="color:var(--c-orange);font-weight:600">'+T('l \\approx '+arcLen().toFixed(2))+' 、'+T('S \\approx '+area().toFixed(2))+'</span>';
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 条件を弧度で書き出す', formula:'r = 6, \\qquad \\theta = \\dfrac{3}{4}\\pi', r:6, k:9 },
+    { label:'Step 2: 弧の長さの公式', formula:'l = r\\theta', r:6, k:9 },
+    { label:'Step 3: 弧の長さに代入', formula:'l = 6 \\times \\dfrac{3}{4}\\pi = \\dfrac{18}{4}\\pi = \\dfrac{9}{2}\\pi', r:6, k:9 },
+    { label:'Step 4: 面積の公式', formula:'S = \\dfrac{1}{2} r^2 \\theta', r:6, k:9 },
+    { label:'Step 5: 面積に代入', formula:'S = \\dfrac{1}{2} \\times 6^2 \\times \\dfrac{3}{4}\\pi = \\dfrac{1}{2}\\times 36 \\times \\dfrac{3}{4}\\pi = \\dfrac{27}{2}\\pi', r:6, k:9 },
+    { label:'Step 6: もう一つの式で検算', formula:'S = \\dfrac{1}{2} l r = \\dfrac{1}{2}\\times \\dfrac{9}{2}\\pi \\times 6 = \\dfrac{27}{2}\\pi', r:6, k:9 },
+    { label:'Step 7: 円全体と比べる', formula:'\\dfrac{\\theta}{2\\pi} = \\dfrac{3\\pi/4}{2\\pi} = \\dfrac{3}{8}\\;\\text{（円の}\\;\\dfrac{3}{8}\\;\\text{にあたる）}', r:6, k:24 },
+    { label:'Step 8: 答え', formula:'l = \\dfrac{9}{2}\\pi, \\qquad S = \\dfrac{27}{2}\\pi', r:6, k:9 }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    container.innerHTML=html;
+    counter.textContent=(cur+1)+' / '+steps.length;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+    setRK(steps[cur].r, steps[cur].k);
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function setRK(r,k){
+  stopAnim();
+  rVal=r; kVal=k;
+  document.getElementById('r-slider').value=r;
+  document.getElementById('k-slider').value=k;
+  draw();
+}
+
+function stopAnim(){
+  if(animId){ cancelAnimationFrame(animId); animId=null; }
+}
+
+function setupSliders(){
+  document.getElementById('r-slider').addEventListener('input',e=>{
+    stopAnim(); rVal=parseInt(e.target.value,10); draw();
+  });
+  document.getElementById('k-slider').addEventListener('input',e=>{
+    stopAnim(); kVal=parseInt(e.target.value,10); draw();
+  });
+}
+
+function setupButtons(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const slider=document.getElementById('k-slider');
+    const duration=4200; let startTime=null;
+    function step(ts){
+      if(!startTime) startTime=ts;
+      const pr=Math.min((ts-startTime)/duration,1);
+      const eased = pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+      kVal=Math.max(1,Math.round(1+23*eased));
+      slider.value=kVal;
+      draw();
+      if(pr<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+
+  const ub=document.getElementById('unroll-btn');
+  ub.addEventListener('click',()=>{
+    if(unrollId){ cancelAnimationFrame(unrollId); unrollId=null; }
+    const from=unroll, to=(unroll<0.5?1:0);
+    ub.textContent = (to===1 ? '弧をもどす' : '弧をのばす');
+    const duration=1200; let startTime=null;
+    function step(ts){
+      if(!startTime) startTime=ts;
+      const pr=Math.min((ts-startTime)/duration,1);
+      const eased = pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+      unroll=from+(to-from)*eased;
+      draw();
+      if(pr<1) unrollId=requestAnimationFrame(step); else unrollId=null;
+    }
+    unrollId=requestAnimationFrame(step);
+  });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph');
+  const wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toSvg(clx,cly){
+    const rect=svg.getBoundingClientRect();
+    return { x:(clx-rect.left)/rect.width*W, y:(cly-rect.top)/rect.height*H };
+  }
+  function startDrag(clx,cly){
+    const p=toSvg(clx,cly);
+    const d=Math.sqrt((p.x-cx)*(p.x-cx)+(p.y-cy)*(p.y-cy));
+    const R=rVal*scaleOf();
+    if(d>R*0.4 && d<R*1.4){ dragging=true; moveDrag(clx,cly); }
+  }
+  function moveDrag(clx,cly){
+    stopAnim();
+    const p=toSvg(clx,cly);
+    let a=Math.atan2(cy-p.y, p.x-cx);
+    if(a<0) a+=2*Math.PI;
+    let k=Math.round(a/(Math.PI/12));
+    if(k<1) k=1; if(k>24) k=24;
+    kVal=k;
+    document.getElementById('k-slider').value=kVal;
+    draw();
+  }
+  function endDrag(){ dragging=false; }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX,e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX,t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

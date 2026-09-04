@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>負の角の三角関数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc .row { margin: .3rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .compare-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; overflow: hidden; margin: .75rem 0; font-size: .95rem; }
+  .compare-table th, .compare-table td { border-bottom: 1px solid #eee; padding: .6rem .5rem; text-align: center; }
+  .compare-table th { background: #f5f8ff; color: var(--muted); font-weight: 600; }
+  .compare-table tr:last-child td { border-bottom: none; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>負の角の三角関数</h1>
+  <p class="subtitle">角 <span id="s-mt"></span> の動径は角 <span id="s-t"></span> の動径と x 軸について対称です。</p>
+
+  <h2>基本の考え方</h2>
+  <p>角 <span id="f-t"></span> の動径 <span id="f-op"></span> と、角 <span id="f-mt"></span> の動径 <span id="f-op2"></span> は、x 軸をはさんで向かい合います。だから交点の座標は x が同じで、y だけ符号が反対になります。</p>
+  <div class="formula-box" id="f-coord"></div>
+  <div class="formula-box" id="f-rules"></div>
+
+  <h2>求めたい値</h2>
+  <div class="formula-box" id="f-goal"></div>
+
+  <h2>動かして確かめよう</h2>
+  <p>円周上の点 <span id="f-p"></span> をドラッグするか、スライダーで角 <span id="f-t2"></span> を変えてみましょう。緑の点 <span id="f-p2"></span> がいつも x 軸の反対側に付いてきます。</p>
+  <p class="drag-hint">円周上のオレンジの点をタップ＆ドラッグで動かせます</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="0.05" max="6.23" step="0.01" value="2.62">
+    <span class="slider-val" id="th-value">2.62</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="set-btn">求める角にする</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="circle" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>グラフで見る対称性</h2>
+  <p><span id="f-sin"></span> は原点について対称、<span id="f-cos"></span> は y 軸について対称です。この対称性が符号の規則そのものです。</p>
+
+  <div class="svg-container" id="wave-wrap">
+    <svg id="wave" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th></th><th id="th-a"></th><th id="th-b"></th><th>関係</th></tr></thead>
+    <tbody>
+      <tr><td id="td-s0"></td><td id="td-s1"></td><td id="td-s2"></td><td>符号が反対</td></tr>
+      <tr><td id="td-c0"></td><td id="td-c1"></td><td id="td-c2"></td><td>同じ値</td></tr>
+      <tr><td id="td-t0"></td><td id="td-t1"></td><td id="td-t2"></td><td>符号が反対</td></tr>
+    </tbody>
+  </table>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="formula-box" id="f-answer"></div>
+  <div class="note" id="note-tip"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const TAU = 2*Math.PI;
+const TARGET = 5/6*Math.PI;
+const CW=600, CH=420, cox=300, coy=210, R=135;
+const WW=600, WH=300, wcx=310, wSpan=262, wAxis=150, wAmp=82;
+
+let theta = TARGET;
+let animId = null;
+let dragging = false;
+let cur = 0;
+
+const STEPS = [
+  { label: 'Step 1: 使う公式を確認する', formula: '\\sin(-\\theta) = -\\sin\\theta, \\quad \\cos(-\\theta) = \\cos\\theta, \\quad \\tan(-\\theta) = -\\tan\\theta' },
+  { label: 'Step 2: マイナスを外に出す', formula: '-\\dfrac{5}{6}\\pi = -\\left(\\dfrac{5}{6}\\pi\\right) \\quad \\text{なので} \\quad \\theta = \\dfrac{5}{6}\\pi \\text{ とみる}' },
+  { label: 'Step 3: 公式を当てはめる', formula: '\\sin\\left(-\\dfrac{5}{6}\\pi\\right) = -\\sin\\dfrac{5}{6}\\pi, \\quad \\cos\\left(-\\dfrac{5}{6}\\pi\\right) = \\cos\\dfrac{5}{6}\\pi' },
+  { label: 'Step 4: 基本の角の位置を確かめる', formula: '\\dfrac{5}{6}\\pi \\text{ の動径と単位円の交点は } \\left(-\\dfrac{\\sqrt{3}}{2},\\ \\dfrac{1}{2}\\right)' },
+  { label: 'Step 5: サインを求める', formula: '\\sin\\dfrac{5}{6}\\pi = \\dfrac{1}{2} \\quad \\Longrightarrow \\quad \\sin\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{1}{2}' },
+  { label: 'Step 6: コサインを求める', formula: '\\cos\\dfrac{5}{6}\\pi = -\\dfrac{\\sqrt{3}}{2} \\quad \\Longrightarrow \\quad \\cos\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{\\sqrt{3}}{2}' },
+  { label: 'Step 7: タンジェントを計算する', formula: '\\tan\\dfrac{5}{6}\\pi = \\dfrac{\\sin\\frac{5}{6}\\pi}{\\cos\\frac{5}{6}\\pi} = \\dfrac{\\frac{1}{2}}{-\\frac{\\sqrt{3}}{2}} = -\\dfrac{1}{\\sqrt{3}} = -\\dfrac{\\sqrt{3}}{3}' },
+  { label: 'Step 8: 符号を反転させる', formula: '\\tan\\left(-\\dfrac{5}{6}\\pi\\right) = -\\tan\\dfrac{5}{6}\\pi = \\dfrac{\\sqrt{3}}{3}' },
+  { label: 'Step 9: 結論', formula: '\\sin\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{1}{2}, \\quad \\cos\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{\\sqrt{3}}{2}, \\quad \\tan\\left(-\\dfrac{5}{6}\\pi\\right) = \\dfrac{\\sqrt{3}}{3}' }
+];
+
+function init(){
+  const put = function(id, l){ document.getElementById(id).innerHTML = T(l); };
+  put('s-t', '\\theta'); put('s-mt', '-\\theta');
+  put('f-t', '\\theta'); put('f-t2', '\\theta'); put('f-mt', '-\\theta');
+  put('f-op', '\\mathrm{OP}'); put('f-op2', '\\mathrm{OP}\'');
+  put('f-p', '\\mathrm{P}'); put('f-p2', '\\mathrm{P}\'');
+  put('lbl-th', '\\theta');
+  put('f-sin', 'y = \\sin\\theta'); put('f-cos', 'y = \\cos\\theta');
+  put('th-a', '\\theta'); put('th-b', '-\\theta');
+  put('td-s0', '\\sin'); put('td-c0', '\\cos'); put('td-t0', '\\tan');
+
+  tex('\\mathrm{P}(x,\\ y) \\quad \\text{に対して} \\quad \\mathrm{P}\'(x,\\ -y)', document.getElementById('f-coord'), true);
+  tex('\\sin(-\\theta) = -\\sin\\theta, \\qquad \\cos(-\\theta) = \\cos\\theta, \\qquad \\tan(-\\theta) = -\\tan\\theta', document.getElementById('f-rules'), true);
+  tex('\\sin\\left(-\\dfrac{5}{6}\\pi\\right), \\qquad \\cos\\left(-\\dfrac{5}{6}\\pi\\right), \\qquad \\tan\\left(-\\dfrac{5}{6}\\pi\\right)', document.getElementById('f-goal'), true);
+  tex('\\sin\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{1}{2}, \\qquad \\cos\\left(-\\dfrac{5}{6}\\pi\\right) = -\\dfrac{\\sqrt{3}}{2}, \\qquad \\tan\\left(-\\dfrac{5}{6}\\pi\\right) = \\dfrac{\\sqrt{3}}{3}', document.getElementById('f-answer'), true);
+
+  document.getElementById('note-tip').innerHTML =
+    '<strong>覚え方：</strong>x 軸で折り返すので、x 座標から決まる ' + T('\\cos') +
+    ' はそのまま、y 座標から決まる ' + T('\\sin') + ' は符号が反対になります。' +
+    T('\\tan = \\dfrac{\\sin}{\\cos}') + ' は分子だけ符号が変わるので、やはり符号が反対です。';
+
+  setupSlider();
+  setupButtons();
+  setupDrag();
+  renderSteps();
+  draw();
+}
+
+function setupButtons(){
+  document.getElementById('prev').addEventListener('click', function(){ if(cur > 0){ cur--; renderSteps(); } });
+  document.getElementById('next').addEventListener('click', function(){ if(cur < STEPS.length-1){ cur++; renderSteps(); } });
+  document.getElementById('set-btn').addEventListener('click', function(){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    setTheta(TARGET);
+  });
+  document.getElementById('anim-btn').addEventListener('click', function(){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    const start = 0.05, end = 6.23, dur = 7000;
+    let t0 = null;
+    function frame(ts){
+      if(!t0) t0 = ts;
+      const p = Math.min((ts - t0)/dur, 1);
+      const eased = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      setTheta(start + (end - start)*eased);
+      if(p < 1) animId = requestAnimationFrame(frame); else animId = null;
+    }
+    animId = requestAnimationFrame(frame);
+  });
+}
+
+function renderSteps(){
+  let html = '';
+  for(let i = 0; i <= cur; i++){
+    html += '<div class="step ' + (i === cur ? 'current' : '') + '"><div class="label">' + STEPS[i].label + '</div><div class="formula-line">' + T(STEPS[i].formula) + '</div></div>';
+  }
+  document.getElementById('walkthrough').innerHTML = html;
+  document.getElementById('counter').textContent = (cur+1) + ' / ' + STEPS.length;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === STEPS.length-1;
+}
+
+function fo(x, y, w, h, size, color, html, weight){
+  return '<foreignObject x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:' + size + 'px;color:' + color + ';font-weight:' + (weight || 600) + ';white-space:nowrap">' + html + '</div></foreignObject>';
+}
+
+function drawCircle(){
+  const c = Math.cos(theta), s = Math.sin(theta);
+  const Px = cox + R*c, Py = coy - R*s, Qy = coy + R*s;
+  let g = '';
+
+  g += '<rect x="' + (cox-R-46) + '" y="' + (coy-3) + '" width="' + (2*R+92) + '" height="6" fill="#efeaff"/>';
+  g += '<line x1="' + (cox-R-46) + '" y1="' + coy + '" x2="' + (cox+R+46) + '" y2="' + coy + '" stroke="#9b8ae0" stroke-width="1.5"/>';
+  g += '<line x1="' + cox + '" y1="' + (coy-R-46) + '" x2="' + cox + '" y2="' + (coy+R+46) + '" stroke="#bbb" stroke-width="1.5"/>';
+  g += '<circle cx="' + cox + '" cy="' + coy + '" r="' + R + '" fill="none" stroke="#dcdcdc" stroke-width="2"/>';
+
+  const ar = 54, large = theta > Math.PI ? 1 : 0;
+  g += '<path d="M ' + (cox+ar) + ' ' + coy + ' A ' + ar + ' ' + ar + ' 0 ' + large + ' 0 ' + (cox+ar*c) + ' ' + (coy-ar*s) + '" fill="none" stroke="var(--c-purple)" stroke-width="3"/>';
+  g += '<path d="M ' + (cox+ar+14) + ' ' + coy + ' A ' + (ar+14) + ' ' + (ar+14) + ' 0 ' + large + ' 1 ' + (cox+(ar+14)*c) + ' ' + (coy+(ar+14)*s) + '" fill="none" stroke="var(--c-green)" stroke-width="3" stroke-dasharray="6 4"/>';
+  g += fo(cox + 86*Math.cos(theta/2) - 12, coy - 86*Math.sin(theta/2) - 32, 34, 30, 15, 'var(--c-purple)', T('\\theta'), 700);
+  g += fo(cox + 96*Math.cos(theta/2) - 18, coy + 96*Math.sin(theta/2) + 2, 44, 30, 15, 'var(--c-green)', T('-\\theta'), 700);
+
+  g += '<line x1="' + cox + '" y1="' + coy + '" x2="' + Px + '" y2="' + Py + '" stroke="var(--c-orange)" stroke-width="3"/>';
+  g += '<line x1="' + cox + '" y1="' + coy + '" x2="' + Px + '" y2="' + Qy + '" stroke="var(--c-green)" stroke-width="3"/>';
+  g += '<line x1="' + Px + '" y1="' + Py + '" x2="' + Px + '" y2="' + Qy + '" stroke="#c9c9c9" stroke-width="2" stroke-dasharray="5 4"/>';
+  g += '<line x1="' + cox + '" y1="' + Py + '" x2="' + Px + '" y2="' + Py + '" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="4 4"/>';
+  g += '<line x1="' + cox + '" y1="' + Qy + '" x2="' + Px + '" y2="' + Qy + '" stroke="var(--c-red)" stroke-width="2" stroke-dasharray="4 4"/>';
+
+  g += '<circle cx="' + Px + '" cy="' + Py + '" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>';
+  g += '<circle cx="' + Px + '" cy="' + Py + '" r="8" fill="none" stroke="var(--c-orange)" stroke-width="2.5"><animate attributeName="r" values="8;17;8" dur="1.7s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0;0.9" dur="1.7s" repeatCount="indefinite"/></circle>';
+  g += '<circle cx="' + Px + '" cy="' + Qy + '" r="8" fill="var(--c-green)" stroke="#fff" stroke-width="2.5"/>';
+
+  const lx = Math.max(2, Math.min(Px + 26*c - 11, CW-36));
+  const push = (s >= 0 ? 1 : -1) * 16 * (1 - Math.abs(s));
+  g += fo(lx, Math.max(2, Math.min(CH-30, Py - 26*s - push - 11)), 36, 28, 14, 'var(--c-orange)', T('\\mathrm{P}'), 700);
+  g += fo(lx, Math.max(2, Math.min(CH-30, Qy + 26*s + push - 11)), 36, 28, 14, 'var(--c-green)', T('\\mathrm{P}\''), 700);
+
+  g += '<circle cx="' + cox + '" cy="' + coy + '" r="4" fill="#666"/>';
+  g += '<text x="' + (cox-17) + '" y="' + (coy+19) + '" font-size="13" fill="#666" font-weight="700">O</text>';
+  g += fo(cox+R+56, coy-13, 24, 26, 14, '#999', T('x'));
+  g += fo(cox+8, 4, 24, 26, 14, '#999', T('y'));
+  g += fo(14, 12, 300, 30, 14, '#9b8ae0', 'x 軸について対称', 700);
+
+  document.getElementById('circle').innerHTML = g;
+}
+
+function wsx(t){ return wcx + (t / TAU) * wSpan; }
+function wsy(v){ return wAxis - v * wAmp; }
+
+function drawWave(){
+  const c = Math.cos(theta), s = Math.sin(theta);
+  let g = '';
+
+  g += '<line x1="' + wsx(-TAU) + '" y1="' + wAxis + '" x2="' + (wsx(TAU)+8) + '" y2="' + wAxis + '" stroke="#bbb" stroke-width="1.5"/>';
+  g += '<line x1="' + wcx + '" y1="' + (wAxis-wAmp-30) + '" x2="' + wcx + '" y2="' + (wAxis+wAmp+30) + '" stroke="#bbb" stroke-width="1.5"/>';
+
+  for(let k = -2; k <= 2; k++){
+    if(k === 0) continue;
+    g += '<line x1="' + wsx(k*Math.PI) + '" y1="' + (wAxis-wAmp-10) + '" x2="' + wsx(k*Math.PI) + '" y2="' + (wAxis+wAmp+10) + '" stroke="#f0f0f0" stroke-width="1"/>';
+    g += fo(wsx(k*Math.PI)-16, wAxis+wAmp+16, 48, 26, 12, '#aaa', T((k === 1 ? '' : (k === -1 ? '-' : String(k))) + '\\pi'));
+  }
+
+  let dS = '', dC = '';
+  const N = 320;
+  for(let i = 0; i <= N; i++){
+    const t = -TAU + (2*TAU) * i / N;
+    dS += (i === 0 ? 'M ' : ' L ') + wsx(t).toFixed(2) + ' ' + wsy(Math.sin(t)).toFixed(2);
+    dC += (i === 0 ? 'M ' : ' L ') + wsx(t).toFixed(2) + ' ' + wsy(Math.cos(t)).toFixed(2);
+  }
+  g += '<path d="' + dC + '" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>';
+  g += '<path d="' + dS + '" fill="none" stroke="var(--c-red)" stroke-width="2.5"/>';
+
+  const tp = theta;
+  g += '<line x1="' + wsx(tp) + '" y1="' + (wAxis-wAmp-10) + '" x2="' + wsx(tp) + '" y2="' + (wAxis+wAmp+10) + '" stroke="var(--c-orange)" stroke-width="2"/>';
+  g += '<line x1="' + wsx(-tp) + '" y1="' + (wAxis-wAmp-10) + '" x2="' + wsx(-tp) + '" y2="' + (wAxis+wAmp+10) + '" stroke="var(--c-green)" stroke-width="2"/>';
+  g += '<line x1="' + wsx(tp) + '" y1="' + wsy(s) + '" x2="' + wsx(-tp) + '" y2="' + wsy(-s) + '" stroke="#e0b48a" stroke-width="1.5" stroke-dasharray="4 4"/>';
+  g += '<line x1="' + wsx(tp) + '" y1="' + wsy(c) + '" x2="' + wsx(-tp) + '" y2="' + wsy(c) + '" stroke="#a8c4f5" stroke-width="1.5" stroke-dasharray="4 4"/>';
+
+  g += '<circle cx="' + wsx(tp) + '" cy="' + wsy(s) + '" r="6.5" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>';
+  g += '<circle cx="' + wsx(-tp) + '" cy="' + wsy(-s) + '" r="6.5" fill="var(--c-red)" stroke="#fff" stroke-width="2" opacity="0.75"/>';
+  g += '<circle cx="' + wsx(tp) + '" cy="' + wsy(c) + '" r="6.5" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>';
+  g += '<circle cx="' + wsx(-tp) + '" cy="' + wsy(c) + '" r="6.5" fill="var(--c-blue)" stroke="#fff" stroke-width="2" opacity="0.75"/>';
+
+  g += fo(14, 8, 150, 28, 13, 'var(--c-red)', T('y = \\sin\\theta'), 700);
+  g += fo(160, 8, 150, 28, 13, 'var(--c-blue)', T('y = \\cos\\theta'), 700);
+  g += fo(wsx(TAU)-26, wAxis-32, 30, 26, 14, '#999', T('\\theta'));
+
+  document.getElementById('wave').innerHTML = g;
+}
+
+function fmt(v){ return (Math.abs(v) < 5e-4 ? 0 : v).toFixed(3); }
+
+function updateLive(){
+  const c = Math.cos(theta), s = Math.sin(theta);
+  let html = '';
+  html += '<div class="row">' + T('\\theta = ' + (theta/Math.PI).toFixed(3) + '\\pi, \\quad -\\theta = ' + (-theta/Math.PI).toFixed(3) + '\\pi') + '</div>';
+  html += '<div class="row">' + T('\\mathrm{P}(' + fmt(c) + ',\\ ' + fmt(s) + '), \\quad \\mathrm{P}\'(' + fmt(c) + ',\\ ' + fmt(-s) + ')') + '</div>';
+  html += '<div class="row">' + T('\\sin(-\\theta) = ' + fmt(-s) + ' = -\\sin\\theta') + '</div>';
+  html += '<div class="row">' + T('\\cos(-\\theta) = ' + fmt(c) + ' = \\cos\\theta') + '</div>';
+  if(Math.abs(c) < 0.02){
+    html += '<div class="row">' + T('\\tan\\theta') + ' はこの角では定義できません</div>';
+  } else {
+    html += '<div class="row">' + T('\\tan(-\\theta) = ' + fmt(-s/c) + ' = -\\tan\\theta') + '</div>';
+  }
+  document.getElementById('live-calc').innerHTML = html;
+
+  document.getElementById('td-s1').innerHTML = T(fmt(s));
+  document.getElementById('td-s2').innerHTML = T(fmt(-s));
+  document.getElementById('td-c1').innerHTML = T(fmt(c));
+  document.getElementById('td-c2').innerHTML = T(fmt(c));
+  if(Math.abs(c) < 0.02){
+    document.getElementById('td-t1').textContent = '定義なし';
+    document.getElementById('td-t2').textContent = '定義なし';
+  } else {
+    document.getElementById('td-t1').innerHTML = T(fmt(s/c));
+    document.getElementById('td-t2').innerHTML = T(fmt(-s/c));
+  }
+}
+
+function draw(){ drawCircle(); drawWave(); updateLive(); }
+
+function setTheta(v){
+  let x = v % TAU;
+  if(x < 0) x += TAU;
+  theta = x;
+  document.getElementById('th-slider').value = Math.max(0.05, Math.min(6.23, theta));
+  document.getElementById('th-value').textContent = theta.toFixed(2);
+  draw();
+}
+
+function setupSlider(){
+  const sl = document.getElementById('th-slider');
+  sl.addEventListener('input', function(){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    theta = parseFloat(sl.value);
+    document.getElementById('th-value').textContent = theta.toFixed(2);
+    draw();
+  });
+}
+
+function setupDrag(){
+  const svg = document.getElementById('circle');
+  const wrap = document.getElementById('svg-wrap');
+
+  function toMath(clx, cly){
+    const rect = svg.getBoundingClientRect();
+    const sx = (clx - rect.left) / rect.width * CW;
+    const sy = (cly - rect.top) / rect.height * CH;
+    return { x: (sx - cox)/R, y: (coy - sy)/R };
+  }
+  function apply(clx, cly){
+    const m = toMath(clx, cly);
+    if(m.x === 0 && m.y === 0) return;
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    setTheta(Math.atan2(m.y, m.x));
+  }
+  function startDrag(clx, cly){
+    const m = toMath(clx, cly);
+    const d = Math.sqrt(m.x*m.x + m.y*m.y);
+    if(d > 0.25 && d < 1.7){ dragging = true; apply(clx, cly); }
+  }
+
+  wrap.addEventListener('mousedown', function(e){ e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', function(e){ if(dragging){ e.preventDefault(); apply(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', function(){ dragging = false; });
+
+  wrap.addEventListener('touchstart', function(e){ const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', function(e){ if(dragging){ e.preventDefault(); const t = e.touches[0]; apply(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', function(){ dragging = false; });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

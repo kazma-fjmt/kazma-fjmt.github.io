@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>一般角の表し方</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn.small { min-width: 96px; padding: .6rem .7rem; font-size: .95rem; min-height: 48px; }
+  .btn.small.active { background: #f0f5ff; border-color: var(--accent); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .preset-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+
+  .compare-table { width: 100%; border-collapse: collapse; margin: .75rem 0; background: #fff; font-size: .95rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .55rem .6rem; text-align: center; }
+  .compare-table th { background: #f3f6fc; color: #555; font-weight: 600; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>一般角の表し方</h1>
+  <p class="subtitle">動径の位置を変えずに、角を <span id="s-form"></span> の形へそろえましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>ある角に <span id="f-360"></span> を足しても引いても、動径はちょうど 1 回転して元の位置に戻ります。だから同じ動径を表す角は無数にあります。</p>
+  <div class="formula-box" id="f-rule"></div>
+  <div class="note">
+    <span id="f-n2"></span> は「<span id="f-quot"></span> を <span id="f-3602"></span> で割った商（小数点以下を切り捨てた整数）」、<span id="f-alpha2"></span> はそのときの余りです。余りは必ず <span id="f-range"></span> に入ります。
+  </div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>ボタンをタップすると、角が <span id="f-3603"></span> ずつ移動して <span id="f-range2"></span> の範囲に入るまでの様子が見られます。数直線上でどれだけ動いても、右下の動径は動きません。</p>
+
+  <div class="preset-row" id="preset-row"></div>
+
+  <div class="slider-row">
+    <label><span id="lbl-th"></span> =</label>
+    <input type="range" id="th-slider" min="-1080" max="1080" step="1" value="500">
+    <span class="slider-val" id="th-value">500°</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn" id="minus-btn">&minus;360&deg;</button>
+    <button class="btn primary" id="anim-btn">そろえる</button>
+    <button class="btn" id="plus-btn">＋360&deg;</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 540" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>答えのまとめ</h2>
+  <table class="compare-table" id="ans-table"></table>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W = 600, H = 540;
+const LY = 118, LX0 = 44, LX1 = 556, DMAX = 1130;
+const CX = 300, CY = 375, R = 125;
+let theta = 500;
+let animId = null;
+let lockAlpha = null;   /* 360°移動のアニメ中は動径の角度を固定する */
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId = null; } lockAlpha = null; }
+
+const presets = [
+  { deg: 500,  tag: '(1)', tex: '500^\\circ' },
+  { deg: 1000, tag: '(2)', tex: '1000^\\circ' },
+  { deg: -290, tag: '(3)', tex: '-290^\\circ' },
+  { deg: -830, tag: '(4)', tex: '-830^\\circ' }
+];
+
+const answers = [
+  { q: '500^\\circ',  a: '140^\\circ + 360^\\circ \\times n' },
+  { q: '1000^\\circ', a: '280^\\circ + 360^\\circ \\times n' },
+  { q: '-290^\\circ', a: '70^\\circ + 360^\\circ \\times n' },
+  { q: '-830^\\circ', a: '250^\\circ + 360^\\circ \\times n' }
+];
+
+function sx(d){ return LX0 + (d + DMAX) * (LX1 - LX0) / (2*DMAX); }
+
+function normalize(d){
+  const n = Math.floor(d/360);
+  return { n: n, alpha: d - 360*n };
+}
+
+function init(){
+  document.getElementById('s-form').innerHTML = T('\\alpha + 360^\\circ \\times n');
+  document.getElementById('f-360').innerHTML = T('360^\\circ');
+  document.getElementById('f-3602').innerHTML = T('360');
+  document.getElementById('f-3603').innerHTML = T('360^\\circ');
+  document.getElementById('f-n2').innerHTML = T('n');
+  document.getElementById('f-quot').innerHTML = T('\\theta');
+  document.getElementById('f-alpha2').innerHTML = T('\\alpha');
+  document.getElementById('f-range').innerHTML = T('0^\\circ \\leq \\alpha < 360^\\circ');
+  document.getElementById('f-range2').innerHTML = T('0^\\circ \\leq \\alpha < 360^\\circ');
+  document.getElementById('lbl-th').innerHTML = T('\\theta');
+
+  tex('\\theta = \\alpha + 360^\\circ \\times n \\quad (n\\;\\text{は整数},\\; 0^\\circ \\leq \\alpha < 360^\\circ)', document.getElementById('f-rule'), true);
+
+  buildTable();
+  initWalkthrough();
+  buildPresets();
+  setupSlider();
+  setupButtons();
+  draw();
+}
+
+function buildTable(){
+  let h = '<tr><th>与えられた角</th><th>一般角の表し方</th></tr>';
+  answers.forEach((r,i)=>{
+    h += `<tr><td>(${i+1}) ${T(r.q)}</td><td>${T(r.a)}</td></tr>`;
+  });
+  document.getElementById('ans-table').innerHTML = h;
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 目標の形を確認する',
+      formula: '\\theta = \\alpha + 360^\\circ \\times n,\\quad 0^\\circ \\leq \\alpha < 360^\\circ' },
+    { label: 'Step 2: (1) 500 度 を 360 で割る',
+      formula: '500 = 360 \\times 1 + 140 \\;\\Rightarrow\\; 500^\\circ = 140^\\circ + 360^\\circ \\times n' },
+    { label: 'Step 3: (2) 1000 度 を 360 で割る',
+      formula: '1000 = 360 \\times 2 + 280 \\;\\Rightarrow\\; 1000^\\circ = 280^\\circ + 360^\\circ \\times n' },
+    { label: 'Step 4: (3) 負の角は 360 度 を足していく',
+      formula: '-290^\\circ + 360^\\circ = 70^\\circ \\;\\Rightarrow\\; -290^\\circ = 70^\\circ + 360^\\circ \\times n' },
+    { label: 'Step 5: (4) マイナス 830 度 も同じように足す',
+      formula: '-830^\\circ + 360^\\circ = -470^\\circ,\\quad -470^\\circ + 360^\\circ = -110^\\circ' },
+    { label: 'Step 6: (4) もう一度足して範囲に入れる',
+      formula: '-110^\\circ + 360^\\circ = 250^\\circ \\;\\Rightarrow\\; -830^\\circ = 250^\\circ + 360^\\circ \\times n' },
+    { label: 'Step 7: 割り算でまとめて確かめる',
+      formula: '-830 = 360 \\times (-3) + 250 \\;\\Rightarrow\\; \\alpha = 250^\\circ,\\; n = -3\\;\\text{が 1 つの例}' },
+    { label: 'Step 8: 答えの書き方',
+      formula: '\\text{答えでは }n\\text{ を整数の文字のまま残す：}\\;\\alpha + 360^\\circ \\times n' }
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function draw(){
+  const svg = document.getElementById('graph');
+  const info = normalize(theta);
+  const aD = (lockAlpha === null) ? info.alpha : lockAlpha;
+  const nD = (lockAlpha === null) ? info.n : Math.round((theta - aD)/360);
+  let s = '';
+
+  s += `<rect x="${sx(0)}" y="${LY-46}" width="${sx(360)-sx(0)}" height="92" fill="rgba(40,167,69,0.13)"/>`;
+  s += `<line x1="${LX0-8}" y1="${LY}" x2="${LX1+8}" y2="${LY}" stroke="#bbb" stroke-width="2"/>`;
+  s += `<polygon points="${LX1+18},${LY} ${LX1+6},${LY-5} ${LX1+6},${LY+5}" fill="#bbb"/>`;
+
+  for(let d=-1080; d<=1080; d+=360){
+    const x = sx(d);
+    s += `<line x1="${x.toFixed(1)}" y1="${LY-9}" x2="${x.toFixed(1)}" y2="${LY+9}" stroke="#aaa" stroke-width="1.5"/>`;
+    s += `<text x="${x.toFixed(1)}" y="${LY+28}" text-anchor="middle" font-size="11" fill="#aaa">${d}°</text>`;
+  }
+  s += `<foreignObject x="${((sx(0)+sx(360))/2-72).toFixed(1)}" y="${LY-72}" width="144" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:#28a745;font-weight:700;text-align:center;white-space:nowrap">${T('0^\\circ \\leq \\alpha < 360^\\circ')}</div></foreignObject>`;
+
+  for(let k=-3; k<=3; k++){
+    const d = aD + 360*k;
+    if(d < -DMAX || d > DMAX) continue;
+    const x = sx(d);
+    const isCur = Math.abs(d - theta) < 0.5;
+    const isAlpha = (k === 0);
+    if(isCur) continue;
+    s += `<circle cx="${x.toFixed(1)}" cy="${LY}" r="${isAlpha?7:5}" fill="${isAlpha?'var(--c-green)':'#c9d6ee'}" stroke="#fff" stroke-width="1.5"/>`;
+  }
+
+  const alphaX = sx(aD);
+  s += `<circle cx="${alphaX.toFixed(1)}" cy="${LY}" r="7" fill="var(--c-green)" stroke="#fff" stroke-width="2"/>`;
+  s += `<foreignObject x="${Math.max(2, Math.min(alphaX-46, W-94))}" y="${LY+34}" width="92" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#28a745;font-weight:700;text-align:center;white-space:nowrap">${T('\\alpha = ' + aD + '^\\circ')}</div></foreignObject>`;
+
+  const tx = sx(theta);
+  s += `<circle cx="${tx.toFixed(1)}" cy="${LY}" r="9" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="9;13;9" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  s += `<foreignObject x="${Math.max(2, Math.min(tx-56, W-112))}" y="${LY-46}" width="110" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:#e67e22;font-weight:700;text-align:center;white-space:nowrap">${T('\\theta = ' + theta + '^\\circ')}</div></foreignObject>`;
+
+  if(lockAlpha === null && info.n !== 0){
+    const dir = info.n > 0 ? -1 : 1;
+    const from = theta, to = theta + 360*dir;
+    const x1 = sx(from), x2 = sx(to);
+    const mid = (x1+x2)/2;
+    s += `<path d="M ${x1.toFixed(1)} ${LY-12} Q ${mid.toFixed(1)} ${LY-52} ${x2.toFixed(1)} ${LY-12}" fill="none" stroke="var(--c-purple)" stroke-width="2.5" stroke-dasharray="7 4"/>`;
+    s += `<foreignObject x="${Math.max(2, Math.min(mid-52, W-104))}" y="${LY-100}" width="104" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#7b61ff;font-weight:700;text-align:center;white-space:nowrap">${T((dir<0?'-':'+') + '360^\\circ')}</div></foreignObject>`;
+  }
+
+  s += `<line x1="40" y1="196" x2="560" y2="196" stroke="#f0f0f0" stroke-width="1"/>`;
+
+  s += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="#fff" stroke="#e6e6e6" stroke-width="1.5"/>`;
+  for(let a=0;a<360;a+=30){
+    const rad = a*Math.PI/180;
+    const r1 = (a%90===0) ? R-12 : R-7;
+    s += `<line x1="${(CX+r1*Math.cos(rad)).toFixed(1)}" y1="${(CY-r1*Math.sin(rad)).toFixed(1)}" x2="${(CX+R*Math.cos(rad)).toFixed(1)}" y2="${(CY-R*Math.sin(rad)).toFixed(1)}" stroke="#ddd" stroke-width="${a%90===0?2:1}"/>`;
+  }
+  s += `<line x1="${CX}" y1="${CY}" x2="${CX+R}" y2="${CY}" stroke="#555" stroke-width="3"/>`;
+  s += `<text x="${CX+R+8}" y="${CY-8}" font-size="14" font-weight="700" fill="#555">X</text>`;
+
+  const arad = aD*Math.PI/180;
+  const startA = 0, endA = -arad;
+  const arcR = 42;
+  const large = aD > 180 ? 1 : 0;
+  const axe = CX + arcR*Math.cos(arad), aye = CY - arcR*Math.sin(arad);
+  s += `<path d="M ${CX+arcR} ${CY} A ${arcR} ${arcR} 0 ${large} 0 ${axe.toFixed(2)} ${aye.toFixed(2)}" fill="none" stroke="var(--c-green)" stroke-width="2.5"/>`;
+
+  const ex = CX + R*Math.cos(arad), ey = CY - R*Math.sin(arad);
+  s += `<line x1="${CX}" y1="${CY}" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--c-orange)" stroke-width="4"/>`;
+  s += `<circle cx="${ex.toFixed(2)}" cy="${ey.toFixed(2)}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="8;12;8" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  const lx = ex + 22*Math.sin(arad), ly = ey + 22*Math.cos(arad);
+  s += `<text x="${lx.toFixed(1)}" y="${(ly+5).toFixed(1)}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--c-orange)">P</text>`;
+  s += `<circle cx="${CX}" cy="${CY}" r="5" fill="#333"/>`;
+  s += `<text x="${CX-18}" y="${CY+18}" font-size="14" font-weight="700" fill="#333">O</text>`;
+
+  s += `<foreignObject x="14" y="${CY+R+8}" width="330" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#888;white-space:nowrap">動径は ${T('\\alpha = ' + aD + '^\\circ')} の位置で止まったまま</div></foreignObject>`;
+  s += `<foreignObject x="352" y="${CY+R+8}" width="234" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#7b61ff;font-weight:700;text-align:right;white-space:nowrap">${T('n = ' + nD)}</div></foreignObject>`;
+
+  svg.innerHTML = s;
+
+  if(lockAlpha !== null) return;   /* 移動中は下の式を書きかえない */
+
+  const q = info.n;
+  const div = `${theta} = 360 \\times ${q<0?'('+q+')':q} + ${info.alpha}`;
+  const gen = `${theta}^\\circ = ${info.alpha}^\\circ + 360^\\circ \\times n`;
+  const state = info.n === 0
+    ? '<span style="color:var(--c-green);font-weight:600;">すでに 0° 以上 360° 未満の範囲にあります</span>'
+    : `<span style="color:var(--c-purple);font-weight:600;">あと ${Math.abs(info.n)} 回 ${info.n>0?'360° を引く':'360° を足す'}と範囲に入ります</span>`;
+
+  document.getElementById('live-calc').innerHTML =
+    T(div) + '<br>' + T(gen) + '<br>' + state;
+}
+
+function buildPresets(){
+  const row = document.getElementById('preset-row');
+  presets.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'btn small';
+    b.innerHTML = `${p.tag} ${T(p.tex)}`;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#preset-row .btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      stopAnim();
+      setValue(p.deg);
+    });
+    row.appendChild(b);
+  });
+}
+
+function setValue(d){
+  theta = Math.round(Math.max(-1080, Math.min(1080, d)));
+  document.getElementById('th-slider').value = theta;
+  document.getElementById('th-value').textContent = theta + '°';
+  draw();
+}
+
+function setupSlider(){
+  const slider = document.getElementById('th-slider');
+  slider.addEventListener('input', ()=>{
+    stopAnim();
+    document.querySelectorAll('#preset-row .btn').forEach(x=>x.classList.remove('active'));
+    setValue(parseFloat(slider.value));
+  });
+}
+
+function hop(delta, done){
+  const from = theta, to = from + delta;
+  lockAlpha = normalize(from).alpha;
+  const duration = 640;
+  let startTime = null;
+  function animate(ts){
+    if(!startTime) startTime = ts;
+    const progress = Math.min((ts - startTime) / duration, 1);
+    const eased = progress < 0.5 ? 2*progress*progress : 1 - Math.pow(-2*progress+2, 2)/2;
+    setValue(from + delta*eased);
+    if(progress < 1) animId = requestAnimationFrame(animate);
+    else { lockAlpha = null; setValue(to); animId = null; if(done) done(); }
+  }
+  animId = requestAnimationFrame(animate);
+}
+
+function alignAll(){
+  stopAnim();
+  if(normalize(theta).n === 0) setValue(theta + 1080);
+  function next(){
+    const info = normalize(theta);
+    if(info.n === 0){ animId = null; return; }
+    hop(info.n > 0 ? -360 : 360, next);
+  }
+  next();
+}
+
+function setupButtons(){
+  document.getElementById('minus-btn').addEventListener('click', ()=>{
+    stopAnim();
+    if(theta - 360 >= -1080) hop(-360, null);
+  });
+  document.getElementById('plus-btn').addEventListener('click', ()=>{
+    stopAnim();
+    if(theta + 360 <= 1080) hop(360, null);
+  });
+  document.getElementById('anim-btn').addEventListener('click', alignAll);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>正接の方程式と一般角</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; flex-wrap: wrap; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: .95rem; font-weight: 600; padding: .6rem 1rem; border-radius: 999px; cursor: pointer;
+    min-height: 44px; min-width: 84px; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .note.hit { background: #eaf7ee; border-color: #b7e2c4; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .answer-box { background: #fff; border: 2px solid var(--accent); border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .answer-box .katex { font-size: 1.1rem; }
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.05rem; font-weight: 700; color: var(--accent); min-width: 5rem; text-align: center; }
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; font-size: .85rem; margin: .5rem 0 0; color: var(--muted); }
+  .legend .sw { display: inline-block; width: 24px; border-top: 3px solid; vertical-align: middle; margin-right: .35rem; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>正接の方程式と一般角</h1>
+  <p class="subtitle">直線 x=1 の上に目印をとると、正接の方程式が単位円の図で読み取れます。</p>
+
+  <h2>基本の考え方</h2>
+  <p>単位円周上の点 <span id="f-p"></span> に対して、直線 <span id="f-op"></span> と直線 <span id="f-x1"></span> の交点を <span id="f-t"></span> とすると、その <span id="f-y"></span> 座標がちょうど正接の値になります。</p>
+  <div class="formula-box" id="f-key"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>方程式をタップして選び、スライダーをドラッグして動径を回しましょう。図の青い点 <span id="f-q"></span> は直接ドラッグしても動かせます。</p>
+  <div class="tabs" id="preset-tabs">
+    <button class="tab active" id="pre0"></button>
+    <button class="tab" id="pre1">(1)</button>
+    <button class="tab" id="pre2">(2)</button>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-k"></span> =</label>
+    <input type="range" id="k-slider" min="-3" max="3" step="1" value="3">
+    <span class="slider-val" id="k-value"></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="t-slider" min="-24" max="48" step="1" value="0">
+    <span class="slider-val" id="t-value"></span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">動径を回す</button></div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 620" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="border-color:var(--c-green)"></span><span id="lg0"></span></span>
+    <span><span class="sw" style="border-color:var(--c-orange)"></span><span id="lg1"></span></span>
+    <span><span class="sw" style="border-color:var(--c-blue)"></span><span id="lg2"></span></span>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="hit-note"></div>
+
+  <h2>一般角での答え</h2>
+  <div class="answer-box" id="answer"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+const _tc=new Map();
+function TC(l){if(_tc.has(l))return _tc.get(l);const s=T(l);_tc.set(l,s);return s;}
+
+const PI=Math.PI, TAU=2*PI;
+const W=600,H=620;
+const CX=240,CY=180,R=92,YLIM=1.85;
+const TMIN=-TAU,TMAX=2*TAU,CLIP=2.2;
+const GX0=55,GX1=575,GXS=(GX1-GX0)/(TMAX-TMIN),GOX=GX0-TMIN*GXS,GOY=478,GYS=42;
+function gx(t){return GOX+t*GXS;}
+function gy(v){return GOY-v*GYS;}
+function ux(x){return CX+x*R;}
+function uy(y){return CY-y*R;}
+
+/* k はスナップ表の添字 -3..3 で持ち、theta は tn*pi/12 で持つ */
+const KTBL=[
+  {v:-Math.sqrt(3),tex:'-\\sqrt{3}'},{v:-1,tex:'-1'},{v:-Math.sqrt(3)/3,tex:'-\\dfrac{\\sqrt{3}}{3}'},
+  {v:0,tex:'0'},
+  {v:Math.sqrt(3)/3,tex:'\\dfrac{\\sqrt{3}}{3}'},{v:1,tex:'1'},{v:Math.sqrt(3),tex:'\\sqrt{3}'}
+];
+let ki=3, tn=0, animId=null, STATIC='', GLABELS='';
+
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function fracPi(n,d){
+  if(n===0)return '0';
+  const g=gcd(n,d),p=Math.abs(n)/g,q=d/g,sg=n<0?'-':'';
+  const num=(p===1?'\\pi':p+'\\pi');
+  return sg+(q===1?num:'\\dfrac{'+num+'}{'+q+'}');
+}
+function K(){return KTBL[ki+3].v;}
+function KX(){return KTBL[ki+3].tex;}
+function TH(){return tn*PI/12;}
+function defined(t){return Math.abs(Math.cos(t))>1e-12;}
+
+/* 0 <= theta < pi の基本解を「pi の 12 分割」の整数で返す（正接の周期は pi） */
+function baseSol(){
+  const a=Math.atan(K());
+  const n=Math.round(a/PI*12);
+  return n<0?n+12:n;
+}
+
+function init(){
+  document.getElementById('f-p').innerHTML=T('\\mathrm{P}');
+  document.getElementById('f-op').innerHTML=T('\\mathrm{OP}');
+  document.getElementById('f-x1').innerHTML=T('x=1');
+  document.getElementById('f-t').innerHTML=T('\\mathrm{T}');
+  document.getElementById('f-y').innerHTML=T('y');
+  document.getElementById('f-q').innerHTML=T('\\mathrm{P}');
+  tex('\\mathrm{T}(1,\\ \\tan\\theta)',document.getElementById('f-key'),true);
+  document.getElementById('f-note').innerHTML=
+    T('\\tan\\theta=k')+' を解くには、直線 '+T('x=1')+' の上に '+T('\\mathrm{T}(1,\\ k)')+
+    ' をとり、直線 '+T('\\mathrm{OT}')+' と単位円の交点 '+T('\\mathrm{P},\\ \\mathrm{P}^{\\prime}')+
+    ' の表す角を読みます。2 つの角の差はちょうど '+T('\\pi')+' で、'+T('\\tan\\theta')+' の周期も '+T('\\pi')+
+    ' なので、答えは '+T('2n\\pi')+' ではなく '+T('n\\pi')+' を足した形になります。';
+  document.getElementById('lbl-k').innerHTML=T('k');
+  document.getElementById('lbl-t').innerHTML=T('\\theta');
+  document.getElementById('pre0').innerHTML=T('\\tan\\theta=\\sqrt{3}');
+  buildStatic();
+  initWalkthrough();
+  setupControls();
+  setupDrag();
+  refresh();
+}
+
+function initWalkthrough(){
+  const S='\\;';
+  const steps=[
+    {label:'Step 1: 目標',
+     formula:'\\tan\\theta=1'+S+'\\text{を満たす}'+S+'\\theta'+S+'\\text{を一般角で求める}'},
+    {label:'Step 2: 正接の意味を図にする',
+     formula:'\\mathrm{T}(1,\\ \\tan\\theta)'+S+'\\text{なので}'+S+'\\tan\\theta'+S+'\\text{は}'+S+'\\mathrm{T}'+S+'\\text{の}'+S+'y'+S+'\\text{座標}'},
+    {label:'Step 3: 目印の点をとる',
+     formula:'\\mathrm{T}(1,\\ 1)'+S+'\\text{をとり、直線}'+S+'\\mathrm{OT}'+S+'\\text{と単位円の交点を}'+S+'\\mathrm{P},\\ \\mathrm{P}^{\\prime}'+S+'\\text{とする}'},
+    {label:'Step 4: 0 以上 2π 未満の範囲で読み取る',
+     formula:'\\theta=\\dfrac{\\pi}{4},\\ \\dfrac{5\\pi}{4}'},
+    {label:'Step 5: 2 つの角の差は π',
+     formula:'\\dfrac{5\\pi}{4}-\\dfrac{\\pi}{4}=\\pi'+S+'\\text{であり、}'+S+'\\tan\\theta'+S+'\\text{の周期も}'+S+'\\pi'},
+    {label:'Step 6: (1) の答え',
+     formula:'\\theta=\\dfrac{\\pi}{4}+n\\pi\\quad(n'+S+'\\text{は整数})'},
+    {label:'Step 7: (2) はまず θ の式にそろえる',
+     formula:'\\sqrt{3}\\tan\\theta+1=0'+S+'\\Longrightarrow'+S+'\\tan\\theta=-\\dfrac{1}{\\sqrt{3}}=-\\dfrac{\\sqrt{3}}{3}'},
+    {label:'Step 8: (2) の答え',
+     formula:'\\mathrm{T}\\left(1,\\ -\\dfrac{\\sqrt{3}}{3}\\right)'+S+'\\text{から}'+S+'\\theta=\\dfrac{5\\pi}{6}+n\\pi\\quad(n'+S+'\\text{は整数})'}
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function fo(x,y,w,h,size,color,body,extra){
+  const cx=Math.max(2,Math.min(x,W-w-2));
+  return `<foreignObject x="${cx.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${size}px;color:${color};white-space:nowrap;${extra||''}">${body}</div></foreignObject>`;
+}
+
+function buildStatic(){
+  let s='';
+  s+=`<line x1="${CX-125}" y1="${CY}" x2="${CX+150}" y2="${CY}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<line x1="${CX}" y1="${CY-160}" x2="${CX}" y2="${CY+160}" stroke="#ccc" stroke-width="1.5"/>`;
+  s+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#bbb" stroke-width="1.8"/>`;
+  s+=`<line x1="${ux(1)}" y1="${uy(YLIM)}" x2="${ux(1)}" y2="${uy(-YLIM)}" stroke="#aab" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  s+=fo(ux(1)+8,uy(YLIM)-6,66,26,12,'#8a8aa0',TC('x=1'),'font-weight:600');
+  s+=`<text x="${CX-9}" y="${CY+17}" font-size="12" fill="#aaa" text-anchor="end">O</text>`;
+  s+=`<text x="${ux(1)}" y="${CY+18}" font-size="11" fill="#aaa" text-anchor="middle">1</text>`;
+  s+=`<text x="${CX-8}" y="${uy(1)+4}" font-size="11" fill="#aaa" text-anchor="end">1</text>`;
+  s+=fo(CX+156,CY+8,26,24,14,'#999',TC('x'));
+  s+=fo(CX+7,6,24,24,14,'#999',TC('y'));
+  s+=`<line x1="20" y1="356" x2="580" y2="356" stroke="#eee" stroke-width="1"/>`;
+  for(let m=-2;m<=3;m++){
+    const x=gx(PI/2+m*PI);
+    s+=`<line x1="${x.toFixed(1)}" y1="${gy(CLIP)}" x2="${x.toFixed(1)}" y2="${gy(-CLIP)}" stroke="#e0c9c9" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  }
+  for(let m=-2;m<=4;m++){
+    const x=gx(m*PI);
+    s+=`<line x1="${x.toFixed(1)}" y1="${gy(CLIP)}" x2="${x.toFixed(1)}" y2="${gy(-CLIP)}" stroke="${m===0?'#999':'#eee'}" stroke-width="${m===0?1.5:1}"/>`;
+  }
+  for(const v of [-2,-1,0,1,2]){
+    s+=`<line x1="${GX0}" y1="${gy(v)}" x2="${GX1}" y2="${gy(v)}" stroke="${v===0?'#999':'#f0f0f0'}" stroke-width="${v===0?1.5:1}"/>`;
+    if(v!==0)s+=`<text x="${(GOX-8).toFixed(1)}" y="${gy(v)+4}" font-size="11" fill="#aaa" text-anchor="end">${v}</text>`;
+  }
+  s+=`<text x="${(GOX-8).toFixed(1)}" y="${GOY+18}" font-size="11" fill="#aaa" text-anchor="end">O</text>`;
+  s+=fo(GX1-16,GOY-28,26,24,14,'#999',TC('\\theta'));
+  STATIC=s;
+  /* 目盛りラベルは曲線を描いたあとで重ねる（曲線に隠れないように） */
+  let g='';
+  for(let m=-2;m<=4;m++){
+    if(m===0)continue;
+    g+=fo(gx(m*PI)-26,GOY+6,52,28,11,'#aaa','<span style="display:inline-block;background:rgba(255,255,255,.85);border-radius:3px;padding:0 2px">'+TC(fracPi(m,1))+'</span>','text-align:center');
+  }
+  GLABELS=g;
+}
+
+/* 漸近線でペンを上げながら y = tan(theta) を描く */
+function curvePath(){
+  let d='',pen=false;const N=1200;
+  for(let i=0;i<=N;i++){
+    const t=TMIN+(TMAX-TMIN)*i/N;
+    const v=Math.tan(t);
+    if(!isFinite(v)||Math.abs(v)>CLIP){pen=false;continue;}
+    d+=(pen?'L':'M')+gx(t).toFixed(1)+' '+gy(v).toFixed(1)+' ';
+    pen=true;
+  }
+  return d;
+}
+
+function spiral(th){
+  if(Math.abs(th)<1e-9)return '';
+  let d='';const N=Math.max(8,Math.round(Math.abs(th)/PI*36));
+  for(let i=0;i<=N;i++){
+    const a=th*i/N, r=30+8*Math.abs(a)/TAU;
+    d+=(i===0?'M':'L')+(CX+r*Math.cos(a)).toFixed(1)+' '+(CY-r*Math.sin(a)).toFixed(1)+' ';
+  }
+  return `<path d="${d}" fill="none" stroke="var(--c-blue)" stroke-width="2" opacity="0.7"/>`;
+}
+
+function drawFig(){
+  const k=K(),th=TH(),n0=baseSol();
+  const ok=defined(th);
+  const hit=ok&&Math.abs(Math.tan(th)-k)<1e-9;
+  const col=hit?'var(--c-green)':'var(--c-blue)';
+  let s=STATIC;
+
+  /* 目印の点 T(1, k) と直線 OT */
+  const a0=n0*PI/12;
+  s+=`<line x1="${ux(-1.28*Math.cos(a0)).toFixed(1)}" y1="${uy(-1.28*Math.sin(a0)).toFixed(1)}" x2="${ux(1).toFixed(1)}" y2="${uy(k).toFixed(1)}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  s+=`<circle cx="${ux(1)}" cy="${uy(k).toFixed(1)}" r="6" fill="var(--c-green)" stroke="#fff" stroke-width="2"><animate attributeName="r" values="6;10;6" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  /* 上端の x=1 ラベルや下端に重ならない範囲に縦位置をクランプし、
+     解のラベル（中心から 1.36R）より右に置いて重なりを避ける */
+  const tly=Math.min(Math.max(uy(k)-14,uy(YLIM)+30),uy(-YLIM)-30);
+  const tlx=ux(1)+82;
+  s+=`<line x1="${(ux(1)+7).toFixed(1)}" y1="${uy(k).toFixed(1)}" x2="${(tlx-4).toFixed(1)}" y2="${(tly+11).toFixed(1)}" stroke="var(--c-green)" stroke-width="1" stroke-dasharray="3 2"/>`;
+  s+=fo(tlx,tly,124,34,12,'var(--c-green)',TC('\\mathrm{T}(1,\\ '+KX()+')'),'font-weight:600');
+
+  /* 2 つの解の動径と点 */
+  [n0,n0+12].forEach(n=>{
+    const a=n*PI/12,X=ux(Math.cos(a)),Y=uy(Math.sin(a));
+    s+=`<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="6" fill="var(--c-orange)" stroke="#fff" stroke-width="2"><animate attributeName="r" values="6;11;6" dur="1.6s" repeatCount="indefinite"/></circle>`;
+    /* 円周上の点より外側に置き、横に寝た動径では x 軸のラベルを避けて上へずらす。
+       動径の線の上に重なっても読めるよう背景を敷く */
+    let sly=CY-1.75*R*Math.sin(a)-17;
+    if(Math.abs(Math.sin(a))<0.25) sly-=34;
+    s+=fo(CX+1.75*R*Math.cos(a)-52,sly,104,34,12,'var(--c-orange)','<span style="display:inline-block;background:rgba(255,255,255,.94);border-radius:3px;padding:0 3px">'+TC('\\theta='+fracPi(n,12))+'</span>','font-weight:600;text-align:center');
+  });
+
+  /* 動かせる点 P と、そのときの正接の値 */
+  const PX=ux(Math.cos(th)),PY=uy(Math.sin(th));
+  s+=spiral(th);
+  if(ok&&Math.abs(Math.tan(th))<=YLIM){
+    s+=`<line x1="${CX}" y1="${CY}" x2="${ux(1).toFixed(1)}" y2="${uy(Math.tan(th)).toFixed(1)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    s+=`<circle cx="${ux(1)}" cy="${uy(Math.tan(th)).toFixed(1)}" r="5.5" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+  }
+  s+=`<line x1="${CX}" y1="${CY}" x2="${PX.toFixed(1)}" y2="${PY.toFixed(1)}" stroke="${col}" stroke-width="2.5"/>`;
+  s+=`<circle cx="${PX.toFixed(1)}" cy="${PY.toFixed(1)}" r="8" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+  /* 点 P の名前は凡例に出しているので、図の上には印だけを残す（ラベルの重なり防止） */
+
+  /* グラフ */
+  s+=`<path d="${curvePath()}" fill="none" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  s+=GLABELS;
+  s+=`<line x1="${GX0}" y1="${gy(k).toFixed(1)}" x2="${GX1}" y2="${gy(k).toFixed(1)}" stroke="var(--c-green)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  /* 破線上に並ぶ解の点や θ の目盛りラベルの帯（GOY+6〜GOY+34）と重ならない高さに置く */
+  let yly=Math.min(Math.max(k>=0?gy(k)-44:gy(k)+12,360),584);
+  s+=fo(GX0+4,yly,110,34,12,'var(--c-green)','<span style="display:inline-block;background:rgba(255,255,255,.94);border-radius:3px;padding:0 3px">'+TC('y='+KX())+'</span>','font-weight:600');
+  for(let m=-2;m<=5;m++){
+    const t=n0*PI/12+m*PI;
+    if(t<TMIN-1e-9||t>TMAX+1e-9)continue;
+    s+=`<circle cx="${gx(t).toFixed(1)}" cy="${gy(k).toFixed(1)}" r="5" fill="var(--c-orange)" stroke="#fff" stroke-width="1.5"><animate attributeName="r" values="5;9;5" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  }
+  if(ok&&Math.abs(Math.tan(th))<=CLIP){
+    s+=`<line x1="${gx(th).toFixed(1)}" y1="${GOY}" x2="${gx(th).toFixed(1)}" y2="${gy(Math.tan(th)).toFixed(1)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    s+=`<circle cx="${gx(th).toFixed(1)}" cy="${gy(Math.tan(th)).toFixed(1)}" r="7" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+  }
+  document.getElementById('graph').innerHTML=s;
+}
+
+function refresh(){
+  const k=K(),th=TH(),n0=baseSol();
+  const ok=defined(th);
+  const hit=ok&&Math.abs(Math.tan(th)-k)<1e-9;
+  document.getElementById('k-value').innerHTML=TC(KX());
+  document.getElementById('t-value').innerHTML=TC(fracPi(tn,12));
+  document.getElementById('lg0').innerHTML=TC('\\mathrm{T}(1,\\ k)');
+  document.getElementById('lg1').innerHTML=TC('\\text{解の動径}');
+  document.getElementById('lg2').innerHTML=TC('\\text{動かせる点}\\ \\mathrm{P}');
+  document.getElementById('live-calc').innerHTML=
+    TC('\\theta='+fracPi(tn,12))+'<br>'+
+    (ok?TC('\\tan\\theta='+(Math.abs(Math.tan(th))<5e-5?0:Math.tan(th)).toFixed(4)+'\\qquad k='+KX()+'='+k.toFixed(4))
+       :TC('\\cos\\theta=0')+' なので '+TC('\\tan\\theta')+' は定義されません。');
+  const hn=document.getElementById('hit-note');
+  hn.className=hit?'note hit':'note';
+  hn.innerHTML=hit
+    ? '一致しました。'+TC('\\theta='+fracPi(tn,12))+' は '+TC('\\tan\\theta='+KX())+' の解の 1 つです。'
+    : '動径をさらに回して、'+TC('\\tan\\theta')+' が '+TC('k='+KX())+' に一致する位置を探しましょう。';
+  document.getElementById('answer').innerHTML=
+    TC('\\tan\\theta='+KX())+'<br>'+
+    TC('\\theta='+(n0===0?'n\\pi':fracPi(n0,12)+'+n\\pi')+'\\quad(n\\;\\text{は整数})');
+  drawFig();
+}
+
+function setPre(id){['pre0','pre1','pre2'].forEach(k=>document.getElementById(k).classList.toggle('active',k===id));}
+function setCase(idx,id){
+  stopAnim();ki=idx;tn=0;
+  document.getElementById('k-slider').value=idx;
+  document.getElementById('t-slider').value=0;
+  setPre(id);refresh();
+}
+
+function setupControls(){
+  const ks=document.getElementById('k-slider'),ts=document.getElementById('t-slider');
+  ks.addEventListener('input',()=>{stopAnim();ki=parseInt(ks.value,10);setPre('');refresh();});
+  ts.addEventListener('input',()=>{stopAnim();tn=parseInt(ts.value,10);refresh();});
+  document.getElementById('pre0').addEventListener('click',()=>setCase(3,'pre0'));
+  document.getElementById('pre1').addEventListener('click',()=>setCase(2,'pre1'));
+  document.getElementById('pre2').addEventListener('click',()=>setCase(-1,'pre2'));
+  document.getElementById('anim-btn').addEventListener('click',runAnim);
+}
+
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+
+/* 動径を -2pi から 4pi まで一定の速さで回し、正接が pi ごとに同じ値へ戻る様子を見せる */
+function runAnim(){
+  stopAnim();
+  const ts=document.getElementById('t-slider'),dur=7000;
+  let st=null;
+  tn=-24;ts.value=-24;refresh();
+  function frame(now){
+    if(st===null)st=now;
+    const pr=Math.min((now-st)/dur,1);
+    tn=Math.round(-24+72*pr);
+    ts.value=tn;refresh();
+    if(pr<1)animId=requestAnimationFrame(frame);else animId=null;
+  }
+  animId=requestAnimationFrame(frame);
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'),wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toUnit(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const sx=(cx-rect.left)/rect.width*W, sy=(cy-rect.top)/rect.height*H;
+    return {x:(sx-CX)/R, y:(CY-sy)/R};
+  }
+  function startDrag(cx,cy){
+    const m=toUnit(cx,cy),d=Math.hypot(m.x,m.y);
+    dragging=(d>0.3&&d<1.8);
+    if(dragging)moveDrag(cx,cy);
+  }
+  function moveDrag(cx,cy){
+    if(!dragging)return;
+    const m=toUnit(cx,cy);
+    const n=Math.round(Math.atan2(m.y,m.x)/PI*12);
+    const turns=Math.round((tn-n)/24);
+    tn=Math.max(-24,Math.min(48,n+24*turns));
+    document.getElementById('t-slider').value=tn;
+    refresh();
+  }
+  function endDrag(){dragging=false;}
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();stopAnim();startDrag(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();moveDrag(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',endDrag);
+  wrap.addEventListener('touchstart',e=>{stopAnim();const t=e.touches[0];startDrag(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];moveDrag(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>
