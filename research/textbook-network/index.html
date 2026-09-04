@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>教科書の全問題のネットワーク</title>
+<link rel="stylesheet" href="vendor/katex/katex.min.css" />
+<style>
+  :root { --panel: #1e2430; --bg: #11151c; --fg: #e6e9ef; --muted: #8b95a7; --accent: #4f9cff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); overflow: hidden; }
+  #app { position: relative; width: 100%; height: 100vh; }
+  #graph { position: fixed; inset: 0; z-index: 0; }
+  #sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 82vw); z-index: 10;
+    background: rgba(30,36,48,0.96); padding: 14px; overflow-y: auto; border-right: 1px solid #2a3140; transition: transform .2s ease; }
+  #detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(340px, 88vw); z-index: 10;
+    background: rgba(30,36,48,0.96); padding: 14px; overflow-y: auto; border-left: 1px solid #2a3140; transition: transform .2s ease; }
+  #sidebar.hidden { transform: translateX(-105%); }
+  #detail.hidden { transform: translateX(105%); }
+  #toggles button { position: fixed; top: 8px; z-index: 8; background: rgba(42,49,64,0.95); }
+  #btnSidebar { left: 8px; }
+  #btnDetail { right: 8px; }
+  #degreeBar { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 5;
+    width: min(540px, 92vw); background: rgba(30,36,48,0.95); border: 1px solid #2a3140; border-radius: 8px; padding: 8px 14px; }
+  #degreeBar .degLabel { font-size: 12px; color: var(--fg); margin-bottom: 4px; }
+  .axisLabel { position: fixed; z-index: 4; font-size: 12px; color: var(--fg); font-weight: bold;
+    transform: translate(-50%,-50%); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px #000; display: none; }
+  #degreeBar input[type=range] { width: 100%; }
+  #degreeBar .degEnds { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  h1 { font-size: 15px; margin: 0 0 12px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 16px 0 6px; }
+  .tlabel { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 2px 0; }
+  label { display: block; font-size: 12px; margin: 8px 0 3px; color: var(--muted); }
+  select, input { width: 100%; padding: 6px; background: #0c0f15; color: var(--fg); border: 1px solid #2a3140; border-radius: 5px; font-size: 13px; }
+  button { background: #2a3140; color: var(--fg); border: 1px solid #3a4356; border-radius: 5px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+  button:hover { background: #3a4356; }
+  .legend-item { display: flex; align-items: center; font-size: 12px; margin: 3px 0; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; flex: none; }
+  .stat { font-size: 12px; color: var(--muted); margin: 2px 0; }
+  .nbr { font-size: 12px; color: var(--fg); margin: 2px 0; cursor: pointer; }
+  .nbr:hover { color: var(--accent); }
+  #statement, #answer { font-size: 12px; line-height: 1.5; background: #0c0f15; padding: 8px; border-radius: 5px; margin-top: 6px; white-space: pre-wrap; }
+  .placeholder { color: var(--muted); font-size: 12px; }
+  .scene-nav-info { display: none !important; }   /* 「click/rotate…」操作ヒントを完全非表示(初期描画の一瞬の点滅も防止) */
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toggles">
+    <button id="btnSidebar">☰ 操作</button>
+    <button id="btnDetail">ℹ 詳細</button>
+  </div>
+  <aside id="sidebar">
+    <h1>教科書の全問題のネットワーク</h1>
+    <label>検索</label>
+    <input id="search" placeholder="例: 因数分解 / 例題2" />
+    <label>科目フィルタ</label>
+    <div id="bookFilter"></div>
+    <div id="stats" class="stat" style="margin-top:12px"></div>
+  </aside>
+  <div id="graph"><div id="loading" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8b95a7">読み込み中…</div></div>
+  <div id="axisTop" class="axisLabel">基礎</div>
+  <div id="axisBot" class="axisLabel">発展</div>
+  <aside id="detail"><p class="placeholder">ノードをクリックすると詳細を表示します。</p></aside>
+  <div id="degreeBar">
+    <div class="degLabel" style="text-align:center">精選度</div>
+    <input type="range" id="degree" min="0" max="100" value="0" step="1" />
+    <div class="degEnds"><span>密</span><span>疎</span></div>
+  </div>
+</div>
+
+<script src="graph_data.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/3d-force-graph.min.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script>
+function showErr(msg) {
+  const el = document.getElementById("graph");
+  const safe = String(msg).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  if (el) el.innerHTML = '<pre style="color:#ff8080;padding:20px;white-space:pre-wrap;font-size:13px">描画エラー:\n' + safe
+    + '\n--- 診断 ---\nForceGraph3D: ' + (typeof window.ForceGraph3D)
+    + '\nwindow.GRAPH: ' + (window.GRAPH ? ('nodes=' + window.GRAPH.nodes.length) : '未読込') + '</pre>';
+}
+try {
+if (typeof ForceGraph3D === "undefined") throw new Error("vendor/3d-force-graph.min.js が読み込めません(パス/404を確認)");
+const DATA = window.GRAPH;
+if (!DATA || !DATA.nodes) throw new Error("graph_data.js (window.GRAPH) が読み込めません");
+
+// 科目ごとの固定色: I, II, III, A, B, C
+const BOOK_ORDER = ["I", "II", "III", "A", "B", "C"];
+const BOOK_COLORS = { I: "#ff4d4d", II: "#4dd24d", III: "#5b8dff", A: "#33e0e0", B: "#ff4dff", C: "#ffe14d" };
+function bookColor(n) { return BOOK_COLORS[n.book] || "#a0a0a0"; }
+// innerHTML へ差し込むデータ由来文字列のエスケープ(XSS/属性ブレイク防止)
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const DAG_DIST = 80;
+
+// ===== データ整形(新構造: nodes はフラット、edges は {source,target}) =====
+const nodes = DATA.nodes.map(n => ({ ...n }));
+const links = DATA.edges.map(e => ({ source: e.source, target: e.target }));
+
+const nodeById = {}; for (const n of nodes) nodeById[n.id] = n;
+const labelOf = {}; for (const n of nodes) labelOf[n.id] = n.label;
+
+// 辺 a→b は「a=含まれる(下位) / b=含む(上位)」。
+//   contains[b]    = b が含む下位問題(= b を target とする辺の source 群)
+//   containedBy[a] = a を含む上位問題(= a を source とする辺の target 群)
+const contains = {}, containedBy = {};
+for (const e of DATA.edges) {
+  (contains[e.target] = contains[e.target] || []).push(e.source);
+  (containedBy[e.source] = containedBy[e.source] || []).push(e.target);
+}
+
+// 次数(データの edges から算出)。サイズ=「含む上位の数」(基礎度の目安)。
+const deg = {};
+for (const e of DATA.edges) { deg[e.source] = (deg[e.source] || 0) + 1; deg[e.target] = (deg[e.target] || 0) + 1; }
+for (const n of nodes) { n._deg = deg[n.id] || 0; n._size = (containedBy[n.id] || []).length; }
+
+// 軸長のためのDAG深さ(最長経路)を edges から算出
+const indeg = {}; for (const n of nodes) indeg[n.id] = 0;
+for (const e of DATA.edges) indeg[e.target] = (indeg[e.target] || 0) + 1;
+let queue = nodes.filter(n => indeg[n.id] === 0).map(n => n.id);
+const topo = [], ind = { ...indeg };
+while (queue.length) {
+  const u = queue.shift(); topo.push(u);
+  for (const v of (containedBy[u] || [])) { if (--ind[v] === 0) queue.push(v); }
+}
+const depth = {}; for (const n of nodes) depth[n.id] = 0;
+for (const u of topo) for (const v of (containedBy[u] || [])) if (depth[u] + 1 > depth[v]) depth[v] = depth[u] + 1;
+const maxDepth = Math.max(0, ...Object.values(depth));
+
+// ===== 精選度 = A·R(選択中科目の部分グラフで再計算) =====
+// 各ノード v に スコア = A(v)·R(v):
+//   R(v) = v から到達できる全ノード(全子孫=下流の bulk)数(自己は除く)
+//   A(v) = v に到達できる全ノード(全祖先=上流の bulk)数(自己は除く)
+// A·R は「v の上流に積み上がる基礎の総量 × 下流に積み上がる発展の総量」=要石度。
+function popcount(b) { let c = 0; while (b > 0n) { c += Number(b & 1n); b >>= 1n; } return c; }
+// 選択中科目の部分グラフに対する精選度(科目フィルタ変更で再計算)
+let curContains = {}, curScore = {}, curMaxSel = 1, curTopo = [];
+// 操作パネルの統計(精選なし=選択科目の部分グラフそのものの数値)
+let stat = { nodes: 0, edges: 0, roots: 0, sinks: 0 };
+function computeSelectivity() {
+  const active = id => activeBooks.has(nodeById[id].book);
+  const activeIds = nodes.filter(n => active(n.id)).map(n => n.id);
+  curContains = {}; const cb = {};
+  for (const id of activeIds) { curContains[id] = []; cb[id] = []; }
+  for (const e of DATA.edges) {                    // active-active の辺だけの部分グラフ
+    if (active(e.source) && active(e.target)) { curContains[e.target].push(e.source); cb[e.source].push(e.target); }
+  }
+  const subRoots = activeIds.filter(id => curContains[id].length === 0);
+  const ind = {}; for (const id of activeIds) ind[id] = curContains[id].length;   // 部分グラフ topo(前提が先)
+  const q = subRoots.slice(); curTopo = [];
+  while (q.length) { const u = q.shift(); curTopo.push(u); for (const v of cb[u]) if (--ind[v] === 0) q.push(v); }
+  // 各ノードに一意ビットを割り当て、到達集合(bulk)をビット和で求める
+  const bit = {}; activeIds.forEach((id, i) => bit[id] = 1n << BigInt(i));
+  // A(v): 全祖先(自己除く)。forward topo で前提側のビットを集約。
+  const anc = {}; for (const id of activeIds) anc[id] = 0n;
+  for (const u of curTopo) for (const p of curContains[u]) anc[u] |= anc[p] | bit[p];
+  // R(v): 全子孫(自己除く)。reverse topo で発展側のビットを集約。
+  const desc = {}; for (const id of activeIds) desc[id] = 0n;
+  for (let i = curTopo.length - 1; i >= 0; i--) { const u = curTopo[i]; for (const w of cb[u]) desc[u] |= desc[w] | bit[w]; }
+  curScore = {};
+  for (const id of activeIds) curScore[id] = popcount(anc[id]) * popcount(desc[id]);
+  curMaxSel = Math.max(1, ...Object.values(curScore));
+  // 統計は「精選なし」= 選択科目の部分グラフ全体での数値(スライダー位置に依存しない)
+  stat = {
+    nodes: activeIds.length,
+    edges: activeIds.reduce((s, id) => s + curContains[id].length, 0),   // active-active の推移簡約辺
+    roots: subRoots.length,                                              // 基礎側末端(部分グラフ内で前提を持たない)
+    sinks: activeIds.filter(id => cb[id].length === 0).length,           // 発展側末端(部分グラフ内で発展先を持たない)
+  };
+}
+function renderStats() {
+  document.getElementById("stats").innerHTML =
+    `ノード: ${stat.nodes}<br>推移簡約後のエッジ: ${stat.edges}<br>基礎側末端: ${stat.roots}<br>発展側末端: ${stat.sinks}`;
+}
+
+// ===== フィルタ状態 =====
+const books = BOOK_ORDER.filter(b => nodes.some(n => n.book === b));
+const activeBooks = new Set(books.filter(b => ["I", "II", "III"].includes(b)));
+let minSel = 0;
+const visibleIds = new Set();
+const idOf = o => (o && typeof o === "object") ? o.id : o;
+
+function passesMask(n) {
+  if (!activeBooks.has(n.book)) return false;
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  if (q) {
+    const hay = (n.id + " " + (n.label || "") + " " + (n.statement || "") + " " + (n.answer || "")).toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+function linkVisible(l) { return visibleIds.has(idOf(l.source)) && visibleIds.has(idOf(l.target)); }
+function sizeVal(n) { return 5; }   // ノードサイズは一律5で固定
+
+// ===== 縦座標: 直接投票マージンの HodgeRank(創発レイアウト) =====
+// 全直接投票対(閾値未満の票も含む・承認済み二層構造。描画には一切使わない)への
+// 重み付き最小二乗  min Σ w·(y_v − y_u − 1)²,  w = log(1+net)  を共役勾配で解き、
+// 弱連結成分ごとに平均0へセンタリング後、min-max 正規化して fy(上=基礎)に割り当てる。
+// 科目・章・節などのメタデータは一切読まない(入力は index 対のみ)。乱数ゼロ・決定的。
+// 解は成分内で一意(凸2次)なので、実装・許容誤差に結果が依存しない。
+const AXIS_LEN = (maxDepth || 10) * DAG_DIST * 1.1 * 1.5 * 0.95;
+const PAIRS = DATA.pairs, LOGW = DATA.logw;
+const NNODE = nodes.length;
+function computeEmergentY() {
+  const act = new Uint8Array(NNODE);
+  nodes.forEach((n, i) => { act[i] = activeBooks.has(n.book) ? 1 : 0; });
+  // 対を選択科目の部分グラフに制限(配列順固定=決定的)
+  const eu = [], ev = [], ew = [];
+  for (let k = 0; k < PAIRS.u.length; k++) {
+    const a = PAIRS.u[k], b = PAIRS.v[k];
+    if (act[a] && act[b]) { eu.push(a); ev.push(b); ew.push(LOGW[PAIRS.net[k]]); }
+  }
+  // 正規方程式 L y = rhs(L = D − W: グラフラプラシアン、L は陽に作らず辺ループで作用)
+  const deg = new Float64Array(NNODE), rhs = new Float64Array(NNODE);
+  for (let k = 0; k < eu.length; k++) {
+    const a = eu[k], b = ev[k], w = ew[k];
+    deg[a] += w; deg[b] += w; rhs[b] += w; rhs[a] -= w;
+  }
+  // 共役勾配(初期値0。L の零行成分は恒等的に 0 に留まるためマスク不要)
+  const y = new Float64Array(NNODE), r = Float64Array.from(rhs), p = Float64Array.from(rhs), q = new Float64Array(NNODE);
+  let rr = 0; for (let i = 0; i < NNODE; i++) rr += r[i] * r[i];
+  const tol2 = 1e-20 * rr;
+  for (let it = 0; it < 2000 && rr > tol2; it++) {
+    for (let i = 0; i < NNODE; i++) q[i] = deg[i] * p[i];
+    for (let k = 0; k < eu.length; k++) { const a = eu[k], b = ev[k], w = ew[k]; q[a] -= w * p[b]; q[b] -= w * p[a]; }
+    let pq = 0; for (let i = 0; i < NNODE; i++) pq += p[i] * q[i];
+    if (pq <= 0) break;
+    const al = rr / pq;
+    for (let i = 0; i < NNODE; i++) { y[i] += al * p[i]; r[i] -= al * q[i]; }
+    let rr2 = 0; for (let i = 0; i < NNODE; i++) rr2 += r[i] * r[i];
+    const be = rr2 / rr; rr = rr2;
+    for (let i = 0; i < NNODE; i++) p[i] = r[i] + be * p[i];
+  }
+  // 弱連結成分ごとに平均0(Union-Find、配列順・経路圧縮で決定的)
+  const uf = new Int32Array(NNODE); for (let i = 0; i < NNODE; i++) uf[i] = i;
+  const find = i => { while (uf[i] !== i) { uf[i] = uf[uf[i]]; i = uf[i]; } return i; };
+  for (let k = 0; k < eu.length; k++) { const ra = find(eu[k]), rb = find(ev[k]); if (ra !== rb) uf[rb] = ra; }
+  const sum = {}, cnt = {};
+  for (let i = 0; i < NNODE; i++) if (act[i]) { const c = find(i); sum[c] = (sum[c] || 0) + y[i]; cnt[c] = (cnt[c] || 0) + 1; }
+  for (let i = 0; i < NNODE; i++) if (act[i]) { const c = find(i); y[i] -= sum[c] / cnt[c]; }
+  // min-max 正規化 → fy(上=基礎、下=発展)。証拠の無いノードは成分センタリングで中央帯に落ちる
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < NNODE; i++) if (act[i]) { if (y[i] < lo) lo = y[i]; if (y[i] > hi) hi = y[i]; }
+  const span = (hi > lo) ? (hi - lo) : 1;
+  const SPAN = AXIS_LEN * 0.95;
+  for (let i = 0; i < NNODE; i++) if (act[i]) nodes[i].fy = (0.5 - (y[i] - lo) / span) * SPAN;
+}
+
+// ===== グラフ生成 =====
+const container = document.getElementById("graph");
+container.innerHTML = "";
+computeEmergentY();                    // 縦座標(創発レイアウト)を確定してから描画開始
+const Graph = ForceGraph3D()(container)
+  .width(container.clientWidth || window.innerWidth)
+  .height(container.clientHeight || window.innerHeight)
+  .backgroundColor("#11151c")
+  .showNavInfo(false)            // 「left-click: rotate …」操作ヒントを非表示
+  .graphData({ nodes, links })
+  .nodeLabel(n => `<div style="background:#0c0f15;color:#e6e9ef;padding:4px 8px;border-radius:4px;font-size:12px">数学${esc(n.book)} ${esc(n.type)}${esc(n.number || "")}<br><span style="color:#8b95a7">${esc(n.section || n.chapter || "")}</span></div>`)
+  .nodeVal(sizeVal)
+  .nodeColor(bookColor)
+  .nodeOpacity(0.92)
+  .nodeResolution(8)
+  .linkColor(() => "#6b7a99")
+  .linkWidth(() => 0.6)
+  .linkOpacity(0.5)
+  .linkDirectionalArrowLength(2.4)
+  .linkDirectionalArrowRelPos(1)
+  .nodeVisibility(n => visibleIds.has(n.id))
+  .linkVisibility(linkVisible)
+  .enableNodeDrag(false)         // ノードのドラッグ移動を無効化(カメラ操作は有効)
+  .onNodeClick(showDetail)
+  .onEngineTick(() => { updateAxisCenter(); })   // 縦位置は computeEmergentY が fy で固定済み(上=基礎)
+  .cooldownTime(15000);
+
+Graph.d3Force("link").distance(24);
+window.addEventListener("resize", () => Graph.width(container.clientWidth).height(container.clientHeight));
+
+// ===== 上下軸の描画 =====
+const THREE = window.THREE;
+let axisGroup = null;
+// 軸端ラベル「基礎」「発展」は HTML 要素として画面に重ねる。
+// 3D スプライトと違い、ズームで文字サイズが変わらず、精選度ラベル(12px)と同じ大きさを保つ。
+const axisTopEl = document.getElementById("axisTop");
+const axisBotEl = document.getElementById("axisBot");
+function drawAxis() {
+  if (axisGroup) { Graph.scene().remove(axisGroup); axisGroup = null; }
+  const L = AXIS_LEN;
+  const dir = new THREE.Vector3(0, -1, 0);
+  const top = new THREE.Vector3(0, L / 2, 0);
+  const g = new THREE.Group();
+  g.add(new THREE.ArrowHelper(dir, top, L, 0xffffff, L * 0.05, L * 0.03));
+  axisGroup = g; Graph.scene().add(g);
+}
+// 軸端の 3D 座標を毎フレーム画面座標へ投影し、HTML ラベルを追従させる。
+const _axisTopV = new THREE.Vector3(), _axisBotV = new THREE.Vector3();
+function projectAxisLabels() {
+  if (axisGroup) {
+    const cam = Graph.camera();
+    const w = container.clientWidth, h = container.clientHeight;
+    const c = axisGroup.position, half = AXIS_LEN / 2;
+    _axisTopV.set(c.x, c.y + half, c.z).project(cam);
+    _axisBotV.set(c.x, c.y - half, c.z).project(cam);
+    place(axisTopEl, _axisTopV, w, h);
+    place(axisBotEl, _axisBotV, w, h);
+  }
+  requestAnimationFrame(projectAxisLabels);
+}
+function place(el, v, w, h) {
+  if (v.z > 1) { el.style.display = "none"; return; }   // カメラ背後は非表示
+  el.style.display = "block";
+  el.style.left = ((v.x + 1) / 2 * w) + "px";
+  el.style.top = ((1 - v.y) / 2 * h) + "px";
+}
+requestAnimationFrame(projectAxisLabels);
+// 軸は選択中科目のノードの重心に追従させる(縦は fy=創発座標の平均)。
+function updateAxisCenter() {
+  if (!axisGroup) return;
+  let sx = 0, sy = 0, sz = 0, c = 0;
+  for (const n of nodes) {
+    if (typeof n.x !== "number" || !activeBooks.has(n.book)) continue;
+    sx += n.x; sy += (typeof n.fy === "number" ? n.fy : (n.y || 0)); sz += (n.z || 0); c++;
+  }
+  if (c) axisGroup.position.set(sx / c, sy / c, sz / c);
+}
+drawAxis();
+
+// ===== フィルタ適用(精選度 = A·R) =====
+// 1) スコア A·R が精選度しきい値以上のノードを「種」として描画。
+// 2) しきい値未満のノードも、描画済みノードの直接前提(curContains)であれば描画
+//    (=種の前提=祖先を閉包。前提が揃ったまま表示)。
+// 検索は最終マスクとして適用(科目は部分グラフで担保)。
+function seedClosure(t) {                 // 種(A·R≥t)+前提(祖先)閉包の集合
+  const inSet = new Set();
+  const stack = [];
+  for (const u of curTopo) if (curScore[u] >= t) { inSet.add(u); stack.push(u); }
+  while (stack.length) {
+    const u = stack.pop();
+    for (const p of curContains[u]) if (!inSet.has(p)) { inSet.add(p); stack.push(p); }
+  }
+  return inSet;
+}
+function updateFilter() {
+  visibleIds.clear();
+  const inSet = seedClosure(minSel);
+  for (const id of inSet) { if (passesMask(nodeById[id])) visibleIds.add(id); }
+  Graph.nodeVisibility(n => visibleIds.has(n.id)).linkVisibility(linkVisible);
+}
+
+// ===== 凡例 =====
+
+// ===== 詳細パネル =====
+function renderTeX(el) {
+  if (window.renderMathInElement) {
+    try {
+      renderMathInElement(el, {
+        delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }],
+        throwOnError: false,
+      });
+    } catch (e) { /* OCR由来の不正TeXは無視 */ }
+  }
+}
+function nbrList(ids) {
+  if (!ids || !ids.length) return '<span class="placeholder">なし</span>';
+  return ids.map(id => {
+    const n = nodeById[id];
+    // 「数学III 1章 2節 問13」形式(章・節はタイトルを除いた番号部分のみ)
+    const parts = [`数学${n.book}`,
+                   (n.chapter || "").split(" ")[0],
+                   (n.section || "").split(" ")[0],
+                   `${n.type}${n.number || ""}`].filter(Boolean);
+    return `<div class="nbr" data-goto="${esc(id)}">${esc(parts.join(" "))}</div>`;
+  }).join("");
+}
+function showDetail(node) {
+  const a = node;
+  const cont = contains[a.id] || [];        // 基礎側(直接前提)
+  const cby = containedBy[a.id] || [];      // 発展側
+  const el = document.getElementById("detail");
+  // タイトル: 数学<科目> / 章 / 節 / <種別><番号>。id・ラベル・解答は表示しない。
+  el.innerHTML = `
+    <div class="tlabel">数学${esc(a.book)}</div>
+    <div class="tlabel">${esc(a.chapter || "")}</div>
+    <div class="tlabel">${esc(a.section || "")}</div>
+    <div class="tlabel">${esc(a.type)}${esc(a.number || "")}</div>
+    <div id="statement"></div>
+    <h2>直接の基礎 (${cont.length})</h2>${nbrList(cont)}
+    <h2>直接の発展 (${cby.length})</h2>${nbrList(cby)}`;
+  const stEl = el.querySelector("#statement");
+  stEl.textContent = a.statement || "";
+  renderTeX(stEl);
+  // 隣接問題クリックで遷移
+  el.querySelectorAll(".nbr").forEach(d => d.onclick = () => { const t = nodeById[d.dataset.goto]; if (t) showDetail(t); });
+  detailEl.classList.remove("hidden");
+}
+
+// ===== コントロール =====
+document.getElementById("search").oninput = updateFilter;
+
+const bookFilterEl = document.getElementById("bookFilter");
+for (const b of books) {
+  bookFilterEl.insertAdjacentHTML("beforeend",
+    `<label style="display:flex;align-items:center;gap:6px;margin:2px 0;cursor:pointer"><input type="checkbox" id="bf_${b}" ${activeBooks.has(b) ? "checked" : ""} style="width:auto"><span class="swatch" style="background:${BOOK_COLORS[b]}"></span>数学${b}</label>`);
+}
+for (const b of books) {
+  document.getElementById("bf_" + b).onchange = (e) => {
+    if (e.target.checked) activeBooks.add(b); else activeBooks.delete(b);
+    computeSelectivity();   // 選択中科目の部分グラフで精選度を再計算
+    refreshSlider();        // スライダー最大値も再設定
+    renderStats();          // 統計も選択科目に追従(精選なしの数値)
+    computeEmergentY();     // 縦座標も選択科目の部分グラフで再計算(創発レイアウト)
+    updateFilter();
+    Graph.d3ReheatSimulation();
+  };
+}
+
+// ===== 精選度スライダー =====
+// 精選度 A·R の分布が強く右に歪むため、スライダーは閾値Tにではなく「表示ノード数の対数」に
+// 線形にする。位置 pos∈[0,STEPS] を目標表示数 N(pos)=nMax^(1−f)·nFloor^f(f=pos/STEPS, 幾何内挿)
+// へ写し、それを満たす最小Tへ二分探索。これでスライダーを等間隔に動かすと表示数が等比で変化する。
+const degSlider = document.getElementById("degree");
+computeSelectivity();                                 // 初期 activeBooks で精選度を計算
+const SLIDER_STEPS = 1000, TARGET_VISIBLE = 180;      // 目盛り解像度 / 既定表示の目安ノード数
+degSlider.min = 0; degSlider.max = SLIDER_STEPS; degSlider.step = 1;
+let nMax = 1, nFloor = 1;
+function countAtThreshold(t) { return seedClosure(t).size; }
+function thresholdForCount(target) {                  // 表示が target 以下になる最小のT(単調性で二分探索)
+  if (countAtThreshold(0) <= target) return 0;
+  let lo = 1, hi = curMaxSel;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (countAtThreshold(mid) <= target) hi = mid; else lo = mid + 1; }
+  return lo;
+}
+function posToThreshold(pos) {                         // スライダー位置 → 幾何目標表示数 → 閾値T
+  if (nFloor >= nMax) return 0;
+  const f = pos / SLIDER_STEPS;
+  const target = Math.round(nMax * Math.pow(nFloor / nMax, f));
+  return thresholdForCount(target);
+}
+function countToPos(target) {                          // 表示数 → スライダー位置(既定位置の算出用)
+  if (nFloor >= nMax || target >= nMax) return 0;
+  const f = Math.log(Math.max(target, nFloor) / nMax) / Math.log(nFloor / nMax);
+  return Math.round(Math.min(1, Math.max(0, f)) * SLIDER_STEPS);
+}
+function refreshSlider() {                             // 部分グラフ再計算後にスライダーを更新
+  nMax = countAtThreshold(0);
+  nFloor = countAtThreshold(curMaxSel);
+  const pos = countToPos(TARGET_VISIBLE);              // 既定=表示が約 TARGET_VISIBLE になる位置
+  degSlider.value = pos;
+  minSel = posToThreshold(pos);
+}
+refreshSlider();
+degSlider.oninput = (e) => { minSel = posToThreshold(+e.target.value); updateFilter(); };
+
+// ===== パネル開閉 =====
+const sidebarEl = document.getElementById("sidebar");
+const detailEl = document.getElementById("detail");
+const btnS = document.getElementById("btnSidebar"), btnD = document.getElementById("btnDetail");
+btnS.onclick = () => sidebarEl.classList.toggle("hidden");
+btnD.onclick = () => detailEl.classList.toggle("hidden");
+if (window.innerWidth < 760) { sidebarEl.classList.add("hidden"); detailEl.classList.add("hidden"); }
+document.addEventListener("pointerdown", (e) => {
+  if (!sidebarEl.classList.contains("hidden") && !sidebarEl.contains(e.target) && e.target !== btnS) sidebarEl.classList.add("hidden");
+  if (!detailEl.classList.contains("hidden") && !detailEl.contains(e.target) && e.target !== btnD) detailEl.classList.add("hidden");
+});
+
+// ===== 初期化 =====
+updateFilter();
+renderStats();
+
+} catch (err) {
+  showErr((err && err.stack) ? err.stack : String(err));
+  console.error(err);
+}
+</script>
+</body>
+</html>
