@@ -28,6 +28,9 @@
   .formula-box .katex { font-size: 1.2rem; }
   .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
   .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
   .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
   .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
   .step:last-child { border-bottom: none; }

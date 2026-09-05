@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>瞬間の速さ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .note.warn { background: #fdeeee; border-color: #f2c4c2; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc > div { margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; margin: .5rem 0; flex-wrap: wrap; }
+
+  .table-wrap { overflow-x: auto; margin: .75rem 0; }
+  .compare-table { border-collapse: collapse; background: #fff; margin: 0 auto; font-size: .9rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .5rem .7rem; text-align: center; white-space: nowrap; }
+  .compare-table .rowhead { background: #f4f7ff; font-weight: 600; }
+  .compare-table .mid { background: #fff4e6; color: var(--c-orange); font-weight: 700; }
+  .compare-table .arrow { color: var(--muted); border-left: none; border-right: none; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 20px; height: 0; border-top-width: 3px; border-top-style: solid; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>瞬間の速さ</h1>
+  <p class="subtitle">平均の速さをとる時間の幅を 0 に近づけて、ある瞬間の速さを求めましょう。</p>
+
+  <h2>斜面を転がる球</h2>
+  <p>斜面を転がり始めてから <span id="f-x"></span> 秒間に球が進む距離を <span id="f-y"></span> (m) とします。球はだんだん速くなるので、区間ごとに平均の速さが変わります。</p>
+  <div class="svg-container" id="ramp-wrap">
+    <svg id="ramp" viewBox="0 0 600 214" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="roll-btn">球を転がす</button></div>
+  <div class="live-calc" id="roll-calc"></div>
+
+  <h2>平均の速さから瞬間の速さへ</h2>
+  <p>3 秒後から <span id="f-3h"></span> 秒後までの平均の速さを、幅 <span id="f-h"></span> の式で表してから <span id="f-h2"></span> を 0 に近づけます。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>スライダーで幅 <span id="f-h3"></span> を変えると、2 点 A・B を結ぶ直線の傾きがそのまま平均の速さになります。<span id="f-h4"></span> を 0 に近づけて、直線が接線に重なる様子を見ましょう。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-h"></span> =</label>
+    <input type="range" id="h-slider" min="-1" max="1.5" step="0.01" value="1">
+    <span class="slider-val" id="h-value">1</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 440" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div id="zero-note"></div>
+
+  <h2>幅を 0 に近づけた表</h2>
+  <div class="table-wrap"><table class="compare-table" id="approach-table"></table></div>
+  <div class="formula-box" id="f-answer"></div>
+  <div class="note" id="note-compare"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const A0=3;
+function f(x){ return x*x; }
+
+const W=600,H=440,mL=64,mR=28,mT=26,mB=48;
+const PW=W-mL-mR, PH=H-mT-mB;
+const XMIN=0,XMAX=4.8,YMIN=0,YMAX=24;
+function px(x){ return mL + (x-XMIN)/(XMAX-XMIN)*PW; }
+function py(y){ return mT+PH - (y-YMIN)/(YMAX-YMIN)*PH; }
+
+let hVal=1, animId=null, rollId=null, rollT=null;
+
+function fmt(v){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  if(s==='-0') s='0';
+  return s;
+}
+function rel(v){ return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+
+function init(){
+  document.getElementById('f-x').innerHTML=T('x');
+  document.getElementById('f-y').innerHTML=T('y=x^2');
+  document.getElementById('f-3h').innerHTML=T('3+h');
+  document.getElementById('f-h').innerHTML=T('h');
+  document.getElementById('f-h2').innerHTML=T('h');
+  document.getElementById('f-h3').innerHTML=T('h');
+  document.getElementById('f-h4').innerHTML=T('h');
+  document.getElementById('lbl-h').innerHTML=T('h');
+
+  tex('\\lim_{h \\to 0} \\dfrac{f(3+h)-f(3)}{h} = \\lim_{h \\to 0}(6+h) = 6 \\ (\\mathrm{m/s})',
+      document.getElementById('f-answer'), true);
+  document.getElementById('note-compare').innerHTML =
+    '3 秒後から 4 秒後までの<strong>平均</strong>の速さは ' + T('7\\ (\\mathrm{m/s})') +
+    ' でしたが、3 秒後の<strong>瞬間</strong>の速さは ' + T('6\\ (\\mathrm{m/s})') +
+    ' です。平均は幅のある区間の速さ、瞬間は幅を 0 に近づけた極限の速さで、別のものです。2 秒後の瞬間の速さ ' +
+    T('4\\ (\\mathrm{m/s})') + ' と比べると、球が加速していることも読み取れます。';
+
+  buildTable();
+  buildLegend();
+  initWalkthrough();
+  setupSlider();
+  setupAnimation();
+  setupRoll();
+  drawRamp(0);
+  draw();
+}
+
+function buildLegend(){
+  document.getElementById('legend').innerHTML =
+    '<span><i style="border-top-color:var(--c-purple)"></i>'+T('y=x^2')+'</span>'+
+    '<span><b style="background:var(--c-red)"></b>'+T('\\mathrm{A}(3,\\,9)')+'</span>'+
+    '<span><b style="background:var(--c-blue)"></b>'+T('\\mathrm{B}(3+h,\\,(3+h)^2)')+'</span>'+
+    '<span><i style="border-top-color:var(--c-blue)"></i>直線 AB（平均の速さ）</span>'+
+    '<span><i style="border-top-color:var(--c-orange);border-top-style:dashed"></i>接線（瞬間の速さ）</span>';
+}
+
+function buildTable(){
+  const hs=[-0.1,-0.01,-0.001,null,0.001,0.01,0.1];
+  let r1='<tr><th class="rowhead">'+T('h')+'</th>', r2='<tr><th class="rowhead">'+T('6+h')+'</th>';
+  hs.forEach(hh=>{
+    if(hh===null){
+      r1+='<td class="arrow">'+T('\\to')+'</td><th class="mid">'+T('0')+'</th><td class="arrow">'+T('\\leftarrow')+'</td>';
+      r2+='<td class="arrow">'+T('\\to')+'</td><th class="mid">'+T('6')+'</th><td class="arrow">'+T('\\leftarrow')+'</td>';
+    } else {
+      r1+='<td>'+T(fmt(hh))+'</td>';
+      r2+='<td>'+T(fmt(6+hh))+'</td>';
+    }
+  });
+  document.getElementById('approach-table').innerHTML=r1+'</tr>'+r2+'</tr>';
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 3 秒後の位置を求める',
+      formula:'f(x)=x^2 \\;\\Longrightarrow\\; f(3)=3^2=9 \\ (\\mathrm{m})' },
+    { label:'Step 2: 3 秒後から 3+h 秒後までに進む距離',
+      formula:'f(3+h)-f(3)=(3+h)^2-3^2=9+6h+h^2-9=6h+h^2' },
+    { label:'Step 3: 平均の速さは 距離 ÷ 時間',
+      formula:'\\dfrac{f(3+h)-f(3)}{h}=\\dfrac{6h+h^2}{h}' },
+    { label:'Step 4: h でくくって約分する（h ≠ 0）',
+      formula:'\\dfrac{h(6+h)}{h}=6+h \\ (\\mathrm{m/s})' },
+    { label:'Step 5: h = 1 とすると 3 秒後から 4 秒後までの平均の速さ',
+      formula:'6+1=7 \\ (\\mathrm{m/s})' },
+    { label:'Step 6: h を 0 に限りなく近づける',
+      formula:'h \\to 0 \\;\\text{ のとき }\\; 6+h \\to 6' },
+    { label:'Step 7: 瞬間の速さを極限で表す',
+      formula:'\\lim_{h \\to 0}\\dfrac{f(3+h)-f(3)}{h}=\\lim_{h \\to 0}(6+h)=6' },
+    { label:'Step 8: 答え',
+      formula:'\\text{3 秒後の瞬間の速さは } 6 \\ (\\mathrm{m/s})' }
+  ];
+  let c=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=c;i++){
+      html+=`<div class="step ${i===c?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${c+1} / ${steps.length}`;
+    prevBtn.disabled=c===0;
+    nextBtn.disabled=c===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(c>0){c--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(c<steps.length-1){c++;render();} });
+  render();
+}
+
+function draw(){
+  const h=hVal, zero=Math.abs(h)<1e-9;
+  let s='';
+  s+=`<rect x="${mL}" y="${mT}" width="${PW}" height="${PH}" fill="#fff" stroke="#e3e3e3"/>`;
+  for(let i=0;i<=4;i++) s+=`<line x1="${px(i)}" y1="${mT}" x2="${px(i)}" y2="${mT+PH}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  for(let i=0;i<=24;i+=4) s+=`<line x1="${mL}" y1="${py(i)}" x2="${mL+PW}" y2="${py(i)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  for(let i=1;i<=4;i++) s+=`<text x="${px(i)}" y="${mT+PH+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  for(let i=4;i<=24;i+=4) s+=`<text x="${mL-8}" y="${py(i)+4}" text-anchor="end" font-size="11" fill="#aaa">${i}</text>`;
+  s+=`<foreignObject x="${mL+PW-26}" y="${mT+PH+4}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${mL+5}" y="${mT+2}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+
+  let d='';
+  for(let i=0;i<=240;i++){
+    const x=XMIN+(XMAX-XMIN)*i/240;
+    d+=(i===0?'M':'L')+` ${px(x).toFixed(2)} ${py(f(x)).toFixed(2)}`;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+
+  /* tangent at A: y = 6x - 9 */
+  const tx1=1.5, tx2=Math.min(XMAX,(YMAX+9)/6);
+  s+=`<line x1="${px(tx1)}" y1="${py(6*tx1-9)}" x2="${px(tx2)}" y2="${py(6*tx2-9)}" stroke="var(--c-orange)" stroke-width="2.5" stroke-dasharray="9 5"/>`;
+
+  if(!zero){
+    const bx=A0+h, by=f(bx);
+    /* right triangle */
+    s+=`<line x1="${px(A0)}" y1="${py(9)}" x2="${px(bx)}" y2="${py(9)}" stroke="#bbb" stroke-width="1.5"/>`;
+    s+=`<line x1="${px(bx)}" y1="${py(9)}" x2="${px(bx)}" y2="${py(by)}" stroke="#bbb" stroke-width="1.5"/>`;
+    s+=`<foreignObject x="${(px(A0)+px(bx))/2-14}" y="${py(9)+(h>0?10:-34)}" width="28" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#888;text-align:center">${T('h')}</div></foreignObject>`;
+    /* secant through A and B, extended */
+    const m=(by-9)/(bx-A0);
+    const sx1=XMIN, sx2=XMAX;
+    let sy1=9+m*(sx1-A0), sy2=9+m*(sx2-A0);
+    let a1={x:sx1,y:sy1}, a2={x:sx2,y:sy2};
+    if(sy1<YMIN){ a1={x:A0+(YMIN-9)/m, y:YMIN}; }
+    if(sy2>YMAX){ a2={x:A0+(YMAX-9)/m, y:YMAX}; }
+    s+=`<line x1="${px(a1.x)}" y1="${py(a1.y)}" x2="${px(a2.x)}" y2="${py(a2.y)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+    s+=`<circle cx="${px(bx)}" cy="${py(by)}" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+    /* h<0 puts B just left of the fixed point A, so park B's label on the right side to keep it clear of A's */
+    s+=`<text x="${px(bx)+13}" y="${py(by)+(h>0?-10:20)}" text-anchor="start" font-size="15" font-weight="700" fill="var(--c-blue)" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">B</text>`;
+  }
+
+  s+=`<circle cx="${px(A0)}" cy="${py(9)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  if(zero){
+    s+=`<circle cx="${px(A0)}" cy="${py(9)}" r="8" fill="none" stroke="var(--c-red)" stroke-width="2.5" opacity="0.7"><animate attributeName="r" values="8;18;8" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0;0.7" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  }
+  s+=`<text x="${px(A0)-13}" y="${py(9)+6}" text-anchor="end" font-size="15" font-weight="700" fill="var(--c-red)" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">A</text>`;
+
+  document.getElementById('graph').innerHTML=s;
+
+  const lc=document.getElementById('live-calc');
+  const zn=document.getElementById('zero-note');
+  if(zero){
+    lc.innerHTML = `<div>${T('h=0')}</div><div>${T('\\dfrac{f(3+0)-f(3)}{0}')} は分母が 0 になり、計算できません</div>`;
+    zn.innerHTML = '<div class="note warn">' + T('h=0') +
+      ' では平均の速さそのものが考えられません。だからこそ、' + T('h') +
+      ' を 0 に<strong>近づけた</strong>ときの行き先、つまり極限を考えます。スライダーを少し動かしてみましょう。</div>';
+  } else {
+    const bx=A0+h, by=f(bx), slope=6+h;
+    lc.innerHTML =
+      `<div>${T('h '+rel(h)+' '+fmt(h))}</div>`+
+      `<div>${T('\\mathrm{A}(3,\\;9), \\quad \\mathrm{B}('+fmt(bx)+',\\;'+fmt(by)+')')}</div>`+
+      `<div>${T('\\dfrac{f(3+h)-f(3)}{h} = \\dfrac{'+fmt(by)+'-9}{'+fmt(h)+'} '+rel(slope)+' '+fmt(slope)+' \\ (\\mathrm{m/s})')}</div>`+
+      `<div style="color:var(--c-blue)">直線 AB の傾き ${T(rel(slope)+' \\ '+fmt(slope))}　（接線の傾き ${T('6')} との差 ${T(rel(Math.abs(h))+' \\ '+fmt(Math.abs(h)))}）</div>`;
+    zn.innerHTML = Math.abs(h)<=0.05
+      ? '<div class="note">幅がとても小さくなり、直線 AB は接線とほとんど重なっています。傾きは 6 に近づいています。</div>'
+      : '';
+  }
+}
+
+/* ---- rolling ball figure ---- */
+function drawRamp(t){
+  const x0=52,y0=44,x1=556,y1=152;
+  const u=Math.min(1,(t*t)/16);
+  const bxp=x0+(x1-x0)*u, byp=y0+(y1-y0)*u;
+  let s='';
+  s+=`<line x1="${x0-10}" y1="${y0-8}" x2="${x1+10}" y2="${y1+8}" stroke="#cfd6e4" stroke-width="9" stroke-linecap="round"/>`;
+  s+=`<line x1="${x0-10}" y1="${y1+18}" x2="${x1+14}" y2="${y1+18}" stroke="#e3e3e3" stroke-width="2"/>`;
+  for(let k=1;k<=4;k++){
+    const uk=(k*k)/16, xk=x0+(x1-x0)*uk, yk=y0+(y1-y0)*uk;
+    const on=(k===3);
+    s+=`<line x1="${xk}" y1="${yk+7}" x2="${xk}" y2="${yk+22}" stroke="${on?'var(--c-orange)':'#b9c2d4'}" stroke-width="${on?3:2}"/>`;
+    s+=`<text x="${xk}" y="${yk+38}" text-anchor="middle" font-size="12" font-weight="${on?'700':'400'}" fill="${on?'var(--c-orange)':'#98a0b3'}">${k} 秒</text>`;
+    s+=`<text x="${xk}" y="${yk+54}" text-anchor="middle" font-size="11" fill="${on?'var(--c-orange)':'#b0b7c6'}">${k*k} m</text>`;
+  }
+  s+=`<circle cx="${bxp}" cy="${byp-11}" r="11" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${bxp}" cy="${byp-11}" r="11" fill="none" stroke="var(--c-red)" stroke-width="2" opacity="0.45"><animate attributeName="r" values="11;17;11" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.45;0;0.45" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  s+=`<foreignObject x="14" y="150" width="230" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);font-weight:700">${T('x='+fmt(t)+',\\;y='+fmt(t*t))}</div></foreignObject>`;
+  document.getElementById('ramp').innerHTML=s;
+
+  document.getElementById('roll-calc').innerHTML =
+    `<div>経過時間 ${T('x '+rel(t)+' '+fmt(t)+'\\ (\\text{秒})')}</div>`+
+    `<div>進んだ距離 ${T('y = x^2 '+rel(t*t)+' '+fmt(t*t)+'\\ (\\mathrm{m})')}</div>`;
+}
+
+function setupRoll(){
+  document.getElementById('roll-btn').addEventListener('click',()=>{
+    if(rollId){ cancelAnimationFrame(rollId); rollId=null; }
+    rollT=null;
+    const dur=4000;
+    function frame(ts){
+      if(!rollT) rollT=ts;
+      const pr=Math.min((ts-rollT)/dur,1);
+      const t=Math.round(pr*4*100)/100;
+      drawRamp(t);
+      rollId = pr<1 ? requestAnimationFrame(frame) : null;
+    }
+    rollId=requestAnimationFrame(frame);
+  });
+}
+
+function setupSlider(){
+  const slider=document.getElementById('h-slider');
+  const val=document.getElementById('h-value');
+  slider.addEventListener('input',()=>{
+    if(animId){ cancelAnimationFrame(animId); animId=null; }
+    hVal=Math.round(parseFloat(slider.value)*100)/100;
+    val.textContent=fmt(hVal);
+    draw();
+  });
+  val.textContent=fmt(hVal);
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){ cancelAnimationFrame(animId); animId=null; }
+    const slider=document.getElementById('h-slider'), val=document.getElementById('h-value');
+    const startH=1.5, endH=0.01, duration=3600;
+    let t0=null;
+    function frame(ts){
+      if(!t0) t0=ts;
+      const pr=Math.min((ts-t0)/duration,1);
+      const eased=pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+      hVal=Math.round((startH+(endH-startH)*eased)*100)/100;
+      slider.value=hVal;
+      val.textContent=fmt(hVal);
+      draw();
+      animId = pr<1 ? requestAnimationFrame(frame) : null;
+    }
+    hVal=startH; slider.value=startH;
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>平均の速さ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc .row { margin: .35rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .legend { margin: .5rem 0 0; font-size: .85rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; margin: 0 1rem .35rem 0; }
+  .legend > span > i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>平均の速さ</h1>
+  <p class="subtitle">斜面を転がる球の平均の速さを、グラフ上の 2 点を結ぶ直線の傾きとして読み取りましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>球が転がり始めてからの時間 <span id="f-x"></span> 秒と、転がった距離 <span id="f-y"></span> m の間に <span id="f-rel"></span> の関係が成り立っています。このとき、<span id="f-ab"></span> 秒後から <span id="f-bb"></span> 秒後までの平均の速さは、進んだ距離を、かかった時間でわった値です。</p>
+  <div class="formula-box" id="f-def"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>3 秒後から 4 秒後までの平均の速さを、順番に求めます。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>2 つのスライダーで区間の両端を変えると、上の斜面のオレンジの部分（進んだ距離）と、下のグラフの割線の傾きが同時に変わります。グラフ上の点 A・B は指でドラッグしても動かせます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="0" max="4.5" step="0.5" value="3">
+    <span class="slider-val" id="a-value">3</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-b"></span> =</label>
+    <input type="range" id="b-slider" min="0.5" max="5" step="0.5" value="4">
+    <span class="slider-val" id="b-value">4</span>
+  </div>
+
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">球を転がす</button></div>
+  <p class="drag-hint">タップすると球が 0 秒から 5 秒まで転がります</p>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=700;
+const IN0={x:48,y:40}, IN1={x:556,y:140}, SMAX=25;
+const gx0=70, gy0=660, sx=96, sy=19.2;
+function gpx(x){return gx0+x*sx;}
+function gpy(y){return gy0-y*sy;}
+function ipt(sM){const t=Math.max(0,Math.min(1,sM/SMAX));return {x:IN0.x+(IN1.x-IN0.x)*t, y:IN0.y+(IN1.y-IN0.y)*t};}
+const ILEN=Math.hypot(IN1.x-IN0.x, IN1.y-IN0.y);
+const NX=-(IN1.y-IN0.y)/ILEN, NY=(IN1.x-IN0.x)/ILEN;
+
+let aVal=3, bVal=4, ballT=4, animId=null;
+let greenAbove=false;
+function dodgeAxis(y,h,axisY){ const t=axisY-6,b=axisY+26; return (y<b && y+h>t)?(t-h):y; }
+function f(x){return x*x;}
+function fmt(v){const r=Math.round(v*1000)/1000;return (Object.is(r,-0)?0:r).toString();}
+
+function init(){
+  document.getElementById('f-x').innerHTML=T('x');
+  document.getElementById('f-y').innerHTML=T('y');
+  document.getElementById('f-rel').innerHTML=T('y=f(x)=x^2');
+  document.getElementById('f-ab').innerHTML=T('a');
+  document.getElementById('f-bb').innerHTML=T('b');
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('lbl-b').innerHTML=T('b');
+  tex('(\\text{平均の速さ})=\\dfrac{f(b)-f(a)}{b-a}\\;\\;(\\text{m/s})', document.getElementById('f-def'), true);
+  document.getElementById('legend').innerHTML=
+    '<span><i style="background:var(--c-blue)"></i>'+T('y=x^2')+' のグラフ</span>'+
+    '<span><i style="background:var(--c-orange)"></i>区間 '+T('a\\le x\\le b')+' で進んだ距離</span>'+
+    '<span><i style="background:var(--c-red)"></i>2 点 A, B を結ぶ直線（割線）</span>'+
+    '<span><i style="background:var(--c-green)"></i>グラフの緑の数値 '+T('b-a')+'</span>'+
+    '<span><i style="background:var(--c-orange)"></i>グラフの橙の数値 '+T('f(b)-f(a)')+'</span>';
+  document.getElementById('note').innerHTML=
+    '割線の傾きが、そのまま平均の速さ（m/s）です。'+T('a')+' と '+T('b')+' を 3 と 4 に合わせると、求める答えが読み取れます。'+
+    'なお区間の幅 '+T('b-a')+' を 0 にすることはできません。0 でわることになるからです。';
+  initWalkthrough();
+  setupControls();
+  draw();
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 平均の速さの意味', formula:'(\\text{平均の速さ})=\\dfrac{(\\text{進んだ距離})}{(\\text{かかった時間})}'},
+    {label:'Step 2: 距離を時間の関数で表す', formula:'y=f(x)=x^2\\quad(x\\;\\text{は秒},\\;y\\;\\text{は m})'},
+    {label:'Step 3: 手本（2 秒後から 3 秒後まで）', formula:'\\dfrac{f(3)-f(2)}{3-2}=\\dfrac{3^2-2^2}{3-2}=\\dfrac{9-4}{1}=5\\;\\;(\\text{m/s})'},
+    {label:'Step 4: 同じ形に 3 と 4 をあてはめる', formula:'\\dfrac{f(4)-f(3)}{4-3}'},
+    {label:'Step 5: 両端の距離を計算する', formula:'f(4)=4^2=16,\\qquad f(3)=3^2=9'},
+    {label:'Step 6: 進んだ距離', formula:'f(4)-f(3)=16-9=7\\;\\;(\\text{m})'},
+    {label:'Step 7: かかった時間', formula:'4-3=1\\;\\;(\\text{s})'},
+    {label:'Step 8: わり算をする', formula:'\\dfrac{f(4)-f(3)}{4-3}=\\dfrac{7}{1}=7'},
+    {label:'Step 9: 答え', formula:'\\text{3 秒後から 4 秒後までの平均の速さは }7\\;\\text{m/s}'}
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function draw(){
+  const svg=document.getElementById('graph');
+  const a=aVal,b=bVal,fa=f(a),fb=f(b);
+  const dx=b-a, dy=fb-fa, slope=dy/dx;
+  let s='';
+
+  s+=`<rect x="0" y="0" width="${W}" height="172" fill="#f7f9ff"/>`;
+  s+=`<text x="300" y="20" text-anchor="middle" font-size="13" fill="#7b8aa5">斜面を転がる球（転がった距離 m）</text>`;
+  s+=`<line x1="${IN0.x}" y1="${IN0.y}" x2="${IN1.x}" y2="${IN1.y}" stroke="#c3cddd" stroke-width="8" stroke-linecap="round"/>`;
+  const pA=ipt(fa), pB=ipt(fb);
+  s+=`<line x1="${pA.x}" y1="${pA.y}" x2="${pB.x}" y2="${pB.y}" stroke="var(--c-orange)" stroke-width="8" stroke-linecap="round"/>`;
+  [1,4,9,16,25].forEach(m=>{
+    const p=ipt(m);
+    s+=`<line x1="${p.x}" y1="${p.y}" x2="${p.x+NX*9}" y2="${p.y+NY*9}" stroke="#9aa7bd" stroke-width="2"/>`;
+    s+=`<text x="${p.x+NX*22}" y="${p.y+NY*22+4}" text-anchor="middle" font-size="11" fill="#9aa7bd">${m}</text>`;
+  });
+  const pball=ipt(f(ballT));
+  s+=`<circle cx="${pball.x-NX*11}" cy="${pball.y-NY*11}" r="10" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<line x1="0" y1="176" x2="${W}" y2="176" stroke="#e3e3e3" stroke-width="2"/>`;
+
+  for(let i=1;i<=5;i++){
+    s+=`<line x1="${gpx(i)}" y1="${gpy(0)}" x2="${gpx(i)}" y2="${gpy(25)}" stroke="#eee" stroke-width="1"/>`;
+  }
+  for(let v=5;v<=25;v+=5){
+    s+=`<line x1="${gpx(0)}" y1="${gpy(v)}" x2="${gpx(5.2)}" y2="${gpy(v)}" stroke="#eee" stroke-width="1"/>`;
+    s+=`<text x="${gx0-8}" y="${gpy(v)+4}" text-anchor="end" font-size="11" fill="#aaa">${v}</text>`;
+  }
+  s+=`<line x1="${gx0-22}" y1="${gy0}" x2="${gpx(5.4)}" y2="${gy0}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<line x1="${gx0}" y1="${gy0+16}" x2="${gx0}" y2="${gpy(25.6)}" stroke="#999" stroke-width="1.5"/>`;
+  for(let i=1;i<=5;i++){
+    s+=`<text x="${gpx(i)}" y="${gy0+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  }
+  s+=`<text x="${gx0-8}" y="${gy0+18}" text-anchor="end" font-size="11" fill="#aaa">O</text>`;
+  s+=`<foreignObject x="${Math.min(gpx(5.5),W-28)}" y="${gy0+2}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${gx0+8}" y="${gpy(25.6)-6}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+
+  let pts='';
+  for(let x=0;x<=5.001;x+=0.05){ pts+=`${gpx(x)},${gpy(f(x))} `; }
+  s+=`<polyline points="${pts}" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  s+=`<line x1="${gpx(a)}" y1="${gpy(fa)}" x2="${gpx(b)}" y2="${gpy(fa)}" stroke="var(--c-green)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s+=`<line x1="${gpx(b)}" y1="${gpy(fa)}" x2="${gpx(b)}" y2="${gpy(fb)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  const legPx=Math.abs(gpx(b)-gpx(a)), legPy=Math.abs(gpy(fb)-gpy(fa));
+  let numLabels='';
+  greenAbove=false;
+  if(legPx>=44){
+    let hly=gpy(fa)+20;
+    if(hly<gy0+23 && hly+34>gy0-3){ hly=gpy(fa)-46; greenAbove=true; }
+    hly=Math.max(194,Math.min(hly,H-38));
+    const hlx=Math.min(Math.max((gpx(a)+gpx(b))/2-26,2), W-54);
+    numLabels+=`<foreignObject x="${hlx}" y="${hly}" width="52" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-green);font-weight:700;display:flex;align-items:center;justify-content:center;height:100%;background:rgba(255,255,255,0.92);border-radius:5px">${T(fmt(dx))}</div></foreignObject>`;
+  }
+  if(legPy>=56){
+    const vRight=(gpx(b)+64<=W-34);
+    const vlx=vRight?gpx(b)+8:Math.max(gpx(b)-64,2);
+    const vly=Math.max(194,Math.min(dodgeAxis(vRight?gpy(fa)-42:gpy(fb)-40,34,gy0),H-38));
+    numLabels+=`<foreignObject x="${vlx}" y="${vly}" width="56" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:var(--c-orange);font-weight:700;display:flex;align-items:center;justify-content:center;height:100%;background:rgba(255,255,255,0.92);border-radius:5px">${T(fmt(dy))}</div></foreignObject>`;
+  }
+
+  const ex1=Math.max(0,a-0.7), ex2=Math.min(5.35,b+0.7);
+  s+=`<line x1="${gpx(ex1)}" y1="${gpy(fa+slope*(ex1-a))}" x2="${gpx(ex2)}" y2="${gpy(fa+slope*(ex2-a))}" stroke="var(--c-red)" stroke-width="3"/>`;
+  s+=numLabels;
+  s+=`<foreignObject x="150" y="186" width="250" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-red);font-weight:700;display:flex;align-items:center;white-space:nowrap">${T('\\dfrac{f(b)-f(a)}{b-a}='+fmt(slope))}</div></foreignObject>`;
+
+  const target=(Math.abs(a-3)<1e-9 && Math.abs(b-4)<1e-9);
+  s+=`<circle cx="${gpx(a)}" cy="${gpy(fa)}" r="8" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${gpx(b)}" cy="${gpy(fb)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  if(target){
+    s+=`<circle cx="${gpx(b)}" cy="${gpy(fb)}" r="8" fill="none" stroke="var(--c-red)" stroke-width="3"><animate attributeName="r" values="8;15;8" dur="1.2s" repeatCount="indefinite"/></circle>`;
+  }
+  s+=`<text x="${gpx(a)-22}" y="${gpy(fa)-10}" font-size="14" fill="var(--c-purple)" font-weight="700">A</text>`;
+  s+=`<text x="${Math.min(gpx(b)+13,W-14)}" y="${Math.max(gpy(fb)-10,196)}" font-size="14" fill="var(--c-red)" font-weight="700">B</text>`;
+
+  svg.innerHTML=s;
+
+  const lc=document.getElementById('live-calc');
+  lc.innerHTML=
+    `<div class="row">${T('\\mathrm{A}('+fmt(a)+',\\,'+fmt(fa)+'),\\quad \\mathrm{B}('+fmt(b)+',\\,'+fmt(fb)+')')}</div>`+
+    `<div class="row">${T('\\dfrac{f('+fmt(b)+')-f('+fmt(a)+')}{'+fmt(b)+'-'+fmt(a)+'}=\\dfrac{'+fmt(fb)+'-'+fmt(fa)+'}{'+fmt(dx)+'}=\\dfrac{'+fmt(dy)+'}{'+fmt(dx)+'}='+fmt(slope)+'\\;\\;(\\text{m/s})')}</div>`+
+    (target?`<div class="row" style="color:var(--c-red);font-weight:700">これが求める答えです</div>`:'');
+}
+
+function setupControls(){
+  const as=document.getElementById('a-slider'), bs=document.getElementById('b-slider');
+  const av=document.getElementById('a-value'), bv=document.getElementById('b-value');
+  function sync(){
+    av.textContent=fmt(aVal); bv.textContent=fmt(bVal);
+    as.value=aVal; bs.value=bVal;
+    ballT=bVal; draw();
+  }
+  as.addEventListener('input',()=>{
+    aVal=parseFloat(as.value);
+    if(aVal>=bVal){ bVal=Math.min(5, aVal+0.5); if(bVal<=aVal){ aVal=bVal-0.5; } }
+    sync();
+  });
+  bs.addEventListener('input',()=>{
+    bVal=parseFloat(bs.value);
+    if(bVal<=aVal){ aVal=Math.max(0, bVal-0.5); if(aVal>=bVal){ bVal=aVal+0.5; } }
+    sync();
+  });
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const dur=4000; let t0=null;
+    function stepAnim(ts){
+      if(!t0) t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      ballT=5*p; draw();
+      if(p<1){ animId=requestAnimationFrame(stepAnim); }
+      else { animId=null; ballT=bVal; draw(); }
+    }
+    animId=requestAnimationFrame(stepAnim);
+  });
+  setupDrag(sync);
+}
+
+function setupDrag(sync){
+  const svg=document.getElementById('graph');
+  const wrap=document.getElementById('svg-wrap');
+  let dragging=null;
+  function toMath(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const svgX=(cx-rect.left)/rect.width*W;
+    const svgY=(cy-rect.top)/rect.height*H;
+    return {x:(svgX-gx0)/sx, sy:svgY};
+  }
+  function startDrag(cx,cy){
+    const m=toMath(cx,cy);
+    if(m.sy<180) return;
+    const da=Math.abs(m.x-aVal), db=Math.abs(m.x-bVal);
+    if(Math.min(da,db)>0.9) return;
+    dragging=(da<=db)?'a':'b';
+  }
+  function moveDrag(cx,cy){
+    if(!dragging) return;
+    const m=toMath(cx,cy);
+    const v=Math.max(0,Math.min(5,Math.round(m.x*2)/2));
+    if(dragging==='a'){ aVal=Math.max(0, Math.min(v, bVal-0.5)); }
+    else { bVal=Math.min(5, Math.max(v, aVal+0.5)); }
+    sync();
+  }
+  function endDrag(){ dragging=null; }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX,e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX,t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

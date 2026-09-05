@@ -47,6 +47,9 @@
     position: relative;
   }
   .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
 
   .live-calc {
     background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;

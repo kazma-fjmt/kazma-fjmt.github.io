@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>増減表からかく 3 次関数のグラフ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .35rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc > div { margin: .25rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { overflow-x: auto; margin: .75rem 0; }
+  .compare-table { border-collapse: collapse; background: #fff; margin: 0 auto; font-size: .9rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .7rem 1rem; text-align: center; white-space: nowrap; }
+  .compare-table .rowhead { background: #f4f7ff; font-weight: 600; }
+  .compare-table .col { cursor: pointer; user-select: none; }
+  .compare-table .mark { background: #fff4e6; color: var(--c-orange); font-weight: 700; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; font-style: normal; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>増減表からかく 3 次関数のグラフ</h1>
+  <p class="subtitle">増減表の 1 欄ずつが、グラフのどの部分になるのかを、かき進めながら確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>増減表があれば、グラフの形はほとんど決まります。<span id="f-solve"></span> となる <span id="f-x1"></span> でよこ軸を区切り、区間ごとに <span id="f-fp"></span> の符号から <span id="f-up"></span> か <span id="f-dn"></span> を書き込み、極値の点を打って、その向きどおりに結べばよいのです。</p>
+  <div class="formula-box" id="f-key"></div>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>かき進めて確かめよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab1"></button>
+    <button class="tab" id="tab2"></button>
+    <button class="tab" id="tab3"></button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label>ペンの位置 <span id="lbl-x"></span> =</label>
+    <input type="range" id="p-slider" min="-2.4" max="2.4" step="0.05" value="2.4">
+    <span class="slider-val" id="p-value">2.4</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">はじめからかく</button>
+    <button class="btn" id="full-btn">最後までかく</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint" id="drag-hint"></p>
+
+  <h2>増減表からグラフへ</h2>
+  <p>表の欄をタップすると、その欄に対応する部分が図の中で光ります。ペンを動かしても、いま通っている欄が光ります。</p>
+  <div class="table-wrap"><table class="compare-table" id="sign-table"></table></div>
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+/* PAD is a blank strip kept free at the top of the panel for its title */
+const W=600,H=380,mL=58,mR=46,PW=W-mL-mR;
+const TT=20,TH=340,PAD=30,TP=TT+PAD;
+const S2=Math.SQRT2;
+
+function fmt(v){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  return s==='-0' ? '0' : s;
+}
+function rel(v){ return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+
+const MODES = {
+  1:{ f:x=>x*x*x-3*x+2, fp:x=>3*x*x-3, fTex:'y=x^3-3x+2', fpTex:"y'=3x^2-3=3(x+1)(x-1)",
+      tab:'x^3-3x+2', stat:[-1,1], statTex:['-1','1'], valTex:['4','0'], coord:['(-1,\\ 4)','(1,\\ 0)'],
+      XMIN:-2.4, XMAX:2.4, YMIN:-7, YMAX:11, xt:[-2,2], yt:[-5,5,10], step:0.05 },
+  2:{ f:x=>x*x*x-6*x, fp:x=>3*x*x-6, fTex:'y=x^3-6x', fpTex:"y'=3x^2-6=3(x^2-2)",
+      tab:'x^3-6x', stat:[-S2,S2], statTex:['-\\sqrt{2}','\\sqrt{2}'], valTex:['4\\sqrt{2}','-4\\sqrt{2}'],
+      coord:['(-\\sqrt{2},\\ 4\\sqrt{2})','(\\sqrt{2},\\ -4\\sqrt{2})'],
+      XMIN:-2.6, XMAX:2.6, YMIN:-8, YMAX:10, xt:[-2,-1,1,2], yt:[-5,5], step:0.05 },
+  3:{ f:x=>-2*x*x*x+3*x*x+4, fp:x=>-6*x*x+6*x, fTex:'y=-2x^3+3x^2+4', fpTex:"y'=-6x^2+6x=-6x(x-1)",
+      tab:'-2x^3+3x^2+4', stat:[0,1], statTex:['0','1'], valTex:['4','5'], coord:['(0,\\ 4)','(1,\\ 5)'],
+      XMIN:-1.2, XMAX:2.2, YMIN:-6, YMAX:14, xt:[-1,2], yt:[-4,4,8,12], step:0.05 }
+};
+
+let mode=1, pen=2.4, sel=4, animId=null;
+function cfg(){ return MODES[mode]; }
+function isMax(M,i){ const d=(M.XMAX-M.XMIN)*0.01, s=M.stat[i]; return M.fp(s-d)>0 && M.fp(s+d)<0; }
+function bps(){ const M=cfg(); return [M.XMIN,M.stat[0],M.stat[1],M.XMAX]; }
+/* five table columns: gap, node, gap, node, gap */
+function colOf(x){
+  const M=cfg(), e=M.step;
+  if(Math.abs(x-M.stat[0])<e) return 1;
+  if(Math.abs(x-M.stat[1])<e) return 3;
+  return x<M.stat[0] ? 0 : (x<M.stat[1] ? 2 : 4);
+}
+function repX(i){
+  const M=cfg(), b=bps();
+  if(i===1) return M.stat[0];
+  if(i===3) return M.stat[1];
+  const k=i/2;
+  return (b[k]+b[k+1])/2;
+}
+
+function init(){
+  const spans={'f-solve':"y'=0",'f-x1':'x','f-fp':"y'",'f-up':'\\nearrow','f-dn':'\\searrow','lbl-x':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex("\\begin{array}{c|ccccc} x & \\cdots & -1 & \\cdots & 1 & \\cdots \\\\ \\hline y' & + & 0 & - & 0 & + \\\\ y & \\nearrow & \\text{極大}\\ 4 & \\searrow & \\text{極小}\\ 0 & \\nearrow \\end{array}",
+      document.getElementById('f-key'), true);
+  tex("\\text{(1)}\\ \\ y=x^3-6x \\qquad \\text{(2)}\\ \\ y=-2x^3+3x^2+4", document.getElementById('f-problem'), true);
+  tex("\\begin{aligned}&\\text{(1) }(-\\sqrt{2},\\ 4\\sqrt{2})\\text{ で極大、}(\\sqrt{2},\\ -4\\sqrt{2})\\text{ で極小のグラフ}\\\\"
+     +"&\\text{(2) }(1,\\ 5)\\text{ で極大、}(0,\\ 4)\\text{ で極小のグラフ}\\end{aligned}", document.getElementById('result-box'), true);
+
+  document.getElementById('tab1').innerHTML=T(MODES[1].tab);
+  document.getElementById('tab2').innerHTML='(1) '+T(MODES[2].tab);
+  document.getElementById('tab3').innerHTML='(2) '+T(MODES[3].tab);
+  document.getElementById('legend').innerHTML=
+    '<span><i style="background:var(--c-blue)"></i>かき終えたグラフ</span>'+
+    '<span><i style="background:#8fa3c4"></i>増減の向き（'+T('\\nearrow')+' と '+T('\\searrow')+'）</span>'+
+    '<span><b style="background:var(--c-orange)"></b>極値の点</span>'+
+    '<span><i style="background:rgba(230,126,34,0.45)"></i>選んでいる欄の部分</span>';
+
+  initWalkthrough(); setupTabs(); setupSlider(); setupButtons(); setupDrag(); applyMode();
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 導関数を求める', formula:"y=x^3-3x+2 \\ \\Longrightarrow\\ y'=3x^2-3=3(x+1)(x-1)" },
+    { label:'Step 2: 導関数が 0 になる x を求める', formula:"3(x+1)(x-1)=0 \\quad\\text{より}\\quad x=-1,\\ 1" },
+    { label:'Step 3: 区間ごとに符号を調べる', formula:"x<-1,\\ 1<x \\text{ のとき } y'>0, \\qquad -1<x<1 \\text{ のとき } y'<0" },
+    { label:'Step 4: 増減表を作る', formula:"\\begin{array}{c|ccccc} x & \\cdots & -1 & \\cdots & 1 & \\cdots \\\\ \\hline y' & + & 0 & - & 0 & + \\\\ y & \\nearrow & \\text{極大}\\ 4 & \\searrow & \\text{極小}\\ 0 & \\nearrow \\end{array}" },
+    { label:'Step 5: 極値の点を打つ', formula:"(-1,\\ 4) \\text{ で極大}, \\qquad (1,\\ 0) \\text{ で極小}" },
+    { label:'Step 6: 表の向きどおりに結ぶ', formula:"\\nearrow \\ \\text{で上り、} \\searrow \\ \\text{で下り、また} \\ \\nearrow \\ \\text{で上るグラフ}" },
+    { label:'Step 7: (1) の導関数と 0 になる x', formula:"y'=3x^2-6=3(x^2-2) \\ \\Longrightarrow\\ x=\\pm\\sqrt{2}" },
+    { label:'Step 8: (1) の極値', formula:"x=-\\sqrt{2} \\text{ のとき極大値 } 4\\sqrt{2}, \\qquad x=\\sqrt{2} \\text{ のとき極小値 } -4\\sqrt{2}" },
+    { label:'Step 9: (2) の導関数と極値', formula:"y'=-6x(x-1) \\ \\Longrightarrow\\ x=0 \\text{ で極小値 } 4, \\quad x=1 \\text{ で極大値 } 5" }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough'), counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++) html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function draw(){
+  const M=cfg(), b=bps();
+  const px=x=>mL+(x-M.XMIN)/(M.XMAX-M.XMIN)*PW;
+  const py=v=>TT+TH-(v-M.YMIN)/(M.YMAX-M.YMIN)*(TH-PAD);
+  const HALO=' stroke="#fff" stroke-width="2.5" paint-order="stroke" stroke-linejoin="round"';
+  const tk=(x,y,a)=>`<text x="${x}" y="${y}" text-anchor="${a}" font-size="11" fill="#aaa"${HALO}>`;
+  const fo=(x,y,w,h,st,body)=>`<foreignObject x="${x}" y="${y}" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="${st}">${body}</div></foreignObject>`;
+  const arc=(x0,x1)=>{ let d=''; for(let k=0;k<=90;k++){ const x=x0+(x1-x0)*k/90; d+=(k===0?'M':'L')+` ${px(x).toFixed(2)} ${py(M.f(x)).toFixed(2)}`; } return d; };
+  let s='', ticks='';
+
+  s+=`<rect x="${mL}" y="${TT}" width="${PW}" height="${TH}" fill="#fff" stroke="#e3e3e3"/>`;
+  M.xt.forEach(k=>{
+    s+=`<line x1="${px(k)}" y1="${TP}" x2="${px(k)}" y2="${TT+TH}" stroke="#eee" stroke-width="1"/>`;
+    ticks+=tk(px(k),py(0)+16,'middle')+fmt(k)+'</text>';
+  });
+  M.yt.forEach(k=>{
+    s+=`<line x1="${mL}" y1="${py(k)}" x2="${mL+PW}" y2="${py(k)}" stroke="#eee" stroke-width="1"/>`;
+    ticks+=tk(mL-7,py(k)+4,'end')+fmt(k)+'</text>';
+  });
+  s+=`<line x1="${mL}" y1="${py(0)}" x2="${mL+PW}" y2="${py(0)}" stroke="#999" stroke-width="1.5"/><line x1="${px(0)}" y1="${TP}" x2="${px(0)}" y2="${TT+TH}" stroke="#999" stroke-width="1.5"/>`;
+  /* the two vertical dashes are the column borders of the table */
+  M.stat.forEach(sx=>s+=`<line x1="${px(sx)}" y1="${TP}" x2="${px(sx)}" y2="${TT+TH}" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.55"/>`);
+
+  /* the selected table column lights up its own stretch of the curve */
+  if(sel%2===0){
+    const k=sel/2, x0=Math.min(b[k],pen), x1=Math.min(b[k+1],pen);
+    if(x1>x0) s+=`<path d="${arc(x0,x1)}" fill="none" stroke="rgba(230,126,34,0.45)" stroke-width="11" stroke-linecap="round"/>`;
+  }
+  s+=`<path d="${arc(M.XMIN,pen)}" fill="none" stroke="var(--c-blue)" stroke-width="2.8"/>`;
+
+  /* chevrons repeat the arrow cells of the table on the curve itself */
+  for(let i=0;i<3;i++){
+    [0.35,0.72].forEach(t=>{
+      const x=b[i]+(b[i+1]-b[i])*t;
+      if(x>pen) return;
+      const e=(M.XMAX-M.XMIN)*0.01;
+      const ang=Math.atan2(py(M.f(x+e))-py(M.f(x-e)), px(x+e)-px(x-e))*180/Math.PI;
+      s+=`<path d="M -7 -6 L 0 0 L -7 6" fill="none" stroke="#8fa3c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(${px(x).toFixed(1)},${py(M.f(x)).toFixed(1)}) rotate(${ang.toFixed(1)})"/>`;
+    });
+  }
+  s+=ticks;
+
+  M.stat.forEach((sx,i)=>{
+    /* an irrational stationary point (x = ±√2) never lands exactly on a step of the
+       pen, so treat the nearest step as having reached it */
+    if(sx>pen+M.step/2) return;
+    const X=px(sx), Y=py(M.f(sx)), up=isMax(M,i);
+    if(sel===2*i+1) s+=`<circle cx="${X}" cy="${Y}" r="10" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="10;19;10" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0;0.9" dur="1.6s" repeatCount="indefinite"/></circle>`;
+    s+=`<path d="M ${X} ${Y-8} L ${X+8} ${Y} L ${X} ${Y+8} L ${X-8} ${Y} Z" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>`;
+    s+=fo(X-75, up ? Y-36 : Y+10, 150, 26,
+      'font-size:13px;text-align:center;white-space:nowrap',
+      '<span style="background:#fff;padding:0 3px;border-radius:3px;color:#e67e22;font-weight:700">'+T((up?'\\text{極大}\\ ':'\\text{極小}\\ ')+M.coord[i])+'</span>');
+  });
+
+  s+=`<circle cx="${px(pen)}" cy="${py(M.f(pen))}" r="8" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${px(pen)}" cy="${py(M.f(pen))}" r="8" fill="none" stroke="var(--c-blue)" stroke-width="2" opacity="0.5"><animate attributeName="r" values="8;16;8" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  s+=fo(mL+6, TT+2, 230, 26, 'font-size:13px;font-weight:600;white-space:nowrap;display:inline-block;background:#fff;color:var(--c-blue)', T(M.fTex));
+  s+=fo(mL+PW+4, py(0)-12, 30, 24, 'font-size:13px;color:#999', T('x'));
+
+  document.getElementById('graph').innerHTML=s;
+  buildTable();
+  updateLive();
+}
+
+function buildTable(){
+  const M=cfg();
+  const up=[0,1,2].map(i=>{ const b=bps(); return M.fp((b[i]+b[i+1])/2)>0; });
+  const cells=[
+    {x:'\\cdots', d:up[0]?'+':'-', y:up[0]?'\\nearrow':'\\searrow'},
+    {x:M.statTex[0], d:'0', y:(isMax(M,0)?'\\text{極大}\\ ':'\\text{極小}\\ ')+M.valTex[0]},
+    {x:'\\cdots', d:up[1]?'+':'-', y:up[1]?'\\nearrow':'\\searrow'},
+    {x:M.statTex[1], d:'0', y:(isMax(M,1)?'\\text{極大}\\ ':'\\text{極小}\\ ')+M.valTex[1]},
+    {x:'\\cdots', d:up[2]?'+':'-', y:up[2]?'\\nearrow':'\\searrow'}
+  ];
+  let r1='<tr><th class="rowhead">'+T('x')+'</th>', r2='<tr><th class="rowhead">'+T("y'")+'</th>', r3='<tr><th class="rowhead">'+T('y')+'</th>';
+  cells.forEach((c,i)=>{
+    const cl='class="col'+(i===sel?' mark':'')+'" data-col="'+i+'"';
+    r1+='<td '+cl+'>'+T(c.x)+'</td>';
+    r2+='<td '+cl+'>'+T(c.d)+'</td>';
+    r3+='<td '+cl+'>'+T(c.y)+'</td>';
+  });
+  const tbl=document.getElementById('sign-table');
+  tbl.innerHTML=r1+'</tr>'+r2+'</tr>'+r3+'</tr>';
+  tbl.querySelectorAll('td.col').forEach(td=>{
+    td.addEventListener('click',()=>{ stopAnim(); sel=parseInt(td.getAttribute('data-col'),10); setPen(Math.max(pen,repX(sel))); draw(); });
+  });
+}
+
+function updateLive(){
+  const M=cfg(), v=M.f(pen), d=M.fp(pen);
+  document.getElementById('live-calc').innerHTML=
+    `<div>${T('x '+rel(pen)+' '+fmt(pen)+', \\qquad y '+rel(v)+' '+fmt(v))}</div>`+
+    `<div style="color:${Math.abs(d)<1e-9?'#7a8699':(d>0?'var(--c-green)':'var(--c-red)')}">${T("y' "+rel(d)+' '+fmt(d))}</div>`;
+  const note=document.getElementById('note-box');
+  if(sel%2===1){
+    const i=(sel-1)/2, up=isMax(M,i);
+    note.innerHTML='選んでいるのは '+T("y'=0")+' の欄です。ここでグラフは'+(up?'上りから下りに変わり、まわりでいちばん高い点':'下りから上りに変わり、まわりでいちばん低い点')+
+      'になります。表の '+T((up?'\\text{極大}\\ ':'\\text{極小}\\ ')+M.valTex[i])+' が、図の点 '+T(M.coord[i])+' です。';
+  } else {
+    const b=bps(), k=sel/2, rise=M.fp((b[k]+b[k+1])/2)>0;
+    note.innerHTML='選んでいるのは '+T(rise?"y'>0":"y'<0")+' の欄で、表には '+T(rise?'\\nearrow':'\\searrow')+
+      ' が入ります。図ではこの区間を'+(rise?'上りながら':'下りながら')+'進み、曲線の上の矢印も同じ向きを向いています。';
+  }
+}
+
+/* setPen only moves the pen; the caller settles `sel` first and then redraws */
+function setPen(v){
+  const M=cfg(), sl=document.getElementById('p-slider');
+  const q=Math.max(M.XMIN,Math.min(M.XMAX,v));
+  pen=parseFloat((Math.round(q/M.step)*M.step).toFixed(4));
+  sl.value=pen;
+  document.getElementById('p-value').textContent=fmt(pen);
+}
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+
+function setupButtons(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const M=cfg(), duration=4200;
+    let t0=null;
+    setPen(M.XMIN); sel=0; draw();
+    function frame(ts){
+      if(!t0) t0=ts;
+      const pr=Math.min((ts-t0)/duration,1);
+      setPen(M.XMIN+(M.XMAX-M.XMIN)*pr);
+      sel=colOf(pen); draw();
+      animId = pr<1 ? requestAnimationFrame(frame) : null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+  document.getElementById('full-btn').addEventListener('click',()=>{ stopAnim(); sel=4; setPen(cfg().XMAX); draw(); });
+}
+
+function applyMode(){
+  const M=cfg(), sl=document.getElementById('p-slider');
+  for(let i=1;i<=3;i++) document.getElementById('tab'+i).classList.toggle('active', mode===i);
+  sl.min=String(M.XMIN); sl.max=String(M.XMAX); sl.step=String(M.step);
+  document.getElementById('mode-desc').innerHTML=
+    T(M.fTex)+' を、増減表どおりにかいていきます。導関数は '+T(M.fpTex)+' です。';
+  document.getElementById('drag-hint').innerHTML='図を横にドラッグするか、スライダーでペンを進めましょう。';
+  sel=4;
+  setPen(M.XMAX); draw();
+}
+
+function setupTabs(){
+  for(let i=1;i<=3;i++) document.getElementById('tab'+i).addEventListener('click',()=>{ stopAnim(); mode=i; applyMode(); });
+}
+
+function setupSlider(){
+  const sl=document.getElementById('p-slider');
+  sl.addEventListener('input',()=>{ stopAnim(); setPen(parseFloat(sl.value)); sel=colOf(pen); draw(); });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'), wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  const toPt=(cx,cy)=>{ const r=svg.getBoundingClientRect(); return {x:(cx-r.left)/r.width*W, y:(cy-r.top)/r.height*H}; };
+  function valueAt(pt){ const M=cfg(); return M.XMIN+(pt.x-mL)/PW*(M.XMAX-M.XMIN); }
+  function inArea(pt){ return pt.x>mL-24 && pt.x<mL+PW+20 && pt.y>TT-12 && pt.y<TT+TH+12; }
+  function startDrag(cx,cy){
+    const pt=toPt(cx,cy);
+    if(!inArea(pt)) return;
+    stopAnim(); dragging=true; setPen(valueAt(pt)); sel=colOf(pen); draw();
+  }
+  function moveDrag(cx,cy){ if(dragging){ setPen(valueAt(toPt(cx,cy))); sel=colOf(pen); draw(); } }
+  function endDrag(){ dragging=false; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

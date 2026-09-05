@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>定数関数の導関数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; margin: .5rem 0; flex-wrap: wrap; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .4rem; }
+  .legend > span > i { width: 22px; height: 4px; border-radius: 2px; display: inline-block; flex: none; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>定数関数の導関数</h1>
+  <p class="subtitle">値が一定の関数はどこでも傾きが 0 になることを、グラフの上で確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>いつも同じ値だけをとる関数を定数関数といいます。そのグラフは <span id="f-xaxis"></span> に平行な直線なので、どこを切り取っても高さが変わりません。</p>
+  <div class="formula-box" id="f-formula"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>上の図で点 <span id="f-Alabel"></span> を左右にドラッグすると、その位置の微分係数が下の図に記録されていきます。スライダーで定数 <span id="f-clabel"></span> と刻み幅 <span id="f-hlabel"></span> も変えられます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-c"></span> =</label>
+    <input type="range" id="c-slider" min="-6" max="6" step="1" value="-6">
+    <span class="slider-val" id="c-value">-6</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-h"></span> =</label>
+    <input type="range" id="h-slider" min="0.2" max="3" step="0.1" value="2.0">
+    <span class="slider-val" id="h-value">2.0</span>
+  </div>
+
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="reset-btn">記録を消す</button>
+  </div>
+
+  <p class="drag-hint">上の図の点 A を指でドラッグしてください</p>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 640" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--c-blue)"></i><span id="lg1"></span></span>
+    <span><i style="background:var(--c-orange)"></i><span id="lg2"></span></span>
+    <span><i style="background:var(--c-green)"></i><span id="lg3"></span></span>
+  </div>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>問に答える</h2>
+  <p>関数 <span id="f-quest"></span> を微分してみましょう。</p>
+  <div class="anim-btn-row"><button class="btn primary" id="ans-btn">答えを表示</button></div>
+  <div class="formula-box" id="answer-box" hidden></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=640,ox=300,sc=30;
+const XMIN=-8.5,XMAX=8.5,YMIN=-7,YMAX=7;
+const oyT=250,oyB=560,DIV=482;
+function px(x){return ox+x*sc;}
+function pyT(y){return oyT-y*sc;}
+function pyB(y){return oyB-y*sc;}
+
+let cVal=-6, hVal=2.0, aVal=-5;
+let traceLo=-5, traceHi=-5;
+let animId=null;
+
+function f1(v){let s=v.toFixed(1);if(s==="-0.0")s="0.0";return s;}
+function sgnStr(v){return v<0?("("+v+")"):String(v);}
+
+function init(){
+  document.getElementById('f-xaxis').innerHTML=T('x\\text{ 軸}');
+  document.getElementById('f-Alabel').innerHTML=T('\\mathrm{A}');
+  document.getElementById('f-clabel').innerHTML=T('c');
+  document.getElementById('f-hlabel').innerHTML=T('h');
+  document.getElementById('lbl-c').innerHTML=T('c');
+  document.getElementById('lbl-h').innerHTML=T('h');
+  document.getElementById('f-quest').innerHTML=T('y=-6');
+  document.getElementById('lg1').innerHTML=T('y=f(x)=c');
+  document.getElementById('lg2').innerHTML=T('\\text{割線 }\\mathrm{AB}');
+  document.getElementById('lg3').innerHTML=T("y=f'(x)");
+  tex("c\\text{ が定数のとき}\\quad (c)'=0",document.getElementById('f-formula'),true);
+  initWalkthrough();
+  setupControls();
+  drawGraph();
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 定数関数とおく',
+     formula:'f(x)=c\\quad(c\\text{ は定数})'},
+    {label:'Step 2: どこの値も同じ',
+     formula:'f(x+h)=c,\\qquad f(x)=c'},
+    {label:'Step 3: 平均変化率をつくる',
+     formula:"y'=\\lim_{h\\to0}\\dfrac{f(x+h)-f(x)}{h}=\\lim_{h\\to0}\\dfrac{c-c}{h}"},
+    {label:'Step 4: 分子が 0 になる',
+     formula:'\\dfrac{c-c}{h}=\\dfrac{0}{h}=0\\quad(h\\ne0)'},
+    {label:'Step 5: どんな h でも 0 だから極限も 0',
+     formula:"y'=\\lim_{h\\to0}0=0"},
+    {label:'Step 6: 定数関数の導関数',
+     formula:"(c)'=0"},
+    {label:'Step 7: 問の関数に当てはめる',
+     formula:'y=-6\\ \\text{は }c=-6\\text{ の定数関数}'},
+    {label:'Step 8: 答え',
+     formula:"y'=0"}
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function drawGraph(){
+  const svg=document.getElementById('graph');
+  const a=aVal,h=hVal,c=cVal,b=a+h;
+  /* the h bracket sits on the side of the line that faces the x axis, so it never leaves the panel */
+  const up=(c<0);
+  const bry=up?pyT(c)-44:pyT(c)+44;
+  const hlx=(px(a)+px(b))/2-42, hly=up?bry-34:bry+4, hlw=84, hlh=32;
+  const ly=up?pyT(c)+22:pyT(c)-12;
+  /* boxes of everything that moves - labels and the draggable dots; static tick labels step aside instead of colliding */
+  const busy=[[hlx,hly,hlw,hlh],[px(a)-30,ly-13,18,16],[px(b)+12,ly-13,18,16],
+              [px(a)-12,pyT(c)-12,24,24],[px(b)-10,pyT(c)-10,20,20],[px(a)-13,pyB(0)-13,26,26]];
+  const hits=(x,y,w,h)=>busy.some(v=>x<v[0]+v[2]&&x+w>v[0]&&y<v[1]+v[3]&&y+h>v[1]);
+  const tick=(x,y,anchor,fill,size,txt,halo)=>{
+    const tw=String(txt).length*size*0.62;
+    const bx=anchor==='middle'?x-tw/2:x-tw;
+    if(hits(bx,y-size*0.82,tw,size)) return '';
+    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" fill="${fill}"${size>11?' font-weight="700"':''}${halo?' stroke="#fff" stroke-width="3.5" paint-order="stroke"':''}>${txt}</text>`;
+  };
+  let s='';
+
+  for(let i=-8;i<=8;i++){
+    s+=`<line x1="${px(i)}" y1="${pyT(YMAX)}" x2="${px(i)}" y2="${pyT(YMIN)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+    s+=`<line x1="${px(i)}" y1="${pyB(2)}" x2="${px(i)}" y2="${pyB(-2)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+  for(let j=-7;j<=7;j++){
+    s+=`<line x1="${px(XMIN)}" y1="${pyT(j)}" x2="${px(XMAX)}" y2="${pyT(j)}" stroke="${j===0?'#999':'#eee'}" stroke-width="${j===0?1.5:1}"/>`;
+  }
+  for(let j=-2;j<=2;j++){
+    s+=`<line x1="${px(XMIN)}" y1="${pyB(j)}" x2="${px(XMAX)}" y2="${pyB(j)}" stroke="${j===0?'#999':'#eee'}" stroke-width="${j===0?1.5:1}"/>`;
+  }
+  s+=`<line x1="0" y1="${DIV}" x2="600" y2="${DIV}" stroke="#ccc" stroke-width="1" stroke-dasharray="6 4"/>`;
+  /* the guide line down to the lower panel goes in early so it is never drawn across a label */
+  s+=`<line x1="${px(a)}" y1="${pyT(c)}" x2="${px(a)}" y2="${pyB(0)}" stroke="var(--c-green)" stroke-width="1.2" stroke-dasharray="3 5" opacity="0.6"/>`;
+
+  for(let i=-8;i<=8;i+=2){ if(i===0) continue;
+    s+=tick(px(i),pyT(0)+16,'middle','#aaa',11,i);
+  }
+  for(let j=-6;j<=6;j+=2){ if(j===0||j===c) continue;
+    s+=tick(ox-8,pyT(j)+4,'end','#aaa',11,j);
+  }
+  s+=tick(ox-8,pyT(0)+16,'end','#aaa',11,'O');
+  s+=tick(ox-8,pyB(0)-6,'end','#aaa',11,'O');
+
+  const xlx=px(XMAX)-30;
+  const xly=[pyT(0)-24,pyT(0)+24,pyT(0)-52].find(v=>!hits(xlx,v,26,24));
+  s+=`<foreignObject x="${xlx}" y="${xly===undefined?pyT(0)-24:xly}" width="26" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${ox+6}" y="4" width="26" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+  s+=`<foreignObject x="${px(XMAX)-30}" y="${pyB(0)-28}" width="26" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+
+  s+=`<foreignObject x="10" y="22" width="150" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:600;white-space:nowrap"><span style="display:inline-block;background:#fff;padding:0 3px">${T('y=f(x)')}</span></div></foreignObject>`;
+  s+=`<foreignObject x="10" y="492" width="150" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-green);font-weight:600;white-space:nowrap"><span style="display:inline-block;background:#fff;padding:0 3px">${T("y=f'(x)")}</span></div></foreignObject>`;
+
+  /* fixed slot at the top right of the upper panel, away from the moving parts */
+  s+=`<foreignObject x="${W-232}" y="22" width="226" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:700;text-align:right;white-space:nowrap"><span style="display:inline-block;background:#fff;padding:0 3px">${T('\\Delta y=f(\\mathrm{B})-f(\\mathrm{A})=0')}</span></div></foreignObject>`;
+
+  s+=`<line x1="${px(XMIN)}" y1="${pyT(c)}" x2="${px(XMAX)}" y2="${pyT(c)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+  s+=`<line x1="${px(a)}" y1="${pyT(c)}" x2="${px(b)}" y2="${pyT(c)}" stroke="var(--c-orange)" stroke-width="7" opacity="0.55"/>`;
+  /* the c tick sits on the line itself, so draw it after the line with a white halo instead of under it */
+  if(c!==0) s+=tick(ox-8,pyT(c)+4,'end','var(--c-blue)',13,c,true);
+
+  const tip = up ? pyT(c)-6 : pyT(c)+6;
+  s+=`<line x1="${px(a)}" y1="${tip}" x2="${px(a)}" y2="${bry}" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s+=`<line x1="${px(b)}" y1="${tip}" x2="${px(b)}" y2="${bry}" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s+=`<line x1="${px(a)}" y1="${bry}" x2="${px(b)}" y2="${bry}" stroke="var(--c-orange)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${hlx}" y="${hly}" width="${hlw}" height="${hlh}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:700;text-align:center;white-space:nowrap">${T('h='+f1(h))}</div></foreignObject>`;
+
+  /* A and B letters go on the opposite side of the bracket and spread outward, so they never collide */
+  s+=`<circle cx="${px(a)}" cy="${pyT(c)}" r="9" fill="var(--c-red)" stroke="#fff" stroke-width="2.5" style="cursor:grab"/>`;
+  s+=`<circle cx="${px(b)}" cy="${pyT(c)}" r="7" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<text x="${px(a)-14}" y="${ly}" text-anchor="end" font-size="15" font-weight="700" fill="var(--c-red)">A</text>`;
+  s+=`<text x="${px(b)+14}" y="${ly}" text-anchor="start" font-size="15" font-weight="700" fill="var(--c-purple)">B</text>`;
+
+  s+=`<line x1="${px(traceLo)}" y1="${pyB(0)}" x2="${px(traceHi)}" y2="${pyB(0)}" stroke="var(--c-green)" stroke-width="5"/>`;
+  s+=`<circle cx="${px(a)}" cy="${pyB(0)}" r="8" fill="var(--c-green)" stroke="#fff" stroke-width="2.5">`;
+  s+=`<animate attributeName="r" values="8;12;8" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  s+=`<foreignObject x="${Math.min(Math.max(px(a)-72,4),W-148)}" y="${pyB(0)+14}" width="144" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-green);font-weight:700;text-align:center;white-space:nowrap">${T("f'("+f1(a)+")=0")}</div></foreignObject>`;
+
+  svg.innerHTML=s;
+
+  const cs=sgnStr(c);
+  document.getElementById('live-calc').innerHTML=
+    T(`\\dfrac{f(${f1(a)}+${f1(h)})-f(${f1(a)})}{${f1(h)}}=\\dfrac{${cs}-${cs}}{${f1(h)}}=\\dfrac{0}{${f1(h)}}=0`)+'<br>'+
+    T(`f'(${f1(a)})=\\lim_{h\\to0}0=0`);
+
+  const nb=document.getElementById('note-box');
+  if(c===0){
+    nb.innerHTML='いまの直線は '+T('y=0')+' で、'+T('x')+' 軸そのものです。それでも平均変化率は '+T('0')+' のままで、'+T("y'=0")+' は変わりません。';
+  } else {
+    nb.innerHTML='点 '+T('\\mathrm{A}')+' をどこに動かしても、'+T('h')+' をどれだけ小さくしても、高さの差 '+T('\\Delta y')+' は '+T('0')+' のままです。だから平均変化率は '+T('h')+' に関係なく '+T('0')+' で、極限をとっても '+T('0')+' です。';
+  }
+}
+
+function extendTrace(x){
+  if(x<traceLo) traceLo=x;
+  if(x>traceHi) traceHi=x;
+}
+
+function setCA(v){
+  aVal=Math.round(Math.max(-7,Math.min(5,v))*10)/10;
+  extendTrace(aVal);
+}
+
+function setupControls(){
+  const cs=document.getElementById('c-slider'),cv=document.getElementById('c-value');
+  cs.addEventListener('input',()=>{cVal=parseInt(cs.value,10);cv.textContent=String(cVal);drawGraph();});
+  const hs=document.getElementById('h-slider'),hv=document.getElementById('h-value');
+  hs.addEventListener('input',()=>{hVal=parseFloat(hs.value);hv.textContent=f1(hVal);drawGraph();});
+
+  document.getElementById('reset-btn').addEventListener('click',()=>{
+    traceLo=aVal;traceHi=aVal;drawGraph();
+  });
+
+  document.getElementById('ans-btn').addEventListener('click',()=>{
+    const box=document.getElementById('answer-box');
+    if(box.hidden){
+      tex("y=-6\\ \\text{は定数関数だから}\\quad y'=0",box,true);
+      box.hidden=false;
+      document.getElementById('ans-btn').textContent='答えを隠す';
+    } else {
+      box.hidden=true;
+      document.getElementById('ans-btn').textContent='答えを表示';
+    }
+  });
+
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const startA=-7,endA=5,duration=3600;
+    let startTime=null;
+    function animate(ts){
+      if(!startTime) startTime=ts;
+      const p=Math.min((ts-startTime)/duration,1);
+      const eased=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      setCA(startA+(endA-startA)*eased);
+      drawGraph();
+      if(p<1) animId=requestAnimationFrame(animate); else animId=null;
+    }
+    setCA(startA);traceLo=startA;traceHi=startA;
+    animId=requestAnimationFrame(animate);
+  });
+
+  setupDrag();
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph');
+  const wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toMathX(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const svgX=(cx-rect.left)/rect.width*W;
+    const svgY=(cy-rect.top)/rect.height*H;
+    return {x:(svgX-ox)/sc,y:svgY};
+  }
+  function startDrag(cx,cy){
+    const m=toMathX(cx,cy);
+    if(m.y>DIV) return;
+    if(Math.abs(m.x-aVal)<2.2||Math.abs((m.y-pyT(cVal)))<40){
+      dragging=true;
+      if(animId){cancelAnimationFrame(animId);animId=null;}
+      setCA(m.x);drawGraph();
+    }
+  }
+  function moveDrag(cx,cy){
+    const m=toMathX(cx,cy);
+    setCA(m.x);drawGraph();
+  }
+  function endDrag(){dragging=false;}
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();moveDrag(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',endDrag);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];startDrag(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];moveDrag(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

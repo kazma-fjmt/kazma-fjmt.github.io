@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>x の n 乗の導関数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem .9rem; margin: .5rem 0; font-size: .85rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .swatch { width: 18px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid #ccc; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 700; padding: .6rem 1rem; border-radius: 10px;
+    min-height: 48px; min-width: 62px; cursor: pointer; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc .row { margin: .35rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .5rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .6rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.8rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>x の n 乗の導関数</h1>
+  <p class="subtitle">増分を分けて見ることで、べき関数の微分の公式がどこから来るのかを確かめましょう。</p>
+
+  <h2>公式</h2>
+  <div class="formula-box" id="f-formula"></div>
+  <p><span id="f-n"></span> が正の整数のとき、この 1 つの式で <span id="f-ex"></span> がすべて求まります。</p>
+
+  <h2>正方形の面積の増分で見る</h2>
+  <p>1 辺 <span id="f-xx"></span> の正方形の辺を <span id="f-hh"></span> だけ伸ばすと、増えた面積は細長い 2 枚と小さな正方形に分かれます。</p>
+  <div class="legend">
+    <span><i class="swatch" style="background:rgba(42,109,244,0.20)"></i><span id="lg-a"></span></span>
+    <span><i class="swatch" style="background:rgba(230,126,34,0.35)"></i><span id="lg-b"></span></span>
+    <span><i class="swatch" style="background:rgba(217,83,79,0.45)"></i><span id="lg-c"></span></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="1" max="2.5" step="0.1" value="1.5">
+    <span class="slider-val" id="x-value">1.5</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-h"></span> =</label>
+    <input type="range" id="h-slider" min="0.05" max="0.5" step="0.01" value="0.4">
+    <span class="slider-val" id="h-value">0.40</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container">
+    <svg id="square" viewBox="0 0 600 470" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="sq-calc"></div>
+
+  <h2>一般の n で確かめる</h2>
+  <p>二項定理で <span id="f-binom"></span> を展開して <span id="f-xn"></span> を引き、<span id="f-hh2"></span> で割ると、次の形になります。</p>
+  <div class="formula-box" id="f-general"></div>
+  <p><span id="f-nsel"></span> を選んで、上の <span id="f-hh3"></span> のスライダーを 0 に近づけてみましょう。左の棒が右の赤い棒に一致します。</p>
+  <div class="tabs" id="n-tabs"></div>
+  <div class="svg-container">
+    <svg id="bars" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="bar-calc"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>関数 <span id="f-target"></span> を微分します。</p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <div class="note" id="note-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+function fmt(v,d){const w=(Math.abs(v)<5e-7)?0:v;return w.toFixed(d===undefined?2:d);}
+function rel(v,d){return (Math.abs(v-parseFloat(fmt(v,d)))<1e-12)?'=':'\\fallingdotseq';}
+function C(n,k){let r=1;for(let i=1;i<=k;i++) r=r*(n-i+1)/i;return Math.round(r);}
+function mono(c,xp,hp){
+  let s='';
+  if(c!==1||(xp===0&&hp===0)) s+=String(c);
+  if(xp===1) s+='x'; else if(xp>1) s+='x^{'+xp+'}';
+  if(hp===1) s+='h'; else if(hp>1) s+='h^{'+hp+'}';
+  return s;
+}
+
+let xVal=1.5, hVal=0.4, nVal=4, animId=null;
+const Q=130, OX=120, OY=430;
+
+function init(){
+  const ids={'f-n':'n','f-ex':"(x)'=1,\\;(x^2)'=2x,\\;(x^3)'=3x^2,\\;\\ldots",
+    'f-xx':'x','f-hh':'h','f-hh2':'h','f-hh3':'h','f-xn':'x^n','f-nsel':'n',
+    'f-binom':'(x+h)^n','lbl-x':'x','lbl-h':'h',
+    'lg-a':'x^2','lg-b':'xh\\;\\text{（2 枚）}','lg-c':'h^2',
+    'f-target':'y=x^4'};
+  for(const k in ids) document.getElementById(k).innerHTML=T(ids[k]);
+
+  tex("(x^n)'=nx^{n-1}\\qquad(n\\;\\text{は正の整数})", document.getElementById('f-formula'), true);
+  tex("\\dfrac{(x+h)^n-x^n}{h}=nx^{n-1}+{}_n\\mathrm{C}_2\\,x^{n-2}h+\\cdots+{}_n\\mathrm{C}_n\\,h^{n-1}", document.getElementById('f-general'), true);
+
+  document.getElementById('note-box').innerHTML =
+    '<strong>注意</strong>　公式の ' + T('x^{n-1}') + ' で、' + T('n=1') + ' のときは ' + T('x^0=1') +
+    ' と考えます。したがって ' + T("(x)'=1\\cdot x^0=1") + ' となり、' + T('n=1') + ' でも公式が使えます。';
+
+  let tabs='';
+  for(let n=1;n<=6;n++) tabs+=`<button class="tab" id="n-${n}">${T('n='+n)}</button>`;
+  document.getElementById('n-tabs').innerHTML=tabs;
+  for(let n=1;n<=6;n++) document.getElementById('n-'+n).addEventListener('click',()=>{ nVal=n; syncTabs(); drawBars(); });
+  syncTabs();
+
+  initWalkthrough();
+  setupControls();
+  drawSquare(); drawBars();
+}
+
+function syncTabs(){
+  for(let n=1;n<=6;n++){
+    const el=document.getElementById('n-'+n);
+    el.className = (n===nVal) ? 'tab active' : 'tab';
+  }
+}
+
+function drawSquare(){
+  const x=xVal, h=hVal;
+  const X=OX+Q*x, XH=OX+Q*(x+h);
+  const Y=OY-Q*x, YH=OY-Q*(x+h);
+  let s='';
+  s+=`<rect x="${OX}" y="${YH}" width="${Q*(x+h)}" height="${Q*(x+h)}" fill="#fff" stroke="#888" stroke-width="1.5"/>`;
+  s+=`<rect x="${OX}" y="${Y}" width="${Q*x}" height="${Q*x}" fill="rgba(42,109,244,0.20)" stroke="var(--c-blue)" stroke-width="1.5"/>`;
+  s+=`<rect x="${X}" y="${Y}" width="${Q*h}" height="${Q*x}" fill="rgba(230,126,34,0.35)" stroke="var(--c-orange)" stroke-width="1.5"/>`;
+  s+=`<rect x="${OX}" y="${YH}" width="${Q*x}" height="${Q*h}" fill="rgba(230,126,34,0.35)" stroke="var(--c-orange)" stroke-width="1.5"/>`;
+  s+=`<rect x="${X}" y="${YH}" width="${Q*h}" height="${Q*h}" fill="rgba(217,83,79,0.45)" stroke="var(--c-red)" stroke-width="1.5"/>`;
+
+  /* side lengths */
+  s+=`<line x1="${OX}" y1="${OY+8}" x2="${X}" y2="${OY+8}" stroke="var(--c-blue)" stroke-width="2"/>`;
+  s+=`<line x1="${X}" y1="${OY+8}" x2="${XH}" y2="${OY+8}" stroke="var(--c-red)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${OX+Q*x/2-13}" y="${OY+12}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:700;text-align:center">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${X+Q*h/2-13}" y="${OY+12}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);font-weight:700;text-align:center">${T('h')}</div></foreignObject>`;
+  s+=`<line x1="${OX-8}" y1="${OY}" x2="${OX-8}" y2="${Y}" stroke="var(--c-blue)" stroke-width="2"/>`;
+  s+=`<line x1="${OX-8}" y1="${Y}" x2="${OX-8}" y2="${YH}" stroke="var(--c-red)" stroke-width="2"/>`;
+  s+=`<foreignObject x="${OX-40}" y="${OY-Q*x/2-13}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-blue);font-weight:700;text-align:center">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${OX-40}" y="${Y-Q*h/2-13}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);font-weight:700;text-align:center">${T('h')}</div></foreignObject>`;
+
+  /* region labels: the strips are thin, so all callouts sit outside with leader lines */
+  s+=`<foreignObject x="${OX+Q*x/2-26}" y="${OY-Q*x/2-16}" width="52" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-blue);font-weight:700;text-align:center">${T('x^2')}</div></foreignObject>`;
+  const rsY=OY-Q*x/2;
+  s+=`<line x1="${X+Q*h/2}" y1="${rsY}" x2="${XH+8}" y2="${rsY}" stroke="var(--c-orange)" stroke-width="1.2"/>`;
+  s+=`<foreignObject x="${XH+10}" y="${rsY-16}" width="56" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-orange);font-weight:700">${T('xh')}</div></foreignObject>`;
+  const tsY=OY-Q*x-Q*h/2, tsX=OX+Q*x/2;
+  s+=`<line x1="${tsX}" y1="${tsY}" x2="${tsX}" y2="${YH-8}" stroke="var(--c-orange)" stroke-width="1.2"/>`;
+  s+=`<foreignObject x="${tsX-28}" y="${YH-38}" width="56" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-orange);font-weight:700;text-align:center">${T('xh')}</div></foreignObject>`;
+  s+=`<line x1="${X+Q*h/2}" y1="${tsY}" x2="${XH+8}" y2="${YH-16}" stroke="var(--c-red)" stroke-width="1.2"/>`;
+  s+=`<foreignObject x="${XH+10}" y="${YH-32}" width="56" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-red);font-weight:700">${T('h^2')}</div></foreignObject>`;
+  s+=`<circle cx="${X+Q*h/2}" cy="${YH+Q*h/2}" r="${Math.max(4,Q*h/2)}" fill="none" stroke="var(--c-red)" stroke-width="2" opacity="0.7"><animate attributeName="opacity" values="0.7;0.1;0.7" dur="2s" repeatCount="indefinite"/></circle>`;
+
+  document.getElementById('square').innerHTML=s;
+
+  const inc=(x+h)*(x+h)-x*x, q=inc/h;
+  document.getElementById('sq-calc').innerHTML =
+    `<div class="row">${T(`(x+h)^2-x^2=2xh+h^2 ${rel(inc,3)} ${fmt(inc,3)}`)}</div>` +
+    `<div class="row" style="color:var(--c-orange)">${T(`\\dfrac{(x+h)^2-x^2}{h}=2x+h ${rel(q,3)} ${fmt(q,3)}`)}</div>` +
+    `<div class="row" style="color:var(--c-red)">${T(`h\\to 0\\;\\text{とすると}\\;h^2\\text{ の正方形が消えて}\\;(x^2)'=2x=${fmt(2*x,1)}`)}</div>`;
+}
+
+function terms(n,x,h){
+  const t=[];
+  for(let k=1;k<=n;k++) t.push({c:C(n,k), xp:n-k, hp:k-1, v:C(n,k)*Math.pow(x,n-k)*Math.pow(h,k-1)});
+  return t;
+}
+
+function drawBars(){
+  const n=nVal, x=xVal, h=hVal;
+  const ts=terms(n,x,h);
+  const total=ts.reduce((a,b)=>a+b.v,0);
+  const first=ts[0].v;
+  const ref=terms(n,x,0.5).reduce((a,b)=>a+b.v,0);
+  const yB=290, chartH=225, sc=chartH/ref;
+  let s='';
+  s+=`<line x1="90" y1="${yB}" x2="510" y2="${yB}" stroke="#999" stroke-width="1.5"/>`;
+
+  const shades=['var(--c-red)','#f0a35e','#f3b57e','#f6c69d','#f8d5b8','#fae2d0'];
+  let acc=0;
+  for(let i=0;i<ts.length;i++){
+    const hh=ts[i].v*sc;
+    if(hh>0.4) s+=`<rect x="170" y="${yB-acc-hh}" width="100" height="${hh}" fill="${shades[Math.min(i,5)]}" stroke="#fff" stroke-width="1"/>`;
+    acc+=hh;
+  }
+  s+=`<rect x="170" y="${yB-acc}" width="100" height="${acc}" fill="none" stroke="#888" stroke-width="1.5"/>`;
+  s+=`<rect x="350" y="${yB-first*sc}" width="100" height="${first*sc}" fill="var(--c-red)" stroke="#fff" stroke-width="1"/>`;
+  s+=`<line x1="90" y1="${yB-first*sc}" x2="510" y2="${yB-first*sc}" stroke="var(--c-red)" stroke-width="1.5" stroke-dasharray="8 5"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></line>`;
+
+  s+=`<foreignObject x="120" y="${yB+8}" width="200" height="46"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#555;font-weight:700;text-align:center">${T('\\dfrac{(x+h)^n-x^n}{h}')}</div></foreignObject>`;
+  s+=`<foreignObject x="320" y="${yB+8}" width="160" height="46"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:700;text-align:center">${T('nx^{n-1}')}</div></foreignObject>`;
+  s+=`<foreignObject x="14" y="10" width="262" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#555;font-weight:700;white-space:nowrap">${T(`n=${n},\\; x=${fmt(x,1)},\\; h=${fmt(h,2)}`)}</div></foreignObject>`;
+  const capTex = (n===1) ? '\\text{段は 1 つだけ}' : '\\text{赤以外の段が }h\\to 0\\text{ で消える}';
+  s+=`<foreignObject x="290" y="10" width="300" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:700;white-space:nowrap;text-align:right">${T(capTex)}</div></foreignObject>`;
+
+  document.getElementById('bars').innerHTML=s;
+
+  let sym='', num='', exact=true;
+  for(let i=0;i<ts.length;i++){
+    sym+=(i?'+':'')+mono(ts[i].c,ts[i].xp,ts[i].hp);
+    num+=(i?'+':'')+fmt(ts[i].v,3);
+    if(rel(ts[i].v,3)!=='=') exact=false;
+  }
+  const limTex=mono(n,n-1,0);
+  document.getElementById('bar-calc').innerHTML =
+    `<div class="row">${T(`\\dfrac{(x+h)^{${n}}-x^{${n}}}{h}=${sym}`)}</div>` +
+    `<div class="row" style="font-size:.95rem;color:var(--c-orange)">${T(`${exact?'=':'\\fallingdotseq'}${num}`)}</div>` +
+    `<div class="row" style="font-size:.95rem">${T(`\\text{合計} ${rel(total,3)} ${fmt(total,3)}`)}</div>` +
+    `<div class="row" style="color:var(--c-red)">${T(`h\\to 0\\;\\Rightarrow\\;(x^{${n}})'=${limTex} ${rel(first,3)} ${fmt(first,3)}`)}</div>`;
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 使う公式を確認する', formula:"(x^n)'=nx^{n-1}\\qquad(n\\;\\text{は正の整数})"},
+    {label:'Step 2: n に 4 を当てはめる', formula:"y=x^4\\;\\text{だから}\\;n=4"},
+    {label:'Step 3: 指数を係数に下ろし、指数を 1 減らす', formula:"y'=4x^{4-1}"},
+    {label:'Step 4: 答え', formula:"y'=4x^3"},
+    {label:'Step 5: 定義から計算しても同じになる', formula:"(x+h)^4-x^4=4x^3h+6x^2h^2+4xh^3+h^4"},
+    {label:'Step 6: h で割る', formula:"\\dfrac{(x+h)^4-x^4}{h}=4x^3+6x^2h+4xh^2+h^3"},
+    {label:'Step 7: h を 0 に近づけると第 2 項以降は 0 に近づく', formula:"y'=\\lim_{h\\to 0}(4x^3+6x^2h+4xh^2+h^3)=4x^3"},
+    {label:'Step 8: 結論', formula:"y=x^4\\;\\text{を微分すると}\\;y'=4x^3"},
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+
+function setupControls(){
+  const xs=document.getElementById('x-slider'), hs=document.getElementById('h-slider');
+  xs.addEventListener('input',()=>{ stopAnim(); xVal=parseFloat(xs.value); document.getElementById('x-value').textContent=fmt(xVal,1); drawSquare(); drawBars(); });
+  hs.addEventListener('input',()=>{ stopAnim(); hVal=parseFloat(hs.value); document.getElementById('h-value').textContent=fmt(hVal); drawSquare(); drawBars(); });
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const from=0.5, to=0.05, dur=3200;
+    let t0=null;
+    function step(ts){
+      if(!t0) t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      const eased=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      hVal=Math.max(0.05,Math.round((from+(to-from)*eased)*100)/100);
+      hs.value=hVal;
+      document.getElementById('h-value').textContent=fmt(hVal);
+      drawSquare(); drawBars();
+      if(p<1) animId=requestAnimationFrame(step); else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

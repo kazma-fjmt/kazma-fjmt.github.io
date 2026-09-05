@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>積の形の関数の積分</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+  .formula-box > div { margin: .4rem 0; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* the expansion grid takes no drag, so let the page scroll over it */
+  .svg-container.plain { touch-action: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step > .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step > .formula-line { text-align: left; overflow-x: auto; }
+  .step > .formula-line .katex { font-size: 1.05rem; }
+  .step.current > .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .5rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc > div { margin: .25rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; font-style: normal; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>積の形の関数の積分</h1>
+  <p class="subtitle">積のままでは積分できない式を、展開してから項ごとに積分する手順を、動く図で確かめましょう。</p>
+
+  <h2>使う道具</h2>
+  <p>不定積分の公式が使えるのは、<span id="f-xn"></span> の形の項が並んでいるときだけです。<span id="f-ex"></span> のような積の形は、そのままでは公式に当てはまりません。まず展開して <span id="f-sum"></span> の和に直しましょう。</p>
+  <div class="formula-box" id="f-pow"></div>
+  <p>たとえば次のように、展開してから項ごとに積分します。</p>
+  <div class="formula-box" id="f-sample"></div>
+  <p>変数が <span id="f-x"></span> 以外でも、同じように不定積分を考えられます。</p>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>展開して積分しよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab1">(1)</button>
+    <button class="tab" id="tab2">(2)</button>
+    <button class="tab" id="tab3">例</button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label>展開の段階</label>
+    <input type="range" id="e-slider" min="0" max="6" step="1" value="0">
+    <span class="slider-val" id="e-value">0</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-e">順に展開する</button>
+    <button class="btn" id="reset-e">最初から</button>
+  </div>
+
+  <div class="svg-container plain">
+    <svg id="grid" viewBox="0 0 600 168" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="formula-box" id="build-line"></div>
+
+  <h2>グラフで確かめよう</h2>
+  <p>下の図は上下 2 段になっています。上段は積分して得た関数、下段はもとの関数です。下段では、積の形のまま計算した値を太い薄緑の線で、展開した式で計算した値を濃い破線で重ねてあります。2 本がぴったり重なることが、展開が正しいことの確認になります。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="-0.3" max="1.7" step="0.05" value="1.2">
+    <span class="slider-val" id="x-value">1.2</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-x">位置を動かす</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 430" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint">図を横にドラッグしても位置を変えられます。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=430,mL=62,mR=26,PW=W-mL-mR;
+const TT=50,TH=190,BT=292,BH=130;
+const GX=[110,200,350,500],GY=[42,74,110,146];
+const HALO=' paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round"';
+
+const CASES=[
+  {v:'x',A:[{a:3,n:1},{a:-2,n:0}],B:[{a:3,n:1},{a:-2,n:0}],
+   XMIN:-0.3,XMAX:1.7,YT0:-2.6,YT1:5,YB0:-1.5,YB1:10.5,
+   xs:{min:-0.3,max:1.7,step:0.05,def:1.2},gx:[1],gyT:[-2,2,4],gyB:[2,4,6,8,10]},
+  {v:'t',A:[{a:4,n:1},{a:-3,n:0}],B:[{a:2,n:1},{a:3,n:0}],
+   XMIN:-1.9,XMAX:1.3,YT0:-5,YT1:12.5,YB0:-11.5,YB1:13.5,
+   xs:{min:-1.9,max:1.3,step:0.05,def:0.6},gx:[-1,1],gyT:[-4,4,8,12],gyB:[-10,-5,5,10]},
+  {v:'x',A:[{a:1,n:1},{a:1,n:0}],B:[{a:2,n:1},{a:-1,n:0}],
+   XMIN:-2,XMAX:1.6,YT0:-2.2,YT1:3.2,YB0:-2.5,YB1:6.5,
+   xs:{min:-2,max:1.6,step:0.05,def:1},gx:[-1,1],gyT:[-2,-1,1,2,3],gyB:[-2,2,4,6]}
+];
+
+let cs=0,eVal=0,xVal=1.2,animId=null;
+const cur=()=>CASES[cs];
+
+function fmt(v){
+  if(Math.abs(v)<5e-13)v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');
+  if(s==='-0')s='0';
+  return s;
+}
+function par(v){return '('+fmt(v)+')';}
+function rel(v){return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11?'=':'\\fallingdotseq';}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a;}
+function mono(a,n,v){
+  if(n===0)return fmt(a);
+  const b=(n===1?v:v+'^{'+n+'}');
+  return a===1?b:(a===-1?'-'+b:fmt(a)+b);
+}
+function fracMono(a,d,n,v){
+  const neg=(a<0)!==(d<0);
+  let A=Math.abs(a),D=Math.abs(d);const g=gcd(A,D)||1;A/=g;D/=g;
+  const co=(D===1)?(A===1?'':String(A)):('\\dfrac{'+A+'}{'+D+'}');
+  return (neg?'-':'')+co+(n===1?v:v+'^{'+n+'}');
+}
+function joinTex(parts){
+  let s='';
+  parts.forEach((p,i)=>{s+=(i===0?p:(p.charAt(0)==='-'?p:'+'+p));});
+  return s;
+}
+function cells(c){
+  const r=[];for(let i=0;i<2;i++)for(let j=0;j<2;j++)r.push({a:c.A[i].a*c.B[j].a,n:c.A[i].n+c.B[j].n});
+  return r;
+}
+function collect(c){
+  const m={};cells(c).forEach(t=>{m[t.n]=(m[t.n]||0)+t.a;});
+  return Object.keys(m).map(Number).sort((a,b)=>b-a).filter(n=>Math.abs(m[n])>1e-12).map(n=>({a:m[n],n:n}));
+}
+function facTex(F,v){return '('+joinTex(F.map(t=>mono(t.a,t.n,v)))+')';}
+function prodTex(c){const a=facTex(c.A,c.v),b=facTex(c.B,c.v);return a===b?a+'^2':a+b;}
+function sumTex(c){return joinTex(collect(c).map(t=>mono(t.a,t.n,c.v)));}
+function intTex(c){return joinTex(collect(c).map(t=>fracMono(t.a,t.n+1,t.n+1,c.v)));}
+function facVal(F,x){return F.reduce((s,t)=>s+t.a*Math.pow(x,t.n),0);}
+function pVal(x){const c=cur();return facVal(c.A,x)*facVal(c.B,x);}
+function fVal(x){return collect(cur()).reduce((s,t)=>s+t.a*Math.pow(x,t.n),0);}
+function FVal(x){return collect(cur()).reduce((s,t)=>s+t.a/(t.n+1)*Math.pow(x,t.n+1),0);}
+
+function pxc(x){const c=cur();return mL+(x-c.XMIN)/(c.XMAX-c.XMIN)*PW;}
+function pyT(y){const c=cur();return TT+TH-(y-c.YT0)/(c.YT1-c.YT0)*TH;}
+function pyB(y){const c=cur();return BT+BH-(y-c.YB0)/(c.YB1-c.YB0)*BH;}
+function fo(x,y,w,h,inner,color,size,al){
+  return `<foreignObject x="${x}" y="${y}" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="height:${h}px;display:flex;align-items:center;justify-content:${al||'center'};font-size:${size||14}px;color:${color||'#333'};font-weight:600;white-space:nowrap">${inner}</div></foreignObject>`;
+}
+function ln(x1,y1,x2,y2,co,wd,da){
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${co}" stroke-width="${wd}"${da?' stroke-dasharray="'+da+'"':''}/>`;
+}
+function tk(x,y,t,an){return `<text x="${x}" y="${y}" text-anchor="${an}" font-size="11" fill="#aaa"${HALO}>${t}</text>`;}
+function curve(fn,ymin,ymax,py){
+  const c=cur();let d='',pen=false;
+  for(let i=0;i<=240;i++){
+    const x=c.XMIN+(c.XMAX-c.XMIN)*i/240,y=fn(x);
+    if(!isFinite(y)||y<ymin||y>ymax){pen=false;continue;}
+    d+=(pen?'L':'M')+' '+pxc(x).toFixed(1)+' '+py(y).toFixed(1);
+    pen=true;
+  }
+  return d;
+}
+function clipT(m,x0,y0){
+  const c=cur(),pts=[],yAt=x=>y0+m*(x-x0);
+  [c.XMIN,c.XMAX].forEach(x=>{const y=yAt(x);if(y>=c.YT0-1e-9&&y<=c.YT1+1e-9)pts.push({x:x,y:y});});
+  if(Math.abs(m)>1e-9){
+    [c.YT0,c.YT1].forEach(y=>{const x=x0+(y-y0)/m;if(x>=c.XMIN-1e-9&&x<=c.XMAX+1e-9)pts.push({x:x,y:y});});
+  }
+  const u=[];
+  for(const p of pts){if(!u.some(q=>Math.abs(q.x-p.x)<1e-7&&Math.abs(q.y-p.y)<1e-7))u.push(p);}
+  return u.length>=2?[u[0],u[1]]:null;
+}
+
+function init(){
+  const spans={'f-xn':'x^n','f-sum':'x^n','f-x':'x','f-ex':'(x+1)(2x-1)','lbl-x':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex('\\int x^n\\,dx=\\dfrac{1}{n+1}x^{n+1}+C',document.getElementById('f-pow'),true);
+  document.getElementById('f-sample').innerHTML=
+    '<div>'+T('\\int(x+1)(2x-1)\\,dx=\\int(2x^2+x-1)\\,dx')+'</div>'+
+    '<div>'+T('=\\dfrac{2}{3}x^3+\\dfrac{1}{2}x^2-x+C')+'</div>';
+  document.getElementById('f-problem').innerHTML=
+    '<div>'+T('(1)\\ \\int(3x-2)^2\\,dx\\qquad(2)\\ \\int(4t-3)(2t+3)\\,dt')+'</div>';
+  document.getElementById('result-box').innerHTML=
+    '<div>'+T('(1)\\ 3x^3-6x^2+4x+C')+'</div>'+
+    '<div>'+T('(2)\\ \\dfrac{8}{3}t^3+3t^2-9t+C')+'</div>';
+  document.getElementById('legend').innerHTML=
+    '<span><i style="background:#2a6df4"></i>積分して得た関数</span>'+
+    '<span><i style="background:#e67e22"></i>接線と高さ</span>'+
+    '<span><i style="background:#9fdcb0"></i>積の形のままの値</span>'+
+    '<span><i style="background:#28a745"></i>展開した式の値</span>';
+  initWalkthrough();
+  setupTabs();
+  setupSliders();
+  setupAnim();
+  setupDrag();
+  applyMode();
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 積のままでは公式が使えない',formula:'\\int(3x-2)^2\\,dx\\quad\\text{は、まず展開する}'},
+    {label:'Step 2: (1) を展開する',formula:'(3x-2)^2=9x^2-6x-6x+4=9x^2-12x+4'},
+    {label:'Step 3: (1) 項ごとに積分する',formula:'\\int(9x^2-12x+4)\\,dx=9\\cdot\\dfrac{1}{3}x^3-12\\cdot\\dfrac{1}{2}x^2+4x+C'},
+    {label:'Step 4: (1) 整理する',formula:'=3x^3-6x^2+4x+C'},
+    {label:'Step 5: (2) を展開する',formula:'(4t-3)(2t+3)=8t^2+12t-6t-9=8t^2+6t-9'},
+    {label:'Step 6: (2) 項ごとに積分する',formula:'\\int(8t^2+6t-9)\\,dt=8\\cdot\\dfrac{1}{3}t^3+6\\cdot\\dfrac{1}{2}t^2-9t+C'},
+    {label:'Step 7: 答え',formula:'=\\dfrac{8}{3}t^3+3t^2-9t+C'}
+  ];
+  let k=0;
+  const box=document.getElementById('walkthrough'),counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'),nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=k;i++){
+      html+='<div class="step '+(i===k?'current':'')+'"><div class="label">'+steps[i].label
+        +'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    box.innerHTML=html;
+    counter.textContent=(k+1)+' / '+steps.length;
+    prevBtn.disabled=k===0;
+    nextBtn.disabled=k===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(k>0){k--;render();}});
+  nextBtn.addEventListener('click',()=>{if(k<steps.length-1){k++;render();}});
+  render();
+}
+
+function drawGrid(){
+  const c=cur(),v=c.v,cl=cells(c),k=eVal;
+  const shown=(k>=5)?4:k, hi=(k>=1&&k<=4)?k-1:-1;
+  const deg={};cl.forEach(t=>{deg[t.n]=(deg[t.n]||0)+1;});
+  let s='';
+  s+=fo(GX[0],2,390,34,'展開する式 &#160;'+T(prodTex(c)),'#2a6df4',15,'flex-start');
+  s+=`<rect x="${GX[0]}" y="${GY[0]}" width="${GX[1]-GX[0]}" height="${GY[1]-GY[0]}" fill="#f4f7ff" stroke="#d4dbeb" stroke-width="1.5"/>`;
+  s+=fo(GX[0],GY[0],GX[1]-GX[0],GY[1]-GY[0],T('\\times'),'#888',15);
+  for(let j=0;j<2;j++){
+    const hd=[{x:GX[j+1],y:GY[0],w:GX[j+2]-GX[j+1],h:GY[1]-GY[0],t:c.B[j],on:hi>=0&&(hi&1)===j},
+              {x:GX[0],y:GY[j+1],w:GX[1]-GX[0],h:GY[j+2]-GY[j+1],t:c.A[j],on:hi>=0&&(hi>>1)===j}];
+    hd.forEach(d=>{
+      s+=`<rect x="${d.x}" y="${d.y}" width="${d.w}" height="${d.h}" fill="${d.on?'#ffe9d0':'#f4f7ff'}" stroke="#d4dbeb" stroke-width="1.5"/>`;
+      s+=fo(d.x,d.y,d.w,d.h,T(mono(d.t.a,d.t.n,v)),d.on?'#b8600e':'#2a6df4',15);
+    });
+  }
+  for(let i=0;i<4;i++){
+    const r=i>>1,j=i&1,t=cl[i];
+    const x=GX[j+1],y=GY[r+1],w=GX[j+2]-GX[j+1],h=GY[r+2]-GY[r+1];
+    const like=(k>=5&&deg[t.n]>1);
+    const fill=(i===hi)?'#fff1e0':(i<shown?(like?'#f3f0ff':'#fff'):'#fafafa');
+    const st=(i===hi)?'#e67e22':(like?'#7b61ff':'#e3e3e3');
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${st}" stroke-width="${i===hi?2.5:1.5}"/>`;
+    if(i===hi){
+      s+=`<rect x="${x+2}" y="${y+2}" width="${w-4}" height="${h-4}" fill="none" stroke="#e67e22" stroke-width="2" opacity="0.9">`
+        +`<animate attributeName="opacity" values="0.9;0.15;0.9" dur="1.4s" repeatCount="indefinite"/></rect>`;
+    }
+    if(i<shown||i===hi){
+      s+=fo(x,y,w,h,T(mono(t.a,t.n,v)),(i===hi)?'#b8600e':(like?'#5b45cc':'#333'),16);
+    }
+  }
+  if(k>=5) s+=fo(GX[0],GY[3]+2,390,20,'同じ次数の項をまとめます','#7b61ff',12,'flex-start');
+  document.getElementById('grid').innerHTML=s;
+}
+
+function buildLine(){
+  const c=cur(),k=eVal,cl=cells(c),v=c.v;
+  let h='';
+  if(k===0){
+    h='<div>'+T(prodTex(c))+'</div>';
+  }else if(k<=4){
+    const got=cl.slice(0,k).map(t=>mono(t.a,t.n,v)).join(',\\ ');
+    h='<div>'+T(prodTex(c))+'</div>'+'<div>'+T('\\text{見つけた積}\\;:\\;'+got)+'</div>';
+  }else if(k===5){
+    h='<div>'+T(prodTex(c)+'='+joinTex(cl.map(t=>mono(t.a,t.n,v))))+'</div>'
+     +'<div>'+T('='+sumTex(c))+'</div>';
+  }else{
+    h='<div>'+T('\\int'+prodTex(c)+'\\,d'+v+'=\\int\\left('+sumTex(c)+'\\right)d'+v)+'</div>'
+     +'<div>'+T('='+intTex(c)+'+C')+'</div>';
+  }
+  document.getElementById('build-line').innerHTML=h;
+}
+
+function draw(){
+  const c=cur(),v=c.v,x=xVal,Fv=FVal(x),fv=fVal(x);
+  let s='',ticks='';
+  const mark={x:pxc(x)-15,y:pyT(0)+2,w:30,h:22};
+  const clear=r=>!(r.x<mark.x+mark.w&&mark.x<r.x+r.w&&r.y<mark.y+mark.h&&mark.y<r.y+r.h);
+  s+=`<rect x="${mL-36}" y="${TT}" width="${PW+56}" height="${TH}" fill="#fbfcff"/>`;
+  s+=`<rect x="${mL-36}" y="${BT}" width="${PW+56}" height="${BH}" fill="#f9fdfa"/>`;
+  c.gx.forEach(g=>{s+=ln(pxc(g),TT,pxc(g),TT+TH,'#eee',1)+ln(pxc(g),BT,pxc(g),BT+BH,'#eee',1);});
+  c.gyT.forEach(g=>{s+=ln(mL-36,pyT(g),mL+PW+20,pyT(g),'#eee',1);});
+  c.gyB.forEach(g=>{s+=ln(mL-36,pyB(g),mL+PW+20,pyB(g),'#eee',1);});
+  s+=ln(mL-36,pyT(0),mL+PW+20,pyT(0),'#999',1.5)+ln(pxc(0),TT,pxc(0),TT+TH,'#999',1.5);
+  s+=ln(mL-36,pyB(0),mL+PW+20,pyB(0),'#999',1.5)+ln(pxc(0),BT,pxc(0),BT+BH,'#999',1.5);
+  s+=ln(pxc(x),TT,pxc(x),TT+TH,'#dbe4f7',1.5,'4 5')+ln(pxc(x),BT,pxc(x),BT+BH,'#dbe4f7',1.5,'4 5');
+  /* upper: the antiderivative and the tangent whose slope must match below */
+  s+=`<path d="${curve(u=>FVal(u),c.YT0,c.YT1,pyT)}" fill="none" stroke="var(--c-blue)" stroke-width="2.8"/>`;
+  const seg=clipT(fv,x,Fv);
+  if(seg) s+=ln(pxc(seg[0].x),pyT(seg[0].y),pxc(seg[1].x),pyT(seg[1].y),'var(--c-orange)',3);
+  const span=c.XMAX-c.XMIN;
+  let run=Math.min(span*0.16,c.XMAX-span*0.04-x);
+  if(Math.abs(fv)>1e-9) run=Math.min(run,Math.abs((fv>0?c.YT1-0.1-Fv:Fv-c.YT0-0.1)/fv));
+  if(run>span*0.02){
+    s+=`<path d="M ${pxc(x)} ${pyT(Fv)} L ${pxc(x+run)} ${pyT(Fv)} L ${pxc(x+run)} ${pyT(Fv+fv*run)} Z" fill="rgba(230,126,34,0.16)" stroke="var(--c-orange)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  }
+  /* lower: the product form as a broad band, the expanded polynomial dashed on top */
+  s+=`<path d="${curve(u=>pVal(u),c.YB0,c.YB1,pyB)}" fill="none" stroke="#9fdcb0" stroke-width="8" stroke-linecap="round"/>`;
+  s+=`<path d="${curve(u=>fVal(u),c.YB0,c.YB1,pyB)}" fill="none" stroke="var(--c-green)" stroke-width="2.4" stroke-dasharray="7 5"/>`;
+  if(fv>c.YB0&&fv<c.YB1){
+    s+=ln(pxc(x),pyB(0),pxc(x),pyB(fv),'var(--c-orange)',4)+ln(mL-36,pyB(fv),pxc(x),pyB(fv),'var(--c-orange)',1.5,'4 5');
+  }
+  c.gx.forEach(g=>{
+    if(clear({x:pxc(g)-7,y:pyT(0)+5,w:14,h:14})) ticks+=tk(pxc(g),pyT(0)+16,g,'middle');
+    ticks+=tk(pxc(g),pyB(0)+16,g,'middle');
+  });
+  c.gyT.forEach(g=>{ticks+=tk(pxc(0)-7,pyT(g)+4,g,'end');});
+  c.gyB.forEach(g=>{ticks+=tk(pxc(0)-7,pyB(g)+4,g,'end');});
+  s+=ticks;
+  s+=`<circle cx="${pxc(x)}" cy="${pyT(Fv)}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="8;11;8" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  if(fv>c.YB0&&fv<c.YB1) s+=`<circle cx="${pxc(x)}" cy="${pyB(fv)}" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=fo(mL-36,1,360,46,T('y='+intTex(c)),'#2a6df4',13,'flex-start');
+  s+=fo(mL-36,244,360,44,T('y='+prodTex(c)+'='+sumTex(c)),'#28a745',13,'flex-start');
+  const chip='<span style="background:#fff;border-radius:4px;padding:0 3px">'+T(v)+'</span>';
+  [pyT(0),pyB(0)].forEach(yy=>{s+=fo(W-34,yy-27,32,26,chip,'#999',13);});
+  s+=fo(mark.x,mark.y,mark.w,24,chip,'#e67e22',13);
+  document.getElementById('graph').innerHTML=s;
+  updateLive();
+}
+
+function updateLive(){
+  const c=cur(),v=c.v,x=xVal,fv=fVal(x),pv=pVal(x);
+  const av=facVal(c.A,x),bv=facVal(c.B,x);
+  const pnum=(facTex(c.A,v)===facTex(c.B,v))?(par(av)+'^2'):(par(av)+par(bv));
+  const snum=joinTex(collect(c).map(t=>{
+    if(t.n===0)return fmt(t.a);
+    const b=(t.n===1?par(x):par(x)+'^{'+t.n+'}');
+    return t.a===1?b:(t.a===-1?'-'+b:fmt(t.a)+b);
+  }));
+  document.getElementById('live-calc').innerHTML=
+    '<div>'+T(v+' = '+fmt(x))+'</div>'+
+    '<div>'+T('\\text{積の形}\\;:\\;'+prodTex(c)+'='+pnum+' '+rel(pv)+' '+fmt(pv))+'</div>'+
+    '<div>'+T('\\text{展開した式}\\;:\\;'+sumTex(c)+'='+snum+' '+rel(fv)+' '+fmt(fv))+'</div>'+
+    '<div>'+T("\\text{接線の傾き}\\;F'("+fmt(x)+') '+rel(fv)+' '+fmt(fv))+'</div>';
+  const note=document.getElementById('note-box');
+  if(cs===0){
+    note.innerHTML='同じ式を 2 回かける形なので、格子の 2 つの '+T('-6x')+' がそろいます。これをまとめて '+T('-12x')+' にしてから積分します。展開せずに積分しようとすると、'+T('x^n')+' の公式に当てはめる形が作れません。';
+  }else if(cs===1){
+    note.innerHTML='変数が '+T('t')+' でも手順は変わりません。展開して '+T('8t^2+6t-9')+' にしてから、項ごとに積分します。積分定数は最後に 1 つだけ書きます。';
+  }else{
+    note.innerHTML='展開して '+T('2x^2+x-1')+' に直すと、'+T('x^n')+' の公式がそのまま使えます。下段で太い薄緑の線と濃い破線が重なっているので、展開の前後で値が変わっていないことが確かめられます。';
+  }
+}
+
+function setE(k){
+  eVal=Math.max(0,Math.min(6,Math.round(k)));
+  document.getElementById('e-slider').value=eVal;
+  document.getElementById('e-value').textContent=eVal;
+  drawGrid();
+  buildLine();
+}
+function setX(v){
+  const s=cur().xs;
+  const q=Math.round(v/s.step)*s.step;
+  xVal=Math.max(s.min,Math.min(s.max,parseFloat(q.toFixed(6))));
+  document.getElementById('x-slider').value=xVal;
+  document.getElementById('x-value').textContent=fmt(xVal);
+  draw();
+}
+function stopAnim(){if(animId){cancelAnimationFrame(animId);animId=null;}}
+
+function applyMode(){
+  const c=cur();
+  for(let i=0;i<3;i++) document.getElementById('tab'+(i+1)).classList.toggle('active',cs===i);
+  const xs=document.getElementById('x-slider');
+  xs.min=String(c.xs.min);xs.max=String(c.xs.max);xs.step=String(c.xs.step);
+  document.getElementById('lbl-x').innerHTML=T(c.v);
+  document.getElementById('mode-desc').innerHTML=
+    'いま見ているのは '+T('\\int'+prodTex(c)+'\\,d'+c.v)+' です。積のままでは公式が使えないので、格子で 4 つの積を作り、同じ次数の項をまとめてから積分します。スライダーを動かすと、格子が 1 マスずつ埋まります。';
+  setE(0);
+  setX(c.xs.def);
+}
+
+function setupTabs(){
+  for(let i=0;i<3;i++){
+    document.getElementById('tab'+(i+1)).addEventListener('click',()=>{stopAnim();cs=i;applyMode();});
+  }
+}
+function setupSliders(){
+  const es=document.getElementById('e-slider'),xs=document.getElementById('x-slider');
+  es.addEventListener('input',()=>{stopAnim();setE(parseFloat(es.value));});
+  xs.addEventListener('input',()=>{stopAnim();setX(parseFloat(xs.value));});
+}
+function setupAnim(){
+  document.getElementById('reset-e').addEventListener('click',()=>{stopAnim();setE(0);});
+  document.getElementById('anim-e').addEventListener('click',()=>{
+    stopAnim();setE(0);
+    const per=800,dur=per*7;
+    let t0=null;
+    function frame(ts){
+      if(!t0)t0=ts;
+      const k=Math.min(6,Math.floor((ts-t0)/per));
+      if(k!==eVal) setE(k);
+      animId=(ts-t0)<dur?requestAnimationFrame(frame):null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+  document.getElementById('anim-x').addEventListener('click',()=>{
+    stopAnim();
+    const s=cur().xs,dur=3800;
+    let t0=null;
+    function frame(ts){
+      if(!t0)t0=ts;
+      const pr=Math.min((ts-t0)/dur,1);
+      const e=pr<0.5?2*pr*pr:1-Math.pow(-2*pr+2,2)/2;
+      setX(s.min+(s.max-s.min)*e);
+      animId=pr<1?requestAnimationFrame(frame):null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'),wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toSvg(cx,cy){
+    const r=svg.getBoundingClientRect();
+    return {x:(cx-r.left)/r.width*W,y:(cy-r.top)/r.height*H};
+  }
+  function valueAt(pt){const c=cur();return c.XMIN+(pt.x-mL)/PW*(c.XMAX-c.XMIN);}
+  function inArea(pt){return pt.x>mL-40&&pt.y>TT-6&&pt.y<BT+BH+8;}
+  function startDrag(cx,cy){
+    const pt=toSvg(cx,cy);
+    if(!inArea(pt))return;
+    stopAnim();dragging=true;setX(valueAt(pt));
+  }
+  function moveDrag(cx,cy){if(dragging)setX(valueAt(toSvg(cx,cy)));}
+  function endDrag(){dragging=false;}
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();moveDrag(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',endDrag);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];startDrag(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];moveDrag(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

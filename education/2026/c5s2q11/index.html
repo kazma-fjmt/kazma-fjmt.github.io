@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>最大・最小の応用</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .5rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc > div { margin: .25rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { overflow-x: auto; margin: .75rem 0; }
+  .compare-table { border-collapse: collapse; background: #fff; margin: 0 auto; font-size: .9rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .5rem .8rem; text-align: center; white-space: nowrap; }
+  .compare-table .rowhead { background: #f4f7ff; font-weight: 600; }
+  .compare-table .mark { background: #fff4e6; color: var(--c-orange); font-weight: 700; }
+  .compare-table .markmin { background: #eaf7ee; color: var(--c-green); font-weight: 700; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; font-style: normal; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>最大・最小の応用</h1>
+  <p class="subtitle">図形の量を 1 つの文字で表し、その文字の動ける範囲を先に押さえてから微分する流れを確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>図形の大きさを最大にする問題は、次の 3 つを順にやれば解けます。まず、変わる長さのうち 1 つを <span id="f-x1"></span> と決めます。次に、残りの長さを <span id="f-x2"></span> で表し、<strong>その <span id="f-x3"></span> がとり得る値の範囲（定義域）</strong>を求めます。最後に体積や面積を <span id="f-x4"></span> の関数として微分し、定義域の中で最大になる場所を探します。</p>
+  <div class="formula-box" id="f-key"></div>
+  <p>定義域を先に押さえるのが要です。<span id="f-fp0"></span> の解が出ても、定義域の外にあるものは答えになりません。</p>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab0">ふたのない箱</button>
+    <button class="tab" id="tab1">円錐</button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label><span id="lbl-var"></span> =</label>
+    <input type="range" id="p-slider" min="0.2" max="8.8" step="0.1" value="1">
+    <span class="slider-val" id="p-value">1</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">端から端まで動かす</button>
+    <button class="btn" id="best-btn">最大のところへ</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 430" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint">右のグラフを左右にドラッグしても大きさを変えられます。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>定義域の中だけで考える</h2>
+  <div class="table-wrap"><table class="compare-table" id="cand-table"></table></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+/* @...@ marks a LaTeX fragment inside a Japanese sentence */
+function mix(str){ return str.replace(/@([^@]+)@/g,(m,p)=>T(p)); }
+
+const W=600,H=430;
+const GL=306, GW=268, GT=44, GH=330;                    /* graph panel on the right */
+const BAR_X=76, BAR_Y=42, BAR_W=140, SC0=BAR_W/18;      /* the cardboard edge, split into x + (18-2x) + x */
+const NET_X=76, NET_Y=80, NET_W=140, BOX_X=64, BOX_Y=396, SC1=7.4;  /* NET_Y clears the 18-2x label under the bar */
+const CBAR_X=44, CBAR_Y=42, CBAR_W=210, CSC=CBAR_W/30;  /* the r + h = 30 bar */
+const CONE_X=149, CONE_Y=396, SC2=4.4;
+const LB='font-size:12px;font-weight:600;white-space:nowrap;display:inline-block;background:#fff;padding:0 2px';
+
+const MODES=[
+  { v:'x', lo:0.2, hi:8.8, step:0.1, start:1, bestAt:3, dom:[0,9], xlab:'x',
+    xmin:-0.4, xmax:9.7, ymin:-45, ymax:495, xticks:[3,6,9], yticks:[100,200,300,400],
+    ylab:'\\text{容積}\\;(\\text{cm}^3)' },
+  { v:'r', lo:2, hi:28, step:0.5, start:6, bestAt:20, dom:[0,30], xlab:'r',
+    xmin:-1.2, xmax:31, ymin:-430, ymax:4750, xticks:[10,20,30], yticks:[1000,2000,3000,4000],
+    ylab:'\\text{体積}\\;(\\text{cm}^3)' }
+];
+
+let mode=0, pVal=1, animId=null;
+
+function fV(x){ return mode===0 ? x*(18-2*x)*(18-2*x) : Math.PI/3*x*x*(30-x); }
+function fD(x){ return mode===0 ? 12*(x-3)*(x-9) : Math.PI*x*(20-x); }
+function gx(x){ const M=MODES[mode]; return GL+(x-M.xmin)/(M.xmax-M.xmin)*GW; }
+function gy(y){ const M=MODES[mode]; return GT+GH-(y-M.ymin)/(M.ymax-M.ymin)*GH; }
+
+function nm(v,d){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(d);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  return s==='-0' ? '0' : s;
+}
+function rel(v,d){ return Math.abs(parseFloat(v.toFixed(d))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+function fo(x,y,w,h,style,latex){
+  return `<foreignObject x="${x}" y="${y}" width="${w}" height="${h}">`
+       + `<div xmlns="http://www.w3.org/1999/xhtml" style="${style}">${T(latex)}</div></foreignObject>`;
+}
+
+function init(){
+  const spans={'f-x1':'x','f-x2':'x','f-x3':'x','f-x4':'x','f-fp0':"y'=0",'lbl-var':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex('\\text{(1) 文字を決める}\\;\\longrightarrow\\;\\text{(2) 定義域を出す}\\;\\longrightarrow\\;\\text{(3) 微分して増減を調べる}',document.getElementById('f-key'),true);
+  tex('\\begin{gathered}\\text{底面の半径と高さの和が }30\\;\\text{cm}\\text{ である円錐のうち、}\\\\[3pt]\\text{体積が最大になるものの半径と高さを求める}\\end{gathered}',document.getElementById('f-problem'),true);
+  tex('\\text{底面の半径 }20\\;\\text{cm},\\quad\\text{高さ }10\\;\\text{cm}\\qquad\\left(\\text{そのとき体積は }\\dfrac{4000}{3}\\pi\\;\\text{cm}^3\\right)',document.getElementById('result-box'),true);
+  initWalkthrough(); setupTabs(); setupSlider(); setupButtons(); setupDrag(); applyMode();
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 何を文字で表すか決める', formula:'\\text{切り取る正方形の 1 辺の長さを }x\\;\\text{cm}\\text{ とおく}' },
+    { label:'Step 2: 残りの長さを x で表す', formula:'\\text{底面の 1 辺}=18-2x\\;\\;(\\text{cm})' },
+    { label:'Step 3: 定義域を先に押さえる', formula:'x>0 \\;\\text{かつ}\\; 18-2x>0 \\;\\Longrightarrow\\; 0<x<9' },
+    { label:'Step 4: 容積を x の式で表す', formula:'y=x(18-2x)^2=4x^3-72x^2+324x' },
+    { label:'Step 5: 微分して因数分解する', formula:"y'=12x^2-144x+324=12(x-3)(x-9)" },
+    { label:'Step 6: 定義域の中にある解だけを拾う', formula:"y'=0 \\;\\Longrightarrow\\; x=3,\\;x=9 \\quad\\text{のうち }0<x<9\\text{ にあるのは }x=3" },
+    { label:'Step 7: 増減を並べる', formula:"\\begin{array}{c|ccccc} x & 0 & \\cdots & 3 & \\cdots & 9 \\\\ \\hline y' & & + & 0 & - & \\\\ y & & \\nearrow & 432 & \\searrow & \\end{array}" },
+    { label:'Step 8: 答え', formula:'\\text{切り取る 1 辺を }3\\;\\text{cm}\\text{ にすればよい}\\quad(\\text{容積 }432\\;\\text{cm}^3)' }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough'), counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++) html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0; nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function drawBox(x){
+  const s=(18-2*x)*SC1, h=x*SC1, dx=0.38*s, dy=0.26*s, cut=x*SC0;
+  let g='';
+  g+=`<rect x="${BAR_X}" y="${BAR_Y}" width="${BAR_W}" height="11" fill="#f0f0f0" stroke="#ccc"/>`;
+  g+=`<rect x="${BAR_X}" y="${BAR_Y}" width="${cut}" height="11" fill="rgba(230,126,34,0.55)"/>`;
+  g+=`<rect x="${BAR_X+BAR_W-cut}" y="${BAR_Y}" width="${cut}" height="11" fill="rgba(230,126,34,0.55)"/>`;
+  g+=`<rect x="${BAR_X+cut}" y="${BAR_Y}" width="${BAR_W-2*cut}" height="11" fill="rgba(42,109,244,0.35)"/>`;
+  g+=fo(BAR_X-4,BAR_Y-24,60,22,LB+';color:#888','18\\;\\text{cm}');
+  if(BAR_W-2*cut>34) g+=fo(BAR_X+BAR_W/2-30,BAR_Y+13,64,24,LB+';color:#2a6df4','18-2x');
+  /* the net: four corner squares cut away, the rest folds up */
+  g+=`<rect x="${NET_X}" y="${NET_Y}" width="${NET_W}" height="${NET_W}" fill="#fafbff" stroke="#aaa" stroke-width="1.5"/>`;
+  g+=`<rect x="${NET_X+cut}" y="${NET_Y+cut}" width="${NET_W-2*cut}" height="${NET_W-2*cut}" fill="rgba(42,109,244,0.16)" stroke="#2a6df4" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  [[0,0],[1,0],[0,1],[1,1]].forEach(c=>{ g+=`<rect x="${NET_X+c[0]*(NET_W-cut)}" y="${NET_Y+c[1]*(NET_W-cut)}" width="${cut}" height="${cut}" fill="rgba(230,126,34,0.5)" stroke="var(--c-orange)" stroke-width="1.5"/>`; });
+  const ax=NET_X+NET_W/2, ay=NET_Y+NET_W;
+  g+=`<line x1="${ax}" y1="${ay+10}" x2="${ax}" y2="${ay+42}" stroke="#bbb" stroke-width="2.5"/>`;
+  g+=`<path d="M ${ax-7} ${ay+38} L ${ax} ${ay+50} L ${ax+7} ${ay+38} Z" fill="#bbb"/>`;
+  g+=fo(ax+14,ay+14,88,24,LB+';color:#999','\\text{折り曲げる}');
+  /* the finished box in oblique projection, hidden edges dashed */
+  const BFL=[BOX_X,BOX_Y], BFR=[BOX_X+s,BOX_Y], BBR=[BOX_X+s+dx,BOX_Y-dy], BBL=[BOX_X+dx,BOX_Y-dy];
+  const TFL=[BFL[0],BFL[1]-h], TFR=[BFR[0],BFR[1]-h], TBR=[BBR[0],BBR[1]-h], TBL=[BBL[0],BBL[1]-h];
+  const P=a=>a.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const seg=(e,col,wd,da)=>`<line x1="${e[0][0]}" y1="${e[0][1]}" x2="${e[1][0]}" y2="${e[1][1]}" stroke="${col}" stroke-width="${wd}"${da?' stroke-dasharray="4 4"':''}/>`;
+  g+=`<polygon points="${P([TFL,TFR,TBR,TBL])}" fill="rgba(230,126,34,0.16)"/>`;
+  g+=`<polygon points="${P([BFL,BFR,TFR,TFL])}" fill="rgba(42,109,244,0.10)"/>`;
+  g+=`<polygon points="${P([BFR,BBR,TBR,TFR])}" fill="rgba(42,109,244,0.06)"/>`;
+  [[BFL,BBL],[BBL,BBR],[BBL,TBL]].forEach(e=>{ g+=seg(e,'#bbb',1.5,true); });
+  [[TFL,TFR],[TFR,TBR],[TBR,TBL],[TBL,TFL]].forEach(e=>{ g+=seg(e,'var(--c-orange)',2); });
+  [[BFL,BFR],[BFR,BBR]].forEach(e=>{ g+=seg(e,'var(--c-blue)',3); });
+  [[BFL,TFL],[BFR,TFR],[BBR,TBR]].forEach(e=>{ g+=seg(e,'var(--c-orange)',2.5); });
+  if(s>30) g+=fo(BOX_X+s/2-32,BOX_Y+6,70,26,LB+';color:#2a6df4','18-2x');
+  if(h>16) g+=fo(BOX_X+s+dx+4,BOX_Y-dy-h/2-12,26,26,LB+';color:#e67e22','x');
+  return g;
+}
+
+function drawCone(r){
+  const h=30-r, rx=r*SC2, hy=h*SC2, ry=Math.max(rx*0.26,3);
+  let g='';
+  g+=`<rect x="${CBAR_X}" y="${CBAR_Y}" width="${CBAR_W}" height="11" fill="#f0f0f0" stroke="#ccc"/>`;
+  g+=`<rect x="${CBAR_X}" y="${CBAR_Y}" width="${r*CSC}" height="11" fill="rgba(42,109,244,0.45)"/>`;
+  g+=`<rect x="${CBAR_X+r*CSC}" y="${CBAR_Y}" width="${h*CSC}" height="11" fill="rgba(40,167,69,0.45)"/>`;
+  g+=fo(CBAR_X-4,CBAR_Y-24,120,22,LB+';color:#888','r+(30-r)=30');
+  if(r*CSC>26) g+=fo(CBAR_X+r*CSC/2-12,CBAR_Y+13,26,24,LB+';color:#2a6df4','r');
+  if(h*CSC>44) g+=fo(CBAR_X+r*CSC+h*CSC/2-26,CBAR_Y+13,56,24,LB+';color:#28a745','30-r');
+  /* the largest cone stays on screen as a faint reference to compare against */
+  const brx=20*SC2, bhy=10*SC2;
+  g+=`<path d="M ${CONE_X} ${CONE_Y-bhy} L ${CONE_X-brx} ${CONE_Y} L ${CONE_X+brx} ${CONE_Y} Z" fill="none" stroke="#dadada" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g+=`<ellipse cx="${CONE_X}" cy="${CONE_Y}" rx="${brx}" ry="${brx*0.26}" fill="none" stroke="#dadada" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g+=`<path d="M ${CONE_X} ${CONE_Y-hy} L ${CONE_X-rx} ${CONE_Y} A ${rx} ${ry} 0 0 0 ${CONE_X+rx} ${CONE_Y} Z" fill="rgba(123,97,255,0.18)" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+  g+=`<ellipse cx="${CONE_X}" cy="${CONE_Y}" rx="${rx}" ry="${ry}" fill="rgba(123,97,255,0.10)" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+  g+=`<line x1="${CONE_X}" y1="${CONE_Y}" x2="${CONE_X+rx}" y2="${CONE_Y}" stroke="var(--c-blue)" stroke-width="3"/>`;
+  g+=`<line x1="${CONE_X}" y1="${CONE_Y}" x2="${CONE_X}" y2="${CONE_Y-hy}" stroke="var(--c-green)" stroke-width="3" stroke-dasharray="6 4"/>`;
+  g+=`<circle cx="${CONE_X}" cy="${CONE_Y}" r="4" fill="#666"/>`;
+  if(rx>24) g+=fo(CONE_X+rx/2-12,CONE_Y+5,26,26,LB+';color:#2a6df4','r');
+  if(hy>26) g+=fo(CONE_X-46,CONE_Y-hy/2-13,44,26,LB+';color:#28a745','30-r');
+  return g;
+}
+
+function curvePath(x0,x1){
+  const M=MODES[mode];
+  let d='', pen=false;
+  for(let i=0;i<=260;i++){
+    const x=x0+(x1-x0)*i/260, y=fV(x);
+    if(y<M.ymin||y>M.ymax){ pen=false; continue; }
+    d+=(pen?'L':'M')+` ${gx(x).toFixed(2)} ${gy(y).toFixed(2)}`;
+    pen=true;
+  }
+  return d;
+}
+
+function draw(){
+  const M=MODES[mode], p=pVal, v=fV(p);
+  const HALO2=' stroke="#fff" stroke-width="2.5" paint-order="stroke" stroke-linejoin="round"';
+  let s='', ticks='';
+  s+=`<rect x="16" y="26" width="270" height="392" fill="#fcfcfd"/>`;
+  s+=(mode===0)?drawBox(p):drawCone(p);
+  s+=`<rect x="${GL}" y="${GT}" width="${GW}" height="${GH}" fill="#fbfbfb"/>`;
+  s+=`<rect x="${gx(M.dom[0])}" y="${GT}" width="${gx(M.dom[1])-gx(M.dom[0])}" height="${GH}" fill="#f2f6ff"/>`;
+  M.xticks.forEach(k=>{ s+=`<line x1="${gx(k)}" y1="${GT}" x2="${gx(k)}" y2="${GT+GH}" stroke="#e8e8e8" stroke-width="1"/>`; });
+  M.yticks.forEach(k=>{ s+=`<line x1="${GL}" y1="${gy(k)}" x2="${GL+GW}" y2="${gy(k)}" stroke="#e8e8e8" stroke-width="1"/>`; });
+  s+=`<line x1="${GL}" y1="${gy(0)}" x2="${GL+GW}" y2="${gy(0)}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<line x1="${gx(0)}" y1="${GT}" x2="${gx(0)}" y2="${GT+GH}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<path d="${curvePath(M.xmin,M.dom[0])}" fill="none" stroke="#c9c9c9" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s+=`<path d="${curvePath(M.dom[1],M.xmax)}" fill="none" stroke="#c9c9c9" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s+=`<path d="${curvePath(M.dom[0],M.dom[1])}" fill="none" stroke="var(--c-purple)" stroke-width="3"/>`;
+  M.dom.forEach(k=>{
+    s+=`<line x1="${gx(k)}" y1="${GT}" x2="${gx(k)}" y2="${GT+GH}" stroke="var(--c-red)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+    s+=`<circle cx="${gx(k)}" cy="${gy(fV(k))}" r="5.5" fill="#fff" stroke="var(--c-red)" stroke-width="2.5"/>`;
+  });
+  s+=`<line x1="${gx(p)}" y1="${gy(0)}" x2="${gx(p)}" y2="${gy(v)}" stroke="var(--c-orange)" stroke-width="1.5" opacity="0.6"/>`;
+  s+=`<line x1="${GL}" y1="${gy(v)}" x2="${gx(p)}" y2="${gy(v)}" stroke="var(--c-orange)" stroke-width="1.5" opacity="0.6"/>`;
+  /* tick numbers come after the curve so it never buries them */
+  M.xticks.forEach(k=>{ if(Math.abs(gx(k)-gx(p))>=15) ticks+=`<text x="${gx(k)}" y="${gy(0)+17}" text-anchor="middle" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  M.yticks.forEach(k=>{ ticks+=`<text x="${GL-6}" y="${gy(k)+4}" text-anchor="end" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  s+=ticks;
+  const bx=M.bestAt;
+  s+=`<circle cx="${gx(bx)}" cy="${gy(fV(bx))}" r="12" fill="none" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  s+=`<circle cx="${gx(bx)}" cy="${gy(fV(bx))}" r="5.5" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>`;
+  s+=`<circle cx="${gx(p)}" cy="${gy(v)}" r="8.5" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${gx(p)}" cy="${gy(v)}" r="8.5" fill="none" stroke="var(--c-purple)" stroke-width="2" opacity="0.5"><animate attributeName="r" values="8.5;16;8.5" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  s+=fo(GL+GW+2,gy(0)+3,24,26,'font-size:14px;color:#999;display:inline-block;background:#fff',M.xlab);
+  s+=fo(GL+4,GT+2,150,28,'font-size:12px;color:#7b61ff;font-weight:600;white-space:nowrap',M.ylab);
+  document.getElementById('graph').innerHTML=s;
+  updateLive();
+}
+
+function updateLive(){
+  const p=pVal, v=fV(p), d=fD(p);
+  const sign = Math.abs(d)<1e-9 ? '\\text{（ここで折り返す）}' : (d>0 ? '\\text{（まだ増えている）}' : '\\text{（もう減っている）}');
+  const rows = (mode===0)
+    ? [ 'x = '+nm(p,1)+',\\qquad 18-2x = '+nm(18-2*p,1),
+        'y = '+nm(p,1)+'\\times('+nm(18-2*p,1)+')^2 '+rel(v,3)+' '+nm(v,3)+'\\;\\text{cm}^3',
+        "y' = 12("+nm(p,1)+"-3)("+nm(p,1)+"-9) "+rel(d,3)+' '+nm(d,3)+'\\;'+sign ]
+    : [ 'r = '+nm(p,1)+',\\qquad 30-r = '+nm(30-p,1),
+        'V = \\dfrac{1}{3}\\pi\\times'+nm(p,1)+'^2\\times'+nm(30-p,1)+' '+rel(v,2)+' '+nm(v,2)+'\\;\\text{cm}^3',
+        "V' = \\pi\\times"+nm(p,1)+"\\times(20-"+nm(p,1)+") "+rel(d,2)+' '+nm(d,2)+'\\;'+sign ];
+  document.getElementById('live-calc').innerHTML=
+    `<div>${T(rows[0])}</div><div style="color:var(--c-purple)">${T(rows[1])}</div><div style="color:var(--c-blue)">${T(rows[2])}</div>`;
+}
+
+function buildTable(){
+  const rows = (mode===0)
+    ? [['\\text{定義域}','0<x<9'],["y'=0\\text{ の解}",'x=3,\\quad x=9'],['\\text{定義域の中にある解}','x=3'],['\\text{定義域の外にある解}','x=9'],['\\text{最大の容積}','432\\;\\text{cm}^3']]
+    : [['\\text{定義域}','0<r<30'],["V'=0\\text{ の解}",'r=0,\\quad r=20'],['\\text{定義域の中にある解}','r=20'],['\\text{定義域の外にある解}','r=0'],['\\text{最大の体積}','\\dfrac{4000}{3}\\pi\\;\\text{cm}^3']];
+  document.getElementById('cand-table').innerHTML =
+    rows.map((r,i)=>'<tr><th class="rowhead">'+T(r[0])+'</th><td'+((i===2||i===4)?' class="mark"':'')+'>'+T(r[1])+'</td></tr>').join('');
+}
+
+function setP(v){
+  const M=MODES[mode], k=1/M.step;
+  pVal=Math.max(M.lo,Math.min(M.hi,Math.round(v*k)/k));
+  document.getElementById('p-slider').value=pVal;
+  document.getElementById('p-value').textContent=nm(pVal,1);
+  draw();
+}
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+
+function applyMode(){
+  const M=MODES[mode], sl=document.getElementById('p-slider');
+  document.getElementById('tab0').classList.toggle('active', mode===0);
+  document.getElementById('tab1').classList.toggle('active', mode===1);
+  sl.min=M.lo; sl.max=M.hi; sl.step=M.step;
+  document.getElementById('lbl-var').innerHTML=T(M.v);
+  if(mode===0){
+    document.getElementById('mode-desc').innerHTML=mix('1 辺 18 cm の正方形の厚紙の 4 隅から 1 辺 @x@ cm の正方形を切り取り、折り曲げてふたのない箱を作ります。@x@ を変えると、左の展開図と箱の形、右の容積のグラフが同時に変わります。');
+    document.getElementById('legend').innerHTML='<span><i style="background:var(--c-orange)"></i>切り取る正方形と箱の高さ '+T('x')+'</span><span><i style="background:var(--c-blue)"></i>底面の 1 辺 '+T('18-2x')+'</span><span><i style="background:var(--c-purple)"></i>容積 '+T('y=x(18-2x)^2')+'</span><span><i style="background:var(--c-red)"></i>定義域の境目</span>';
+    document.getElementById('note-box').innerHTML=mix('@y\'=0@ の解は @x=3@ と @x=9@ の 2 つですが、@x=9@ では底面の 1 辺が 0 になり箱ができません。定義域 @0<x<9@ を先に押さえておけば、この見かけの解をきちんと外せます。');
+  } else {
+    document.getElementById('mode-desc').innerHTML=mix('底面の半径 @r@ cm と高さの和が 30 cm の円錐です。高さは @30-r@ cm と表せるので、体積は @r@ だけの関数になります。@r@ を変えると、左の円錐の形と右の体積のグラフが同時に変わります。うすい点線は体積が最大になる円錐です。');
+    document.getElementById('legend').innerHTML='<span><i style="background:var(--c-blue)"></i>底面の半径 '+T('r')+'</span><span><i style="background:var(--c-green)"></i>高さ '+T('30-r')+'</span><span><i style="background:var(--c-purple)"></i>体積 '+T('V=\\dfrac{1}{3}\\pi r^2(30-r)')+'</span><span><i style="background:#dadada"></i>体積が最大の円錐</span>';
+    document.getElementById('note-box').innerHTML=mix('@V\'=\\pi r(20-r)@ なので @V\'=0@ の解は @r=0@ と @r=20@ ですが、@r=0@ は定義域 @0<r<30@ の外です。@r=20@ の前後で @V\'@ の符号が正から負に変わるので、そこで体積が最大になります。');
+  }
+  stopAnim(); buildTable(); setP(M.start);
+}
+
+function setupTabs(){
+  document.getElementById('tab0').addEventListener('click',()=>{ stopAnim(); mode=0; applyMode(); });
+  document.getElementById('tab1').addEventListener('click',()=>{ stopAnim(); mode=1; applyMode(); });
+}
+function setupSlider(){
+  const sl=document.getElementById('p-slider');
+  sl.addEventListener('input',()=>{ stopAnim(); setP(parseFloat(sl.value)); });
+}
+function setupButtons(){
+  document.getElementById('best-btn').addEventListener('click',()=>{ stopAnim(); setP(MODES[mode].bestAt); });
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const M=MODES[mode], from=M.lo, to=M.hi, duration=3800;
+    let t0=null;
+    setP(from);
+    function frame(ts){
+      if(!t0) t0=ts;
+      const pr=Math.min((ts-t0)/duration,1);
+      const eased=pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+      setP(from+(to-from)*eased);
+      animId = pr<1 ? requestAnimationFrame(frame) : null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'), wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toP(cx){
+    const M=MODES[mode], rect=svg.getBoundingClientRect();
+    return M.xmin+((cx-rect.left)/rect.width*W-GL)/GW*(M.xmax-M.xmin);
+  }
+  function startDrag(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const sx=(cx-rect.left)/rect.width*W, sy=(cy-rect.top)/rect.height*H;
+    if(sx<GL-18||sy<GT-16||sy>GT+GH+16) return;
+    stopAnim(); dragging=true; setP(toP(cx));
+  }
+  function moveDrag(cx){ if(dragging) setP(toP(cx)); }
+  function endDrag(){ dragging=false; }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX); } });
+  window.addEventListener('mouseup', endDrag);
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

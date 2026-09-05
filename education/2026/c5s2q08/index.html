@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>4 次関数の極値とグラフ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+  .formula-box > div { margin: .35rem 0; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .5rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc > div { margin: .3rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { overflow-x: auto; margin: .75rem 0; }
+  .compare-table { border-collapse: collapse; background: #fff; margin: 0 auto; font-size: .9rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .5rem .7rem; text-align: center; white-space: nowrap; }
+  .compare-table .rowhead { background: #f4f7ff; font-weight: 600; }
+  .compare-table .mark { background: #fff4e6; color: var(--c-orange); font-weight: 700; }
+  .compare-table .cur { background: #dfe9ff; }
+  .compare-table .mark.cur { background: #ffe2bf; }
+  .compare-table .up { color: var(--c-green); font-weight: 700; }
+  .compare-table .down { color: var(--c-red); font-weight: 700; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; font-style: normal; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>4 次関数の極値とグラフ</h1>
+  <p class="subtitle">導関数を因数分解し、因子ごとの符号から増減表とグラフを組み立てましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>4 次関数を微分すると 3 次式になります。これを因数分解できれば、<span id="f-yp"></span> の符号は因子の符号の<strong>かけ算</strong>で決まります。因子が 3 つあると符号が変わる場所も増え、グラフは山と谷を複数もつ形になります。</p>
+  <div class="formula-box" id="f-key"></div>
+  <p>符号が変わらない因子（2 乗の形）があるときは、そこでは極値になりません。</p>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab1"></button>
+    <button class="tab" id="tab2"></button>
+    <button class="tab" id="tab3"></button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="-2.3" max="2.3" step="0.02" value="-2.3">
+    <span class="slider-val" id="x-value">-2.3</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn" id="btn-stat">傾きが 0 の点へ</button>
+    <button class="btn primary" id="anim-draw">グラフをかく</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint">図を横にドラッグしても点 P を動かせます。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>増減表</h2>
+  <div class="table-wrap"><table class="compare-table" id="sign-table"></table></div>
+  <p id="table-note"></p>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,mL=64,mR=26,PW=W-mL-mR;
+const PT=24,PH=286,FY=326,RH=26,RS=30,LH=46;
+const HALO=' stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"';
+const HALO2=' stroke="#fff" stroke-width="2.5" paint-order="stroke" stroke-linejoin="round"';
+const R2=Math.sqrt(2);
+
+function fmt(v){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  if(s==='-0') s='0';
+  return s;
+}
+function rel(v){ return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+function par(v){ return v<0 ? '('+fmt(v)+')' : fmt(v); }
+
+const MODES={
+  1:{ tab:'y=x^4-4x^2', ftex:'y=x^4-4x^2', fptex:"y'=4x(x+\\sqrt{2})(x-\\sqrt{2})",
+      f:x=>x*x*x*x-4*x*x, fp:x=>4*x*x*x-8*x,
+      ycalc:t=>t+'^4-4\\cdot '+t+'^2',
+      factors:[{tex:'4x',fn:x=>4*x},{tex:'x+\\sqrt{2}',fn:x=>x+R2},{tex:'x-\\sqrt{2}',fn:x=>x-R2}],
+      xmin:-2.3, xmax:2.3, y0:-5.2, y1:7.5, yticks:[-4,-2,2,4,6],
+      stat:[{x:-R2,tex:'-\\sqrt{2}',kind:'min',val:'-4'},{x:0,tex:'0',kind:'max',val:'0'},{x:R2,tex:'\\sqrt{2}',kind:'min',val:'-4'}] },
+  2:{ tab:'(1)', ftex:'y=\\dfrac{1}{4}x^4+\\dfrac{1}{3}x^3-x^2', fptex:"y'=x(x+2)(x-1)",
+      f:x=>x*x*x*x/4+x*x*x/3-x*x, fp:x=>x*x*x+x*x-2*x,
+      ycalc:t=>'\\dfrac{1}{4}'+t+'^4+\\dfrac{1}{3}'+t+'^3-'+t+'^2',
+      factors:[{tex:'x',fn:x=>x},{tex:'x+2',fn:x=>x+2},{tex:'x-1',fn:x=>x-1}],
+      xmin:-2.9, xmax:2.1, y0:-3.4, y1:4.2, yticks:[-2,-1,1,2,4],
+      stat:[{x:-2,tex:'-2',kind:'min',val:'-\\dfrac{8}{3}'},{x:0,tex:'0',kind:'max',val:'0'},{x:1,tex:'1',kind:'min',val:'-\\dfrac{5}{12}'}] },
+  3:{ tab:'(2)', ftex:'y=x^4-2x^3', fptex:"y'=2x^2(2x-3)",
+      f:x=>x*x*x*x-2*x*x*x, fp:x=>4*x*x*x-6*x*x,
+      ycalc:t=>t+'^4-2\\cdot '+t+'^3',
+      factors:[{tex:'2x^2',fn:x=>2*x*x},{tex:'2x-3',fn:x=>2*x-3}],
+      xmin:-1.0, xmax:2.4, y0:-2.6, y1:6.2, yticks:[-2,-1,2,4,6],
+      stat:[{x:0,tex:'0',kind:'none',val:''},{x:1.5,tex:'\\dfrac{3}{2}',kind:'min',val:'-\\dfrac{27}{16}'}] }
+};
+
+let mode=1, xVal=-2.3, animId=null, traceTo=null;
+
+function statY(M){ return FY+M.factors.length*RS+4; }
+function labelY(M){ return statY(M)+RH+8; }
+function svgH(M){ return labelY(M)+LH+8; }
+
+function clipLine(M,m,x0,y0){
+  const pts=[], yAt=x=>y0+m*(x-x0);
+  [M.xmin,M.xmax].forEach(x=>{ const y=yAt(x); if(y>=M.y0-1e-9 && y<=M.y1+1e-9) pts.push({x:x,y:y}); });
+  if(Math.abs(m)>1e-9){
+    [M.y0,M.y1].forEach(y=>{ const x=x0+(y-y0)/m; if(x>=M.xmin-1e-9 && x<=M.xmax+1e-9) pts.push({x:x,y:y}); });
+  }
+  const u=[];
+  for(const p of pts){ if(!u.some(q=>Math.abs(q.x-p.x)<1e-7 && Math.abs(q.y-p.y)<1e-7)) u.push(p); }
+  return u.length>=2 ? [u[0],u[1]] : null;
+}
+/* the open intervals cut out of [xmin, xmax] by the stationary points */
+function intervals(M){
+  const e=[M.xmin].concat(M.stat.map(s=>s.x),[M.xmax]), out=[];
+  for(let i=0;i<e.length-1;i++) out.push({lo:e[i], hi:e[i+1], mid:(e[i]+e[i+1])/2});
+  return out;
+}
+
+function init(){
+  const spans={'f-yp':"y'",'lbl-x':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex("y=x^4-4x^2\\;\\Longrightarrow\\;y'=4x^3-8x=4x(x+\\sqrt{2})(x-\\sqrt{2})", document.getElementById('f-key'), true);
+  document.getElementById('f-problem').innerHTML=
+    '<div>'+T('(1)\\;\\; y=\\dfrac{1}{4}x^4+\\dfrac{1}{3}x^3-x^2')+'</div>'+
+    '<div>'+T('(2)\\;\\; y=x^4-2x^3')+'</div>';
+  document.getElementById('result-box').innerHTML=
+    '<div>'+T('(1)\\;\\; x=-2\\ \\text{で極小値}\\ -\\dfrac{8}{3},\\quad x=0\\ \\text{で極大値}\\ 0,\\quad x=1\\ \\text{で極小値}\\ -\\dfrac{5}{12}')+'</div>'+
+    '<div>'+T('(2)\\;\\; x=\\dfrac{3}{2}\\ \\text{で極小値}\\ -\\dfrac{27}{16}\\quad(x=0\\ \\text{は極値ではない})')+'</div>';
+  document.getElementById('tab1').innerHTML=T(MODES[1].tab);
+  document.getElementById('tab2').innerHTML=T('(1)\\;\\tfrac{1}{4}x^4+\\tfrac{1}{3}x^3-x^2');
+  document.getElementById('tab3').innerHTML=T('(2)\\;x^4-2x^3');
+
+  initWalkthrough();
+  for(let i=1;i<=3;i++) document.getElementById('tab'+i).addEventListener('click',()=>{ stopAnim(); mode=i; applyMode(); });
+  const sl=document.getElementById('x-slider');
+  sl.addEventListener('input',()=>{ stopAnim(); setX(parseFloat(sl.value)); draw(); });
+  document.getElementById('btn-stat').addEventListener('click',()=>{
+    stopAnim();
+    const M=MODES[mode];
+    const next=M.stat.find(s=>s.x>xVal+1e-6) || M.stat[0];
+    setX(next.x,true); draw();
+  });
+  document.getElementById('anim-draw').addEventListener('click',()=>{ const M=MODES[mode]; sweep(M.xmin,M.xmax,4200); });
+  setupDrag();
+  applyMode();
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: (1) を微分する', formula:"y'=x^3+x^2-2x" },
+    { label:'Step 2: 因数分解する', formula:"y'=x(x^2+x-2)=x(x+2)(x-1)" },
+    { label:'Step 3: 傾きが 0 になる x を出す', formula:"y'=0\\ \\text{となる}\\ x\\ \\text{は}\\ x=-2,\\ 0,\\ 1" },
+    { label:'Step 4: 因子ごとの符号をかけ合わせる', formula:"x<-2\\,:\\,(-)(-)(-)=-,\\quad -2<x<0\\,:\\,(-)(+)(-)=+" },
+    { label:'Step 5: 残りの区間も同じように調べる', formula:"0<x<1\\,:\\,(+)(+)(-)=-,\\quad 1<x\\,:\\,(+)(+)(+)=+" },
+    { label:'Step 6: 増減表から極値の位置を読む', formula:"x=-2\\ \\text{極小},\\quad x=0\\ \\text{極大},\\quad x=1\\ \\text{極小}" },
+    { label:'Step 7: 極値の値を計算する', formula:"y(-2)=-\\dfrac{8}{3},\\quad y(0)=0,\\quad y(1)=-\\dfrac{5}{12}" },
+    { label:'Step 8: (2) を微分して因数分解する', formula:"y'=4x^3-6x^2=2x^2(2x-3)" },
+    { label:'Step 9: (2) は 2 乗の因子に注意する', formula:"2x^2\\geqq 0\\ \\text{より符号は}\\ 2x-3\\ \\text{だけで決まる}" },
+    { label:'Step 10: 答え', formula:"(2)\\ \\text{は}\\ x=\\dfrac{3}{2}\\ \\text{で極小値}\\ -\\dfrac{27}{16}\\ \\text{のみ}" }
+  ];
+  let c=0;
+  const container=document.getElementById('walkthrough'), counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=c;i++){
+      html+=`<div class="step ${i===c?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${c+1} / ${steps.length}`;
+    prevBtn.disabled=c===0;
+    nextBtn.disabled=c===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(c>0){c--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(c<steps.length-1){c++;render();} });
+  render();
+}
+
+function draw(){
+  const M=MODES[mode], a=xVal, ya=M.f(a), slope=M.fp(a), H=svgH(M);
+  const px=x=>mL+(x-M.xmin)/(M.xmax-M.xmin)*PW;
+  const py=y=>PT+PH-(y-M.y0)/(M.y1-M.y0)*PH;
+  const segs=intervals(M);
+  const upTo = traceTo===null ? M.xmax : traceTo;
+  let s='';
+
+  /* ---- graph panel ---- */
+  s+=`<rect x="${mL}" y="${PT}" width="${PW}" height="${PH}" fill="#fff" stroke="#e3e3e3"/>`;
+  for(let i=Math.ceil(M.xmin);i<=Math.floor(M.xmax);i++)
+    s+=`<line x1="${px(i)}" y1="${PT}" x2="${px(i)}" y2="${PT+PH}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  M.yticks.forEach(v=>{ s+=`<line x1="${mL}" y1="${py(v)}" x2="${mL+PW}" y2="${py(v)}" stroke="#eee" stroke-width="1"/>`; });
+  s+=`<line x1="${mL}" y1="${py(0)}" x2="${mL+PW}" y2="${py(0)}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<line x1="${px(a)}" y1="${PT}" x2="${px(a)}" y2="${PT+PH}" stroke="#c9d3e8" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  /* the whole curve first, then the part already traced on top of it */
+  let d='', d2='';
+  for(let i=0;i<=240;i++){
+    const x=M.xmin+(M.xmax-M.xmin)*i/240;
+    d+=(i===0?'M':'L')+` ${px(x).toFixed(2)} ${py(M.f(x)).toFixed(2)}`;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--c-purple)" stroke-width="2" opacity="0.35"/>`;
+  for(let i=0;i<=240;i++){
+    const x=M.xmin+(upTo-M.xmin)*i/240;
+    d2+=(i===0?'M':'L')+` ${px(x).toFixed(2)} ${py(M.f(x)).toFixed(2)}`;
+  }
+  s+=`<path d="${d2}" fill="none" stroke="var(--c-purple)" stroke-width="3.5"/>`;
+  const seg=clipLine(M,slope,a,ya);
+  if(seg) s+=`<line x1="${px(seg[0].x)}" y1="${py(seg[0].y)}" x2="${px(seg[1].x)}" y2="${py(seg[1].y)}" stroke="var(--c-blue)" stroke-width="3"/>`;
+  /* the marks that get painted over a tick label; drop the label instead of stacking */
+  const edge=px(a)-26<mL;
+  const pLx=edge?px(a):px(a)-14, pLy=edge?py(ya)-18:py(ya)-10;
+  const blk=[{x0:pLx-(edge?9:14), x1:pLx+(edge?9:3), y0:pLy-14, y1:pLy+5},
+             {x0:px(a)-12, x1:px(a)+12, y0:py(ya)-12, y1:py(ya)+12}];
+  M.stat.forEach(st=>blk.push({x0:px(st.x)-9, x1:px(st.x)+9, y0:py(M.f(st.x))-9, y1:py(M.f(st.x))+9}));
+  const hid=(x0,y0,x1,y1)=>blk.some(q=>x0<q.x1&&x1>q.x0&&y0<q.y1&&y1>q.y0);
+  let tk='';
+  for(let i=Math.ceil(M.xmin);i<=Math.floor(M.xmax);i++){ if(i===0) continue;
+    const ty=py(0)+16;
+    if(hid(px(i)-10, ty-11, px(i)+10, ty+3)) continue;
+    tk+=`<text x="${px(i)}" y="${ty}" text-anchor="middle" font-size="11" fill="#aaa"${HALO2}>${i}</text>`; }
+  M.yticks.forEach(v=>{ const ty=py(v)+4;
+    if(hid(mL-24, ty-11, mL-6, ty+3)) return;
+    tk+=`<text x="${mL-8}" y="${ty}" text-anchor="end" font-size="11" fill="#aaa"${HALO2}>${v}</text>`; });
+  s+=tk;
+  M.stat.forEach(st=>{
+    s+=`<circle cx="${px(st.x)}" cy="${py(M.f(st.x))}" r="6" fill="#fff" stroke="#555" stroke-width="2.5"/>`;
+    if(st.kind!=='none' && Math.abs(px(st.x)-px(a))>50){
+      const up = st.kind==='max';
+      s+=`<text x="${px(st.x)}" y="${py(M.f(st.x))+(up?-16:30)}" text-anchor="middle" font-size="12" font-weight="700" fill="#555"${HALO}>${up?'極大':'極小'}</text>`;
+    }
+  });
+  s+=`<circle cx="${px(a)}" cy="${py(ya)}" r="9" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${px(a)}" cy="${py(ya)}" r="9" fill="none" stroke="var(--c-red)" stroke-width="2" opacity="0.5"><animate attributeName="r" values="9;17;9" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${pLx}" y="${pLy}" text-anchor="${edge?'middle':'end'}" font-size="15" font-weight="700" fill="var(--c-red)"${HALO}>P</text>`;
+  s+=`<foreignObject x="${mL+30}" y="${PT+2}" width="220" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#7b61ff;font-weight:600;white-space:nowrap;height:48px;display:flex;align-items:center"><span style="display:inline-block;background:#fff">${T(M.ftex)}</span></div></foreignObject>`;
+  s+=`<foreignObject x="${mL+PW-26}" y="${py(0)-24}" width="26" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999;display:inline-block;background:#fff">${T('x')}</div></foreignObject>`;
+
+  /* ---- one strip per factor, then their product ---- */
+  s+=`<path d="M ${px(a)} ${PT+PH+4} L ${px(a)-7} ${PT+PH+14} L ${px(a)+7} ${PT+PH+14} Z" fill="var(--c-red)"/>`;
+  const rows=M.factors.map((fc,i)=>({y:FY+i*RS, tex:fc.tex, fn:fc.fn}));
+  rows.push({y:statY(M), tex:"y'", fn:M.fp, bold:true});
+  rows.forEach(row=>{
+    segs.forEach(sg=>{
+      const v=row.fn(sg.mid), pos=v>0;
+      const x1=px(sg.lo), x2=px(sg.hi);
+      s+=`<rect x="${x1}" y="${row.y}" width="${x2-x1}" height="${RH}" fill="${pos?'rgba(40,167,69,0.20)':'rgba(217,83,79,0.20)'}" stroke="#fff" stroke-width="1"/>`;
+      s+=`<text x="${(x1+x2)/2}" y="${row.y+18}" text-anchor="middle" font-size="${row.bold?15:13}" font-weight="700" fill="${pos?'#28a745':'#d9534f'}">${pos?'+':'\u2212'}</text>`;
+    });
+    M.stat.forEach(st=>{
+      if(Math.abs(row.fn(st.x))<1e-9){
+        s+=`<rect x="${px(st.x)-10}" y="${row.y}" width="20" height="${RH}" fill="#fff" stroke="#ddd" stroke-width="1"/>`;
+        s+=`<text x="${px(st.x)}" y="${row.y+18}" text-anchor="middle" font-size="13" font-weight="700" fill="#555">0</text>`;
+      } else {
+        s+=`<line x1="${px(st.x)}" y1="${row.y}" x2="${px(st.x)}" y2="${row.y+RH}" stroke="#fff" stroke-width="2"/>`;
+      }
+    });
+    s+=`<foreignObject x="0" y="${row.y}" width="62" height="${RH}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;color:${row.bold?'#333':'#666'};text-align:right;padding-right:5px">${T(row.tex)}</div></foreignObject>`;
+  });
+  s+=`<line x1="${px(a)}" y1="${FY-4}" x2="${px(a)}" y2="${statY(M)+RH+4}" stroke="#c9d3e8" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  M.stat.forEach(st=>{
+    s+=`<foreignObject x="${px(st.x)-35}" y="${labelY(M)}" width="70" height="${LH}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#555;height:${LH}px;display:flex;align-items:center;justify-content:center">${T(st.tex)}</div></foreignObject>`;
+  });
+
+  const svg=document.getElementById('graph');
+  svg.setAttribute('viewBox','0 0 600 '+H);
+  svg.innerHTML=s;
+  updateLive();
+  highlight();
+}
+
+function updateLive(){
+  const M=MODES[mode], a=xVal, ya=M.f(a), slope=M.fp(a);
+  const at=M.stat.find(st=>Math.abs(st.x-a)<1e-9);
+  let facs=M.factors.map(fc=>fc.tex+' '+rel(fc.fn(a))+' '+fmt(fc.fn(a))).join(',\\quad ');
+  const sub = at ? (/^\d+$/.test(at.tex) ? at.tex : '\\left('+at.tex+'\\right)') : par(a);
+  const yv  = (at && at.val) ? at.val : fmt(ya);
+  const yr  = (at && at.val) ? '=' : rel(ya);
+  document.getElementById('live-calc').innerHTML=
+    `<div>${T(at ? 'x = '+at.tex : 'x '+rel(a)+' '+fmt(a))}</div>`+
+    `<div>${T('y = '+M.ycalc(sub)+' '+yr+' '+yv)}</div>`+
+    `<div style="color:#666">${T(facs)}</div>`+
+    `<div style="color:var(--c-blue)">${T("y' "+rel(slope)+" "+fmt(slope))}</div>`;
+  const note=document.getElementById('note-box');
+  if(at){
+    note.innerHTML = at.kind==='none'
+      ? '接線が水平になりました。ところが '+T("y'")+' の帯の色は前後で同じままです。符号が変わらないので、ここは極値ではありません。'
+      : '接線が水平になりました。'+T("y'")+' の帯の色が前後で入れかわっています。だからここは'+(at.kind==='max'?'極大':'極小')+'です。';
+  } else if(slope>0){
+    note.innerHTML = T("y'")+' が正なので曲線は右上がりです。因子の帯を見ると、負の因子が偶数個（0 個または 2 個）になっています。';
+  } else {
+    note.innerHTML = T("y'")+' が負なので曲線は右下がりです。因子の帯を見ると、負の因子が奇数個になっています。';
+  }
+}
+
+function buildTable(){
+  const M=MODES[mode], segs=intervals(M);
+  let r1='<tr><th class="rowhead">'+T('x')+'</th>';
+  let r2='<tr><th class="rowhead">'+T("y'")+'</th>';
+  let r3='<tr><th class="rowhead">'+T('y')+'</th>';
+  segs.forEach((sg,i)=>{
+    const pos=M.fp(sg.mid)>0, c=2*i;
+    r1+=`<td data-col="${c}">&hellip;</td>`;
+    r2+=`<td data-col="${c}">${T(pos?'+':'-')}</td>`;
+    r3+=`<td data-col="${c}" class="${pos?'up':'down'}">${pos?'&#8599;':'&#8600;'}</td>`;
+    if(i<M.stat.length){
+      const st=M.stat[i], c2=2*i+1;
+      r1+=`<td data-col="${c2}" class="mark">${T(st.tex)}</td>`;
+      r2+=`<td data-col="${c2}" class="mark">${T('0')}</td>`;
+      r3+=`<td data-col="${c2}" class="mark">${T(st.kind==='none'?'\\text{極値ではない}':(st.kind==='max'?'\\text{極大}\\;':'\\text{極小}\\;')+st.val)}</td>`;
+    }
+  });
+  document.getElementById('sign-table').innerHTML=r1+'</tr>'+r2+'</tr>'+r3+'</tr>';
+  document.getElementById('table-note').innerHTML=
+    '図の帯と同じ並びです。'+T("y'")+' の行の符号が変わる列だけが極値になります。';
+}
+
+/* light up the column of the table that matches the point on the graph */
+function highlight(){
+  const M=MODES[mode], a=xVal;
+  let col=0;
+  const idx=M.stat.findIndex(st=>Math.abs(st.x-a)<1e-9);
+  if(idx>=0) col=2*idx+1;
+  else { let k=0; while(k<M.stat.length && a>M.stat[k].x) k++; col=2*k; }
+  document.querySelectorAll('#sign-table td').forEach(td=>{
+    td.classList.toggle('cur', parseInt(td.getAttribute('data-col'),10)===col);
+  });
+}
+
+function setX(v,exact){
+  const M=MODES[mode];
+  xVal = exact ? v : Math.max(M.xmin,Math.min(M.xmax,Math.round(v*50)/50));
+  const sl=document.getElementById('x-slider');
+  sl.value=xVal;
+  /* x can land on an irrational stationary point, so never claim x = the 2-digit form */
+  const shown=Math.round(xVal*100)/100;
+  document.getElementById('x-value').textContent=(Math.abs(shown-xVal)<1e-12?'':'\u2252')+fmt(shown);
+}
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } traceTo=null; }
+
+function applyMode(){
+  const M=MODES[mode], sl=document.getElementById('x-slider');
+  for(let i=1;i<=3;i++) document.getElementById('tab'+i).classList.toggle('active', mode===i);
+  sl.min=String(M.xmin); sl.max=String(M.xmax); sl.step='0.02';
+  document.getElementById('mode-desc').innerHTML=
+    T(M.ftex)+' のグラフです。導関数は '+T(M.fptex)+'。下の帯は因子ごとの符号で、一番下がそれをかけ合わせた '+T("y'")+' の符号です。';
+  document.getElementById('legend').innerHTML=
+    '<span><i style="background:var(--c-purple)"></i>'+T('y=f(x)')+'</span>'+
+    '<span><i style="background:var(--c-blue)"></i>点 P の接線</span>'+
+    '<span><b style="background:var(--c-red)"></b>点 P</span>'+
+    '<span><b style="background:#fff;border:2px solid #555"></b>'+T("y'=0")+' の点</span>'+
+    '<span><i style="background:rgba(40,167,69,0.55)"></i>正の帯</span>'+
+    '<span><i style="background:rgba(217,83,79,0.55)"></i>負の帯</span>';
+  buildTable();
+  setX(M.xmin,true);
+  draw();
+}
+
+function sweep(from,to,duration){
+  stopAnim();
+  let t0=null;
+  setX(from,true); traceTo=from; draw();
+  function frame(ts){
+    if(!t0) t0=ts;
+    const pr=Math.min((ts-t0)/duration,1);
+    const v=from+(to-from)*pr;
+    setX(v,true); traceTo=v; draw();
+    if(pr<1){ animId=requestAnimationFrame(frame); }
+    else { animId=null; traceTo=null; draw(); }
+  }
+  animId=requestAnimationFrame(frame);
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'), wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toX(cx){
+    const M=MODES[mode], rect=svg.getBoundingClientRect();
+    const sx=(cx-rect.left)/rect.width*W;
+    return M.xmin+(sx-mL)/PW*(M.xmax-M.xmin);
+  }
+  function startDrag(cx,cy){
+    const M=MODES[mode], rect=svg.getBoundingClientRect();
+    const sy=(cy-rect.top)/rect.height*svgH(M);
+    if(sy<PT-14 || sy>statY(M)+RH+14) return;
+    stopAnim(); dragging=true; setX(toX(cx)); draw();
+  }
+  function moveDrag(cx){ if(dragging){ setX(toX(cx)); draw(); } }
+  function endDrag(){ dragging=false; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

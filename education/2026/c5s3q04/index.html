@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>積分定数の決定</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step > .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step > .formula-line { text-align: left; overflow-x: auto; }
+  .step > .formula-line .katex { font-size: 1.05rem; }
+  .step.current > .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .5rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc > div { margin: .25rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 0; border-top-width: 3px; border-top-style: solid; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>積分定数の決定</h1>
+  <p class="subtitle">導関数と 1 点の値から、原始関数をただ 1 つに決める手順を動く図で確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>導関数 <span id="f-fp"></span> が分かっていても、原始関数は 1 つには決まりません。積分定数 <span id="f-c1"></span> の分だけ上下にずれた曲線がいくつもあり、それらはすべて同じ導関数をもちます。そこに <span id="f-cond"></span> のような条件が 1 つ加わると、その点を通る曲線が 1 本だけ選ばれます。</p>
+  <div class="formula-box" id="f-key"></div>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab1">例で練習</button>
+    <button class="tab" id="tab2">解く問題</button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label><span id="lbl-c"></span> =</label>
+    <input type="range" id="c-slider" min="-3" max="7" step="0.1" value="0">
+    <span class="slider-val" id="c-value">0</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="-1.6" max="4.6" step="0.1" value="2">
+    <span class="slider-val" id="x-value">2</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn" id="anim-c">C を動かす</button>
+    <button class="btn primary" id="fit-c">条件に合わせる</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 548" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint">上の図をドラッグすると、指の位置を通る曲線が選ばれます。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=548,mL=58,mR=26,PW=W-mL-mR;
+const TT=32,TH=276,BT=372,BH=148;
+
+const MODES=[null,
+{
+  fpTex:'x^2-3x', F0Tex:'\\dfrac{1}{3}x^3-\\dfrac{3}{2}x^2',
+  fp:x=>x*x-3*x, F0:x=>x*x*x/3-1.5*x*x,
+  x0:3, y0:-1, F0x0:-4.5,
+  F0x0Tex:'\\dfrac{1}{3}\\cdot 3^3-\\dfrac{3}{2}\\cdot 3^2',
+  Ct:3.5, CtTex:'\\dfrac{7}{2}', Cmin:-3, Cmax:7,
+  XMIN:-1.6, XMAX:4.6, YT0:-9, YT1:8.5, YB0:-3.5, YB1:8,
+  xt:2, fam:[-3,-1,1,5,7],
+  xticks:[-1,0,1,2,3,4], ytT:[-8,-4,4,8], ytB:[-2,2,4,6],
+  ansTex:'F(x)=\\dfrac{1}{3}x^3-\\dfrac{3}{2}x^2+\\dfrac{7}{2}'
+},
+{
+  fpTex:'x^2+x-2', F0Tex:'\\dfrac{1}{3}x^3+\\dfrac{1}{2}x^2-2x',
+  fp:x=>x*x+x-2, F0:x=>x*x*x/3+0.5*x*x-2*x,
+  x0:0, y0:1, F0x0:0,
+  F0x0Tex:'\\dfrac{1}{3}\\cdot 0^3+\\dfrac{1}{2}\\cdot 0^2-2\\cdot 0',
+  Ct:1, CtTex:'1', Cmin:-4, Cmax:6,
+  XMIN:-3.6, XMAX:2.6, YT0:-6.5, YT1:10.5, YB0:-3.5, YB1:8,
+  xt:1.5, fam:[-4,-2,3,5],
+  xticks:[-3,-2,-1,0,1,2], ytT:[-6,-3,3,6,9], ytB:[-2,2,4,6],
+  ansTex:'F(x)=\\dfrac{1}{3}x^3+\\dfrac{1}{2}x^2-2x+1'
+}];
+
+let mode=1, cVal=0, xVal=2, animId=null;
+function M(){ return MODES[mode]; }
+
+function px(x){ const m=M(); return mL+(x-m.XMIN)/(m.XMAX-m.XMIN)*PW; }
+function pyT(y){ const m=M(); return TT+TH-(y-m.YT0)/(m.YT1-m.YT0)*TH; }
+function pyB(y){ const m=M(); return BT+BH-(y-m.YB0)/(m.YB1-m.YB0)*BH; }
+
+function fmt(v){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  if(s==='-0') s='0';
+  return s;
+}
+function rel(v){ return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+function par(v){ return v<0 ? '('+fmt(v)+')' : fmt(v); }
+
+function init(){
+  const spans={'f-fp':"F'(x)",'f-c1':'C','f-cond':'F(0)=1','lbl-c':'C','lbl-x':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex("F'(x)=f(x)\\ \\Longrightarrow\\ F(x)=\\int f(x)\\,dx\\quad\\text{（}C\\text{ をふくむ）}", document.getElementById('f-key'), true);
+  tex("F'(x)=x^2+x-2,\\qquad F(0)=1\\ \\text{ を満たす }F(x)", document.getElementById('f-problem'), true);
+  tex('F(x)=\\dfrac{1}{3}x^3+\\dfrac{1}{2}x^2-2x+1', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  setupTabs();
+  setupSliders();
+  setupAnim();
+  setupDrag();
+  applyMode();
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 導関数が分かっているので積分する',
+      formula:'F(x)=\\displaystyle\\int (x^2+x-2)\\,dx' },
+    { label:'Step 2: 項ごとに積分する',
+      formula:'\\displaystyle\\int x^2dx=\\dfrac{1}{3}x^3,\\quad \\int x\\,dx=\\dfrac{1}{2}x^2,\\quad \\int (-2)\\,dx=-2x' },
+    { label:'Step 3: 積分定数 C を付けて 1 つにまとめる',
+      formula:'F(x)=\\dfrac{1}{3}x^3+\\dfrac{1}{2}x^2-2x+C' },
+    { label:'Step 4: もう 1 つの条件を代入する',
+      formula:'F(0)=\\dfrac{1}{3}\\cdot 0^3+\\dfrac{1}{2}\\cdot 0^2-2\\cdot 0+C=C' },
+    { label:'Step 5: C を決める',
+      formula:'C=1' },
+    { label:'Step 6: 答え',
+      formula:'F(x)=\\dfrac{1}{3}x^3+\\dfrac{1}{2}x^2-2x+1' }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough'), counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function pathOf(fn,pyf,ylo,yhi){
+  const m=M(); let d='',pen=false;
+  for(let i=0;i<=300;i++){
+    const x=m.XMIN+(m.XMAX-m.XMIN)*i/300, y=fn(x);
+    if(!(y>=ylo && y<=yhi)){ pen=false; continue; }
+    d+=(pen?'L':'M')+` ${px(x).toFixed(2)} ${pyf(y).toFixed(2)}`;
+    pen=true;
+  }
+  return d;
+}
+
+function draw(){
+  const m=M(), C=cVal, xt=xVal, slope=m.fp(xt);
+  const HALO2=' stroke="#fff" stroke-width="2.5" paint-order="stroke" stroke-linejoin="round"';
+  const AXL='font-size:14px;color:#999;display:inline-block;background:#fff';
+  const CAP='font-size:13px;font-weight:600;white-space:nowrap;display:inline-block;background:#fff;';
+  let s='';
+
+  /* ---- upper panel: the family of primitives ---- */
+  s+=`<rect x="${mL}" y="${TT}" width="${PW}" height="${TH}" fill="#fff" stroke="#e3e3e3"/>`;
+  m.xticks.forEach(k=>{ s+=`<line x1="${px(k)}" y1="${TT}" x2="${px(k)}" y2="${TT+TH}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`; });
+  m.ytT.concat([0]).forEach(k=>{ s+=`<line x1="${mL}" y1="${pyT(k)}" x2="${mL+PW}" y2="${pyT(k)}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`; });
+
+  /* tick labels are emitted after the curves so the curves never bury them */
+  let tickTop='';
+  m.xticks.forEach(k=>{ if(k===0) return; tickTop+=`<text x="${px(k)}" y="${pyT(0)+16}" text-anchor="middle" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  m.ytT.forEach(k=>{ tickTop+=`<text x="${mL-8}" y="${pyT(k)+4}" text-anchor="end" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+
+  /* the direction marks are short segments of the tangent; shorten them further
+     near the edges so they never leave the plotting rect */
+  function tanMark(yv,color,width){
+    let sL=Math.min(0.55, xt-m.XMIN), sR=Math.min(0.55, m.XMAX-xt);
+    if(slope>0){ sL=Math.min(sL,(yv-m.YT0)/slope); sR=Math.min(sR,(m.YT1-yv)/slope); }
+    else if(slope<0){ sL=Math.min(sL,(m.YT1-yv)/(-slope)); sR=Math.min(sR,(yv-m.YT0)/(-slope)); }
+    sL=Math.max(0,sL); sR=Math.max(0,sR);
+    if(sL+sR<0.02) return '';
+    return `<line x1="${px(xt-sL)}" y1="${pyT(yv-slope*sL)}" x2="${px(xt+sR)}" y2="${pyT(yv+slope*sR)}" stroke="${color}" stroke-width="${width}" stroke-linecap="round"/>`;
+  }
+  let tanMarks='';
+  m.fam.forEach(k=>{
+    s+=`<path d="${pathOf(x=>m.F0(x)+k,pyT,m.YT0,m.YT1)}" fill="none" stroke="#c9d3e8" stroke-width="1.8"/>`;
+    const yv=m.F0(xt)+k;
+    if(yv>m.YT0 && yv<m.YT1) tanMarks+=tanMark(yv,'#9fb4d8',2.5);
+  });
+  s+=`<path d="${pathOf(x=>m.F0(x)+C,pyT,m.YT0,m.YT1)}" fill="none" stroke="var(--c-blue)" stroke-width="3"/>`;
+  s+=tanMarks;
+  const ySel=m.F0(xt)+C;
+  if(ySel>m.YT0 && ySel<m.YT1) s+=tanMark(ySel,'var(--c-orange)',3.5);
+
+  /* the gap between the selected curve and the point it has to pass through */
+  const yAtX0=m.F0(m.x0)+C, gap=yAtX0-m.y0;
+  if(Math.abs(gap)>0.02 && yAtX0>m.YT0 && yAtX0<m.YT1)
+    s+=`<line x1="${px(m.x0)}" y1="${pyT(m.y0)}" x2="${px(m.x0)}" y2="${pyT(yAtX0)}" stroke="var(--c-red)" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+
+  s+=tickTop;
+  s+=`<circle cx="${px(m.x0)}" cy="${pyT(m.y0)}" r="8" fill="var(--c-red)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${px(m.x0)}" cy="${pyT(m.y0)}" r="8" fill="none" stroke="var(--c-red)" stroke-width="2" opacity="0.55"><animate attributeName="r" values="8;16;8" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  s+=`<text x="${px(m.x0)+13}" y="${pyT(m.y0)-9}" font-size="15" font-weight="700" fill="var(--c-red)" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">P</text>`;
+
+  s+=`<line x1="${px(xt)}" y1="${TT}" x2="${px(xt)}" y2="${BT+BH}" stroke="#e8d5bd" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  s+=`<foreignObject x="${mL+PW-30}" y="${pyT(0)+2}" width="30" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="${AXL}">${T('x')}</div></foreignObject>`;
+  /* panel captions sit outside the plotting rect so no curve can run through them */
+  s+=`<foreignObject x="${mL}" y="0" width="330" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="${CAP}color:#2a6df4">${T('y='+m.F0Tex.replace(/dfrac/g,'tfrac')+'+C')}</div></foreignObject>`;
+
+  /* ---- lower panel: the derivative, which every curve above shares ---- */
+  s+=`<rect x="${mL}" y="${BT}" width="${PW}" height="${BH}" fill="#fff" stroke="#e3e3e3"/>`;
+  m.xticks.forEach(k=>{ s+=`<line x1="${px(k)}" y1="${BT}" x2="${px(k)}" y2="${BT+BH}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`; });
+  m.ytB.concat([0]).forEach(k=>{ s+=`<line x1="${mL}" y1="${pyB(k)}" x2="${mL+PW}" y2="${pyB(k)}" stroke="${k===0?'#999':'#eee'}" stroke-width="${k===0?1.5:1}"/>`; });
+  let tickBot='';
+  m.xticks.forEach(k=>{ if(k===0) return; tickBot+=`<text x="${px(k)}" y="${pyB(0)+15}" text-anchor="middle" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  m.ytB.forEach(k=>{ tickBot+=`<text x="${mL-8}" y="${pyB(k)+4}" text-anchor="end" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  s+=`<path d="${pathOf(m.fp,pyB,m.YB0,m.YB1)}" fill="none" stroke="var(--c-green)" stroke-width="3"/>`;
+  /* the panel背景 covers the connector drawn above, so re-draw it here */
+  s+=`<line x1="${px(xt)}" y1="${BT}" x2="${px(xt)}" y2="${BT+BH}" stroke="#e8d5bd" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  s+=tickBot;
+  if(slope>m.YB0 && slope<m.YB1){
+    s+=`<circle cx="${px(xt)}" cy="${pyB(slope)}" r="7.5" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="7.5;10.5;7.5" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  }
+  s+=`<foreignObject x="${mL+PW-30}" y="${pyB(0)+2}" width="30" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="${AXL}">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${mL}" y="${BT-32}" width="330" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="${CAP}color:#28a745">${T("y=F'(x)="+m.fpTex)}</div></foreignObject>`;
+
+  document.getElementById('graph').innerHTML=s;
+  updateLive();
+}
+
+function updateLive(){
+  const m=M(), C=cVal, val=m.F0x0+C, gap=val-m.y0;
+  document.getElementById('live-calc').innerHTML=
+    `<div>${T('C='+fmt(C))}</div>`+
+    `<div style="color:var(--c-blue)">${T('F('+fmt(m.x0)+')='+m.F0x0Tex+'+C='+fmt(m.F0x0)+'+'+par(C)+' '+rel(val)+' '+fmt(val))}</div>`+
+    `<div style="color:var(--c-red)">${T('\\text{条件}\\;\\;F('+fmt(m.x0)+')='+fmt(m.y0))}</div>`+
+    `<div style="color:${Math.abs(gap)<1e-9?'var(--c-green)':'var(--c-orange)'}">${T('\\text{ずれ}\\;\\;F('+fmt(m.x0)+')-'+par(m.y0)+' '+rel(gap)+' '+fmt(gap))}</div>`;
+  const note=document.getElementById('note-box');
+  if(Math.abs(gap)<1e-9){
+    note.innerHTML='ずれが 0 になりました。曲線が点 P を通っています。この '+T('C')+' が求める積分定数で、原始関数はこの 1 本に決まります。';
+  } else if(gap>0){
+    note.innerHTML='いまの曲線は点 P より上を通っています。'+T('C')+' を小さくして曲線を下げましょう。どの曲線を選んでも下の導関数のグラフは同じままです。';
+  } else {
+    note.innerHTML='いまの曲線は点 P より下を通っています。'+T('C')+' を大きくして曲線を上げましょう。どの曲線を選んでも下の導関数のグラフは同じままです。';
+  }
+}
+
+function setC(v){
+  const m=M();
+  cVal=Math.round(Math.max(m.Cmin,Math.min(m.Cmax,v))*10)/10;
+  document.getElementById('c-slider').value=cVal;
+  document.getElementById('c-value').textContent=fmt(cVal);
+}
+function setX(v){
+  const m=M();
+  xVal=Math.round(Math.max(m.XMIN,Math.min(m.XMAX,v))*10)/10;
+  document.getElementById('x-slider').value=xVal;
+  document.getElementById('x-value').textContent=fmt(xVal);
+}
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+
+function sweepC(from,to,duration){
+  stopAnim();
+  let t0=null;
+  function frame(ts){
+    if(!t0) t0=ts;
+    const pr=Math.min((ts-t0)/duration,1);
+    const eased=pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+    setC(from+(to-from)*eased);
+    draw();
+    animId = pr<1 ? requestAnimationFrame(frame) : null;
+  }
+  animId=requestAnimationFrame(frame);
+}
+
+function applyMode(){
+  const m=M();
+  document.getElementById('tab1').classList.toggle('active',mode===1);
+  document.getElementById('tab2').classList.toggle('active',mode===2);
+  const cs=document.getElementById('c-slider'), xs=document.getElementById('x-slider');
+  cs.min=String(m.Cmin); cs.max=String(m.Cmax);
+  xs.min=String(m.XMIN); xs.max=String(m.XMAX);
+  document.getElementById('mode-desc').innerHTML=
+    '導関数が '+T("F'(x)="+m.fpTex)+' である原始関数を、'+T('C')+' を変えながら探します。条件は '+T('F('+fmt(m.x0)+')='+fmt(m.y0))+' なので、点 P を通る 1 本を選びましょう。'+
+    T('x')+' のスライダーは接線の傾きを見る位置です。';
+  document.getElementById('legend').innerHTML=
+    '<span><i style="border-top-color:#c9d3e8"></i>'+T('C')+' を変えた原始関数</span>'+
+    '<span><i style="border-top-color:var(--c-blue)"></i>いま選んでいる '+T('y='+m.F0Tex.replace(/dfrac/g,'tfrac')+'+C')+'</span>'+
+    '<span><b style="background:var(--c-red)"></b>通るべき点 '+T('\\mathrm{P}('+fmt(m.x0)+',\\ '+fmt(m.y0)+')')+'</span>'+
+    '<span><i style="border-top-color:var(--c-orange)"></i>接線の向き（どの曲線も同じ）</span>'+
+    '<span><i style="border-top-color:var(--c-green)"></i>'+T("y=F'(x)")+'</span>';
+  tex(m.ansTex, document.getElementById('result-box'), true);
+  setC(m.Cmin);
+  setX(m.xt);
+  draw();
+}
+
+function setupTabs(){
+  document.getElementById('tab1').addEventListener('click',()=>{ stopAnim(); mode=1; applyMode(); });
+  document.getElementById('tab2').addEventListener('click',()=>{ stopAnim(); mode=2; applyMode(); });
+}
+function setupSliders(){
+  const cs=document.getElementById('c-slider'), xs=document.getElementById('x-slider');
+  cs.addEventListener('input',()=>{ stopAnim(); setC(parseFloat(cs.value)); draw(); });
+  xs.addEventListener('input',()=>{ stopAnim(); setX(parseFloat(xs.value)); draw(); });
+}
+function setupAnim(){
+  document.getElementById('anim-c').addEventListener('click',()=>{ const m=M(); setC(m.Cmin); sweepC(m.Cmin,m.Cmax,3600); });
+  document.getElementById('fit-c').addEventListener('click',()=>{ sweepC(cVal,M().Ct,1800); });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph');
+  const wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+
+  function toSvg(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    return { x:(cx-rect.left)/rect.width*W, y:(cy-rect.top)/rect.height*H };
+  }
+  function apply(pt){
+    const m=M();
+    const gx=m.XMIN+(pt.x-mL)/PW*(m.XMAX-m.XMIN);
+    const gy=m.YT0+(TT+TH-pt.y)/TH*(m.YT1-m.YT0);
+    setX(gx);
+    setC(gy-m.F0(Math.round(Math.max(m.XMIN,Math.min(m.XMAX,gx))*10)/10));
+    draw();
+  }
+  function startDrag(cx,cy){
+    const pt=toSvg(cx,cy);
+    if(pt.y<TT-16 || pt.y>TT+TH+16) return;
+    stopAnim();
+    dragging=true;
+    apply(pt);
+  }
+  function moveDrag(cx,cy){ if(dragging) apply(toSvg(cx,cy)); }
+  function endDrag(){ dragging=false; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX, e.clientY); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

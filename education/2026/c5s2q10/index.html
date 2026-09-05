@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>関数の最大・最小</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: .95rem; font-weight: 600; padding: .7rem .5rem; border-radius: 10px; min-height: 48px; cursor: pointer; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc > div { margin: .25rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row > label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row > input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row > .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { overflow-x: auto; margin: .75rem 0; }
+  .compare-table { border-collapse: collapse; background: #fff; margin: 0 auto; font-size: .9rem; }
+  .compare-table th, .compare-table td { border: 1px solid #e3e3e3; padding: .5rem .8rem; text-align: center; white-space: nowrap; }
+  .compare-table .rowhead { background: #f4f7ff; font-weight: 600; }
+  .compare-table .mark { background: #fff4e6; color: var(--c-orange); font-weight: 700; }
+  .compare-table .markmin { background: #eaf7ee; color: var(--c-green); font-weight: 700; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; margin: .5rem 0 0; font-size: .88rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend > span > i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; font-style: normal; }
+  .legend > span > b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>関数の最大・最小</h1>
+  <p class="subtitle">区間の中の極値と両端の値を並べてくらべ、最大値と最小値を決める手順を動く図で確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>区間 <span id="f-ab"></span> で考えるとき、最大値と最小値の候補は 2 種類しかありません。<span id="f-fp0"></span> となる区間内の <span id="f-x1"></span> での値（極値）と、区間の両端 <span id="f-xa"></span>、<span id="f-xb"></span> での値です。この候補を全部並べて、いちばん大きい値が最大値、いちばん小さい値が最小値になります。</p>
+  <div class="formula-box" id="f-key"></div>
+  <p>ここで大事なのは、<strong>極大値がそのまま最大値になるとは限らない</strong>ことです。区間の端でもっと大きくなることがあります。</p>
+
+  <h2>解く問題</h2>
+  <div class="formula-box" id="f-problem"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <div class="tabs">
+    <button class="tab active" id="tab0">例題</button>
+    <button class="tab" id="tab1">(1)</button>
+    <button class="tab" id="tab2">(2)</button>
+  </div>
+  <p id="mode-desc"></p>
+
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="-1" max="2" step="0.05" value="-1">
+    <span class="slider-val" id="x-value">-1</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">区間をなぞる</button>
+    <button class="btn" id="reset-btn">はじめに戻す</button>
+  </div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="drag-hint">図を左右にドラッグしても点 P を動かせます。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+  <div class="note" id="note-box"></div>
+
+  <h2>候補をくらべる</h2>
+  <div class="table-wrap"><table class="compare-table" id="cand-table"></table></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+/* @...@ marks a LaTeX fragment inside a Japanese sentence */
+function mix(str){ return str.replace(/@([^@]+)@/g,(m,p)=>T(p)); }
+
+const W=600,H=410,mL=58,mR=26,PT=24,PH=350;
+const PW=W-mL-mR;
+
+const MODES=[
+  { name:'例題', c:[4,-3,-6,2], ftex:'4x^3-3x^2-6x+2',
+    a:-1, b:2, xmin:-1.45, xmax:2.45, ymin:-5.5, ymax:12.5,
+    xticks:[-1,1,2], yticks:[-5,5,10],
+    cand:[ {x:-1,   xt:'-1',              v:1,    vt:'1',              kind:'端'},
+           {x:-0.5, xt:'-\\dfrac{1}{2}',  v:3.75, vt:'\\dfrac{15}{4}', kind:'極大'},
+           {x:1,    xt:'1',               v:-3,   vt:'-3',             kind:'極小'},
+           {x:2,    xt:'2',               v:10,   vt:'10',             kind:'端'} ],
+    note:'極大値 @\\dfrac{15}{4}@ は最大値ではありません。区間の右端 @x=2@ の値 @10@ のほうが大きいからです。極値だけを見て答えを決めないようにしましょう。' },
+  { name:'(1)', c:[2,1,-4,0], ftex:'2x^3+x^2-4x',
+    a:-2, b:0, xmin:-2.4, xmax:0.4, ymin:-5.5, ymax:4.5,
+    xticks:[-2,-1], yticks:[-4,-2,2,4],
+    cand:[ {x:-2, xt:'-2', v:-4, vt:'-4', kind:'端'},
+           {x:-1, xt:'-1', v:3,  vt:'3',  kind:'極大'},
+           {x:0,  xt:'0',  v:0,  vt:'0',  kind:'端'} ],
+    note:'@f\'(x)=2(3x-2)(x+1)@ なので停留点は @x=-1@ と @x=\\dfrac{2}{3}@ ですが、後者は区間の外なので候補に入れません。ここでは極大値がそのまま最大値になり、最小値は左端で起こります。' },
+  { name:'(2)', c:[-4,9,12,-1], ftex:'-4x^3+9x^2+12x-1',
+    a:-2, b:3, xmin:-2.6, xmax:3.6, ymin:-9, ymax:49,
+    xticks:[-2,-1,1,2,3], yticks:[10,20,30,40],
+    cand:[ {x:-2,   xt:'-2',             v:43,    vt:'43',              kind:'端'},
+           {x:-0.5, xt:'-\\dfrac{1}{2}', v:-4.25, vt:'-\\dfrac{17}{4}', kind:'極小'},
+           {x:2,    xt:'2',              v:27,    vt:'27',              kind:'極大'},
+           {x:3,    xt:'3',              v:8,     vt:'8',               kind:'端'} ],
+    note:'@f\'(x)=-6(2x+1)(x-2)@ で停留点は 2 つとも区間の中にあります。極大値 @27@ より左端の値 @43@ のほうが大きいので、最大値は区間の端で起こります。' }
+];
+
+let mode=0, xVal=-1, animId=null, loV=1, hiV=1;
+
+function fv(M,x){ const c=M.c; return ((c[0]*x+c[1])*x+c[2])*x+c[3]; }
+function fpv(M,x){ const c=M.c; return (3*c[0]*x+2*c[1])*x+c[2]; }
+function px(x){ const M=MODES[mode]; return mL+(x-M.xmin)/(M.xmax-M.xmin)*PW; }
+function py(y){ const M=MODES[mode]; return PT+PH-(y-M.ymin)/(M.ymax-M.ymin)*PH; }
+
+function fmt(v){
+  if(Math.abs(v)<5e-13) v=0;
+  let s=v.toFixed(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  if(s==='-0') s='0';
+  return s;
+}
+function rel(v){ return Math.abs(parseFloat(v.toFixed(6))-v)<1e-11 ? '=' : '\\fallingdotseq'; }
+
+function best(M,dir){
+  let k=0;
+  for(let i=1;i<M.cand.length;i++){ if(dir>0 ? M.cand[i].v>M.cand[k].v : M.cand[i].v<M.cand[k].v) k=i; }
+  return M.cand[k];
+}
+
+function init(){
+  const spans={'f-ab':'a\\le x\\le b','f-fp0':"f'(x)=0",'f-x1':'x','f-xa':'x=a','f-xb':'x=b','lbl-x':'x'};
+  for(const id in spans) document.getElementById(id).innerHTML=T(spans[id]);
+  tex('\\text{候補}\\;:\\;f(a),\\quad f(b),\\quad a<x<b \\text{ での極値}',
+      document.getElementById('f-key'),true);
+  tex('\\begin{aligned}&(1)\\;\\;f(x)=2x^3+x^2-4x &&(-2\\le x\\le 0)\\\\[3pt]'
+     +'&(2)\\;\\;f(x)=-4x^3+9x^2+12x-1 &&(-2\\le x\\le 3)\\end{aligned}',
+      document.getElementById('f-problem'),true);
+  tex('\\begin{aligned}&(1)\\;\\;\\text{最大値 }3\\;(x=-1),\\quad \\text{最小値 }-4\\;(x=-2)\\\\[3pt]'
+     +'&(2)\\;\\;\\text{最大値 }43\\;(x=-2),\\quad \\text{最小値 }-\\dfrac{17}{4}\\;\\left(x=-\\dfrac{1}{2}\\right)\\end{aligned}',
+      document.getElementById('result-box'),true);
+  buildLegend();
+  initWalkthrough();
+  setupTabs();
+  setupSlider();
+  setupButtons();
+  setupDrag();
+  applyMode();
+}
+
+function buildLegend(){
+  document.getElementById('legend').innerHTML=
+    '<span><i style="background:var(--c-purple)"></i>区間の中の '+T('y=f(x)')+'</span>'+
+    '<span><i style="background:#c9c9c9"></i>区間の外（考えない）</span>'+
+    '<span><b style="background:var(--c-blue)"></b>両端の値</span>'+
+    '<span><b style="background:var(--c-red)"></b>区間の中の極値</span>'+
+    '<span><i style="background:var(--c-orange)"></i>なぞって通った高さの範囲</span>'+
+    '<span><b style="background:var(--c-green)"></b>いま見ている点 P</span>';
+}
+
+function initWalkthrough(){
+  const steps=[
+    { label:'Step 1: 導関数を求める', formula:"f(x)=4x^3-3x^2-6x+2 \\;\\Longrightarrow\\; f'(x)=12x^2-6x-6=6(2x+1)(x-1)" },
+    { label:'Step 2: 導関数が 0 になる x を出す', formula:"f'(x)=0 \\;\\Longrightarrow\\; x=-\\dfrac{1}{2},\\quad x=1" },
+    { label:'Step 3: どちらも区間の中にあることを確かめる', formula:"-1<-\\dfrac{1}{2}<2,\\qquad -1<1<2" },
+    { label:'Step 4: 増減を表に並べる', formula:"\\begin{array}{c|ccccccc} x & -1 & \\cdots & -\\frac{1}{2} & \\cdots & 1 & \\cdots & 2 \\\\ \\hline f'(x) & & + & 0 & - & 0 & + & \\\\ f(x) & 1 & \\nearrow & \\frac{15}{4} & \\searrow & -3 & \\nearrow & 10 \\end{array}" },
+    { label:'Step 5: 区間の中の極値を書き出す', formula:"\\text{極大値 }f\\!\\left(-\\dfrac{1}{2}\\right)=\\dfrac{15}{4},\\qquad \\text{極小値 }f(1)=-3" },
+    { label:'Step 6: 両端の値を書き出す', formula:"f(-1)=1,\\qquad f(2)=10" },
+    { label:'Step 7: 候補を全部くらべる', formula:"1,\\;\\; \\dfrac{15}{4},\\;\\; -3,\\;\\; 10 \\quad\\text{のうち最大は }10\\text{、最小は }-3" },
+    { label:'Step 8: 答え', formula:"\\text{最大値 }10\\;(x=2),\\qquad \\text{最小値 }-3\\;(x=1)" }
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough'), counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+=`<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click',()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+function curvePath(M,x0,x1){
+  let d='', pen=false;
+  for(let i=0;i<=300;i++){
+    const x=x0+(x1-x0)*i/300, y=fv(M,x);
+    if(y<M.ymin||y>M.ymax){ pen=false; continue; }
+    d+=(pen?'L':'M')+` ${px(x).toFixed(2)} ${py(y).toFixed(2)}`;
+    pen=true;
+  }
+  return d;
+}
+
+function draw(){
+  const M=MODES[mode], x=xVal, y=fv(M,x);
+  const HALO2=' stroke="#fff" stroke-width="2.5" paint-order="stroke" stroke-linejoin="round"';
+  const AXL='font-size:14px;color:#999;display:inline-block;background:#fff';
+  let s='', ticks='';
+
+  s+=`<rect x="${mL}" y="${PT}" width="${PW}" height="${PH}" fill="#fbfbfb"/>`;
+  s+=`<rect x="${px(M.a)}" y="${PT}" width="${px(M.b)-px(M.a)}" height="${PH}" fill="#f2f6ff"/>`;
+  M.xticks.forEach(k=>{ s+=`<line x1="${px(k)}" y1="${PT}" x2="${px(k)}" y2="${PT+PH}" stroke="#e8e8e8" stroke-width="1"/>`; });
+  M.yticks.forEach(k=>{ s+=`<line x1="${mL}" y1="${py(k)}" x2="${mL+PW}" y2="${py(k)}" stroke="#e8e8e8" stroke-width="1"/>`; });
+  s+=`<line x1="${mL}" y1="${py(0)}" x2="${mL+PW}" y2="${py(0)}" stroke="#999" stroke-width="1.5"/>`;
+  s+=`<line x1="${px(0)}" y1="${PT}" x2="${px(0)}" y2="${PT+PH}" stroke="#999" stroke-width="1.5"/>`;
+
+  /* the band records every height the point has already swept through */
+  s+=`<rect x="${mL}" y="${py(hiV)}" width="${PW}" height="${Math.max(py(loV)-py(hiV),1.5)}" fill="rgba(230,126,34,0.14)"/>`;
+  s+=`<line x1="${mL}" y1="${py(hiV)}" x2="${mL+PW}" y2="${py(hiV)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="7 4"/>`;
+  s+=`<line x1="${mL}" y1="${py(loV)}" x2="${mL+PW}" y2="${py(loV)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="7 4"/>`;
+
+  s+=`<path d="${curvePath(M,M.xmin,M.a)}" fill="none" stroke="#c9c9c9" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s+=`<path d="${curvePath(M,M.b,M.xmax)}" fill="none" stroke="#c9c9c9" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s+=`<path d="${curvePath(M,M.a,M.b)}" fill="none" stroke="var(--c-purple)" stroke-width="3"/>`;
+  s+=`<line x1="${px(M.a)}" y1="${PT}" x2="${px(M.a)}" y2="${PT+PH}" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  s+=`<line x1="${px(M.b)}" y1="${PT}" x2="${px(M.b)}" y2="${PT+PH}" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+  s+=`<line x1="${px(x)}" y1="${py(0)}" x2="${px(x)}" y2="${py(y)}" stroke="var(--c-green)" stroke-width="1.5" opacity="0.6"/>`;
+  s+=`<line x1="${mL}" y1="${py(y)}" x2="${px(x)}" y2="${py(y)}" stroke="var(--c-green)" stroke-width="1.5" opacity="0.6"/>`;
+
+  /* tick numbers are emitted after the curves so they are never buried */
+  M.xticks.forEach(k=>{
+    if(Math.abs(px(k)-px(x))<17) return;
+    ticks+=`<text x="${px(k)}" y="${py(0)+17}" text-anchor="middle" font-size="11" fill="#aaa"${HALO2}>${k}</text>`;
+  });
+  M.yticks.forEach(k=>{ ticks+=`<text x="${mL-8}" y="${py(k)+4}" text-anchor="end" font-size="11" fill="#aaa"${HALO2}>${k}</text>`; });
+  s+=ticks;
+
+  const mx=best(M,1), mn=best(M,-1);
+  M.cand.forEach(c=>{
+    const col=(c.kind==='端')?'var(--c-blue)':'var(--c-red)';
+    if(c===mx) s+=`<circle cx="${px(c.x)}" cy="${py(c.v)}" r="13" fill="none" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+    if(c===mn) s+=`<circle cx="${px(c.x)}" cy="${py(c.v)}" r="13" fill="none" stroke="var(--c-green)" stroke-width="2.5"/>`;
+    s+=`<circle cx="${px(c.x)}" cy="${py(c.v)}" r="6.5" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+  });
+
+  s+=`<circle cx="${px(x)}" cy="${py(y)}" r="9" fill="var(--c-green)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${px(x)}" cy="${py(y)}" r="9" fill="none" stroke="var(--c-green)" stroke-width="2" opacity="0.5"><animate attributeName="r" values="9;17;9" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  /* the y=f(x) caption sits at the top left; drop the P mark below the point there */
+  const pLow = py(y)<PT+56 && px(x)<mL+272;
+  s+=`<text x="${px(x)+13}" y="${pLow?py(y)+26:py(y)-11}" font-size="15" font-weight="700" fill="var(--c-green)"${HALO2}>P</text>`;
+
+  s+=`<foreignObject x="${mL+PW-28}" y="${py(0)+2}" width="28" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="${AXL}">${T('x')}</div></foreignObject>`;
+  s+=`<foreignObject x="${mL+6}" y="${PT+3}" width="250" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#7b61ff;font-weight:600;white-space:nowrap;display:inline-block;background:#fff">${T('y='+M.ftex)}</div></foreignObject>`;
+  document.getElementById('graph').innerHTML=s;
+  updateLive();
+}
+
+function updateLive(){
+  const M=MODES[mode], x=xVal, y=fv(M,x), d=fpv(M,x);
+  const dir = Math.abs(d)<1e-9 ? '\\text{（接線は水平）}' : (d>0 ? '\\text{（増加中）}' : '\\text{（減少中）}');
+  document.getElementById('live-calc').innerHTML=
+    `<div>${T('x '+rel(x)+' '+fmt(x))}</div>`+
+    `<div style="color:var(--c-green)">${T('f(x) '+rel(y)+' '+fmt(y))}</div>`+
+    `<div style="color:var(--c-blue)">${T("f'(x) "+rel(d)+' '+fmt(d)+'\\;'+dir)}</div>`+
+    `<div style="color:var(--c-orange)">なぞって通った高さ ${T(fmt(loV)+'\\;\\sim\\;'+fmt(hiV))}</div>`;
+}
+
+function buildTable(){
+  const M=MODES[mode], mx=best(M,1), mn=best(M,-1);
+  let r0='<tr><th class="rowhead">'+T('x')+'</th>', r1='<tr><th class="rowhead">種類</th>',
+      r2='<tr><th class="rowhead">'+T('f(x)')+'</th>', r3='<tr><th class="rowhead">判定</th>';
+  M.cand.forEach(c=>{
+    const cls=(c===mx)?' class="mark"':((c===mn)?' class="markmin"':'');
+    r0+='<td'+cls+'>'+T(c.xt)+'</td>';
+    r1+='<td'+cls+'>'+c.kind+'</td>';
+    r2+='<td'+cls+'>'+T(c.vt)+'</td>';
+    r3+='<td'+cls+'>'+(c===mx?'最大値':(c===mn?'最小値':'—'))+'</td>';
+  });
+  document.getElementById('cand-table').innerHTML=r0+'</tr>'+r1+'</tr>'+r2+'</tr>'+r3+'</tr>';
+}
+
+function setX(v){
+  const M=MODES[mode];
+  xVal=Math.max(M.a,Math.min(M.b,Math.round(v*20)/20));
+  const y=fv(M,xVal);
+  if(y>hiV) hiV=y;
+  if(y<loV) loV=y;
+  document.getElementById('x-slider').value=xVal;
+  document.getElementById('x-value').textContent=fmt(xVal);
+  draw();
+}
+
+function resetTrace(){
+  const M=MODES[mode];
+  xVal=M.a; hiV=fv(M,M.a); loV=fv(M,M.a);
+  document.getElementById('x-slider').value=xVal;
+  document.getElementById('x-value').textContent=fmt(xVal);
+}
+
+function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+
+function applyMode(){
+  const M=MODES[mode], sl=document.getElementById('x-slider');
+  for(let i=0;i<3;i++) document.getElementById('tab'+i).classList.toggle('active', mode===i);
+  sl.min=M.a; sl.max=M.b; sl.step='0.05';
+  document.getElementById('mode-desc').innerHTML=
+    mix('@f(x)='+M.ftex+'@ を区間 @'+M.a+'\\le x\\le '+M.b+'@ で考えます。点 P を左端から右端まで動かすと、通った高さがだいだい色の帯として残ります。区間全体をなぞりきったとき、帯の上端が最大値、下端が最小値です。');
+  document.getElementById('note-box').innerHTML=mix(M.note);
+  stopAnim();
+  resetTrace();
+  buildTable();
+  draw();
+}
+
+function setupTabs(){
+  for(let i=0;i<3;i++){
+    document.getElementById('tab'+i).addEventListener('click',()=>{ stopAnim(); mode=i; applyMode(); });
+  }
+}
+
+function setupSlider(){
+  const sl=document.getElementById('x-slider');
+  sl.addEventListener('input',()=>{ stopAnim(); setX(parseFloat(sl.value)); });
+}
+
+function setupButtons(){
+  document.getElementById('reset-btn').addEventListener('click',()=>{ stopAnim(); resetTrace(); draw(); });
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const M=MODES[mode];
+    resetTrace(); draw();
+    const from=M.a, to=M.b, duration=3600;
+    let t0=null;
+    function frame(ts){
+      if(!t0) t0=ts;
+      const pr=Math.min((ts-t0)/duration,1);
+      const eased=pr<0.5 ? 2*pr*pr : 1-Math.pow(-2*pr+2,2)/2;
+      setX(from+(to-from)*eased);
+      animId = pr<1 ? requestAnimationFrame(frame) : null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function setupDrag(){
+  const svg=document.getElementById('graph'), wrap=document.getElementById('svg-wrap');
+  let dragging=false;
+  function toX(cx){
+    const M=MODES[mode], rect=svg.getBoundingClientRect();
+    const sx=(cx-rect.left)/rect.width*W;
+    return M.xmin+(sx-mL)/PW*(M.xmax-M.xmin);
+  }
+  function startDrag(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    const sy=(cy-rect.top)/rect.height*H;
+    if(sy<PT-14||sy>PT+PH+14) return;
+    stopAnim(); dragging=true; setX(toX(cx));
+  }
+  function moveDrag(cx){ if(dragging) setX(toX(cx)); }
+  function endDrag(){ dragging=false; }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); moveDrag(e.clientX); } });
+  window.addEventListener('mouseup', endDrag);
+  wrap.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

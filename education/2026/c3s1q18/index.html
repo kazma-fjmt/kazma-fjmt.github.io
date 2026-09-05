@@ -36,6 +36,9 @@
     margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
   }
   .svg-container svg { display: block; width: 100%; height: auto; }
+  /* draw() replaces the SVG contents, which would orphan a touch sequence that
+     started on a child; keep hit-testing on the wrapper so the drag survives */
+  .svg-container > svg { pointer-events: none; }
 
   .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .88rem; margin: .5rem 0 .75rem; }
   .legend > span { display: inline-flex; align-items: center; gap: .4rem; }
