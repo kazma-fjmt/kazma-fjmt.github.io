@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>累乗根と有理数の指数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.12rem; }
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 700; padding: .7rem .5rem; border-radius: 10px;
+    min-height: 48px; cursor: pointer; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  /* each read-out line is its own flex box: KaTeX \dfrac overflows a plain line box and would collide */
+  .live-calc .lc-line { display: flex; justify-content: center; align-items: center; min-height: 1.9rem; padding: .45rem 0; }
+  .live-calc .sumline { color: var(--c-orange); }
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; min-width: 2.5rem; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1rem; font-weight: 700; color: var(--accent); min-width: 3rem; text-align: center; }
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>累乗根と有理数の指数</h1>
+  <p class="subtitle">根号を分数の指数に直して、累乗根の混じった計算をしましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p><span id="f-cond"></span> が正の整数のとき、累乗根は次のように分数の指数で書けます。</p>
+  <div class="formula-box" id="def-box"></div>
+  <div class="note">根号のままでは指数法則が使えません。まず<strong>根指数を分母、中の指数を分子</strong>にして分数の指数に直し、そのうえで指数を足し引きします。</div>
+
+  <h2>根号と分数の指数を行き来する</h2>
+  <p>根指数 <span id="f-n"></span> と中の指数 <span id="f-m"></span> のスライダーを動かすと、目盛りの細かさと点の位置が変わります。</p>
+  <div class="slider-row">
+    <label><span id="lbl-n"></span> =</label>
+    <input type="range" id="n-slider" min="2" max="9" step="1" value="4">
+    <span class="slider-val" id="n-value">4</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-m"></span> =</label>
+    <input type="range" id="m-slider" min="1" max="9" step="1" value="3">
+    <span class="slider-val" id="m-value">3</span>
+  </div>
+  <div class="svg-container">
+    <svg id="ruler" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="ruler-calc"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>次の計算をしましょう。タブをタップすると問題を切りかえられます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" id="tab0">(1)</button>
+    <button class="tab" id="tab1">(2)</button>
+  </div>
+  <div class="formula-box" id="prob-box"></div>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>指数のタイルで見る</h2>
+  <p>指数を共通の分母でそろえると、かけ算は右向きのタイル、わり算は左向きのタイルになります。積み上げて残ったタイルが答えの指数です。ステップを進めるとタイルが 1 段ずつ増えます。</p>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+function LC(){return [...arguments].map(l=>'<div class="lc-line">'+l+'</div>').join('');}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function R(n,d){d=(d===undefined?1:d);if(d<0){n=-n;d=-d;}const g=gcd(n,d);return {n:n/g,d:d/g};}
+function radd(a,b){return R(a.n*b.d+b.n*a.d,a.d*b.d);}
+function rval(a){return a.n/a.d;}
+function rtex(a){
+  if(a.d===1) return String(a.n);
+  return (a.n<0?'-\\frac{'+(-a.n)+'}{'+a.d+'}':'\\frac{'+a.n+'}{'+a.d+'}');
+}
+function rtexD(a){
+  if(a.d===1) return String(a.n);
+  return (a.n<0?'-\\dfrac{'+(-a.n)+'}{'+a.d+'}':'\\dfrac{'+a.n+'}{'+a.d+'}');
+}
+function rad(k,inner){ return k===2 ? '\\sqrt{'+inner+'}' : '\\sqrt['+k+']{'+inner+'}'; }
+function foLabel(x,y,w,h,html,align,fs){
+  return '<foreignObject x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h+'">'+
+    '<div xmlns="http://www.w3.org/1999/xhtml" style="height:'+h+'px;display:flex;align-items:center;justify-content:'+
+    (align==='left'?'flex-start':(align==='right'?'flex-end':'center'))+
+    ';font-size:'+(fs||13)+'px;white-space:nowrap">'+html+'</div></foreignObject>';
+}
+
+const PROBLEMS = [
+  {
+    expr:'\\sqrt[4]{a}\\times\\sqrt[8]{a^{3}}\\div\\sqrt{a}',
+    D:8,
+    blocks:[
+      { base:'a',
+        rows:[
+          {lab:'\\sqrt[4]{a}\\;\\to\\;a^{\\frac14}', e:R(1,4), col:'var(--c-blue)'},
+          {lab:'\\times\\sqrt[8]{a^{3}}\\;\\to\\;a^{\\frac38}', e:R(3,8), col:'var(--c-green)'},
+          {lab:'\\div\\sqrt{a}\\;\\to\\;a^{-\\frac12}', e:R(-1,2), col:'var(--c-red)'}
+        ],
+        sum:'\\dfrac{2+3-4}{8}=\\dfrac18' }
+    ],
+    goalLab:'a^{\\frac18}=\\sqrt[8]{a}',
+    steps:[
+      {n:1,t:0,label:'Step 1: 4 乗根を分数の指数に直す', f:'\\sqrt[4]{a}=a^{\\frac14}'},
+      {n:2,t:0,label:'Step 2: 8 乗根も同じように直す', f:'\\sqrt[8]{a^{3}}=a^{\\frac38}'},
+      {n:3,t:0,label:'Step 3: わり算は指数を引く', f:'\\sqrt{a}=a^{\\frac12}\\;\\text{なので}\\;\\div\\sqrt{a}\\;\\text{は指数}\\;-\\dfrac12'},
+      {n:3,t:0,label:'Step 4: 指数を 1 つにまとめる', f:'\\sqrt[4]{a}\\times\\sqrt[8]{a^{3}}\\div\\sqrt{a}=a^{\\frac14+\\frac38-\\frac12}'},
+      {n:3,t:1,label:'Step 5: 分母 8 に通分して計算する', f:'\\dfrac14+\\dfrac38-\\dfrac12=\\dfrac{2+3-4}{8}=\\dfrac18'},
+      {n:3,t:1,goal:true,label:'Step 6: 答え', f:'\\sqrt[4]{a}\\times\\sqrt[8]{a^{3}}\\div\\sqrt{a}=a^{\\frac18}=\\sqrt[8]{a}'}
+    ]
+  },
+  {
+    expr:'\\sqrt[3]{ab^{2}}\\div\\sqrt[6]{a^{5}b}\\times\\sqrt{a}',
+    D:6,
+    blocks:[
+      { base:'a',
+        rows:[
+          {lab:'\\sqrt[3]{ab^{2}}\\;\\to\\;a^{\\frac13}', e:R(1,3), col:'var(--c-blue)'},
+          {lab:'\\div\\sqrt[6]{a^{5}b}\\;\\to\\;a^{-\\frac56}', e:R(-5,6), col:'var(--c-red)'},
+          {lab:'\\times\\sqrt{a}\\;\\to\\;a^{\\frac12}', e:R(1,2), col:'var(--c-green)'}
+        ],
+        sum:'\\dfrac{2-5+3}{6}=0' },
+      { base:'b',
+        rows:[
+          {lab:'\\sqrt[3]{ab^{2}}\\;\\to\\;b^{\\frac23}', e:R(2,3), col:'var(--c-blue)'},
+          {lab:'\\div\\sqrt[6]{a^{5}b}\\;\\to\\;b^{-\\frac16}', e:R(-1,6), col:'var(--c-red)'},
+          {lab:'\\times\\sqrt{a}\\;\\to\\;b^{0}', e:R(0), col:'var(--c-green)'}
+        ],
+        sum:'\\dfrac{4-1}{6}=\\dfrac12' }
+    ],
+    goalLab:'a^{0}b^{\\frac12}=\\sqrt{b}',
+    steps:[
+      {n:1,t:0,label:'Step 1: 根号の中を底ごとに分ける', f:'\\sqrt[3]{ab^{2}}=\\left(ab^{2}\\right)^{\\frac13}=a^{\\frac13}b^{\\frac23}'},
+      {n:2,t:0,label:'Step 2: わる数も分数の指数に直す', f:'\\sqrt[6]{a^{5}b}=a^{\\frac56}b^{\\frac16}\\;\\text{なので指数は}\\;-\\dfrac56,\\;-\\dfrac16'},
+      {n:3,t:0,label:'Step 3: 最後の因数を直す', f:'\\sqrt{a}=a^{\\frac12}\\;\\text{で}\\;b\\;\\text{を含まないから}\\;b^{0}'},
+      {n:3,t:0,label:'Step 4: 底ごとに指数を集める', f:'=a^{\\frac13-\\frac56+\\frac12}\\,b^{\\frac23-\\frac16}'},
+      {n:3,t:1,label:'Step 5: 底 a の指数を通分する', f:'\\dfrac13-\\dfrac56+\\dfrac12=\\dfrac{2-5+3}{6}=0'},
+      {n:3,t:2,label:'Step 6: 底 b の指数を通分する', f:'\\dfrac23-\\dfrac16=\\dfrac{4-1}{6}=\\dfrac36=\\dfrac12'},
+      {n:3,t:2,goal:true,label:'Step 7: 答え', f:'\\sqrt[3]{ab^{2}}\\div\\sqrt[6]{a^{5}b}\\times\\sqrt{a}=a^{0}b^{\\frac12}=\\sqrt{b}'}
+    ]
+  }
+];
+
+const W=600, LABW=212, XL=220, XR=592;
+const TOPPAD=38, ROWH=52, SUMGAP=6, ANNOT=48, BLOCKGAP=16, BOTPAD=4;
+let curP=0, curStep=0, animId=null, animProg=null;
+
+function blockSum(bl){ let s=R(0); for(const r of bl.rows) s=radd(s,r.e); return s; }
+function progress(){ return animProg!==null ? animProg : PROBLEMS[curP].steps[curStep].n; }
+function totLevel(){
+  const pr=PROBLEMS[curP];
+  if(animProg!==null) return animProg>=pr.blocks[0].rows.length-1e-9 ? pr.blocks.length : 0;
+  return pr.steps[curStep].t;
+}
+function svgHeight(pr){
+  let h=TOPPAD+BOTPAD;
+  for(const b of pr.blocks) h+=b.rows.length*ROWH+SUMGAP+ROWH+ANNOT;
+  h+=BLOCKGAP*(pr.blocks.length-1);
+  return h;
+}
+
+function draw(){
+  const pr=PROBLEMS[curP];
+  const p=progress(), tl=totLevel();
+  const sc=(XR-XL)/2, X=v=>XL+sc+v*sc;
+  const H=svgHeight(pr);
+  let y=TOPPAD+ROWH/2;
+  let s='', bi=0;
+  for(const bl of pr.blocks){
+    for(let i=0;i<bl.rows.length;i++){
+      const r=bl.rows[i];
+      s+=gridRow(X,pr.D,y);
+      s+=foLabel(4,y-ROWH/2+2,LABW,ROWH-4,'<span style="color:'+r.col+'">'+T(r.lab)+'</span>','right',13);
+      const f=Math.max(0,Math.min(1,p-i));
+      s+=tiles(X,pr.D,y,r.e,f,r.col);
+      if(rval(r.e)===0 && f>0){
+        s+=foLabel(X(0)+8,y-13,70,26,'<span style="color:'+r.col+';font-weight:600">'+T('0\\;\\text{個}')+'</span>','left',13);
+      }
+      y+=ROWH;
+    }
+    const lineY=y-ROWH/2+SUMGAP/2;
+    s+='<line x1="8" y1="'+lineY.toFixed(1)+'" x2="'+(W-8)+'" y2="'+lineY.toFixed(1)+'" stroke="#ddd" stroke-width="1.5"/>';
+    y+=SUMGAP;
+    const sum=blockSum(bl);
+    const show=tl>bi;
+    s+=gridRow(X,pr.D,y);
+    s+=foLabel(4,y-ROWH/2+2,LABW,ROWH-4,'<span style="color:'+(show?'var(--c-orange)':'#bbb')+';font-weight:600">'+
+      T('\\text{合計 }'+bl.base+'^{'+(show?rtex(sum):'\\;?\\;')+'}')+'</span>','right',13);
+    if(show){
+      s+=tiles(X,pr.D,y,sum,1,'var(--c-orange)');
+      const ex=rval(sum);
+      s+='<circle cx="'+X(ex).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="7;13;7" dur="1.1s" repeatCount="indefinite"/></circle>';
+    }
+    y+=ROWH/2;
+    if(show){
+      s+=foLabel(W/2-140,y+2,280,ANNOT-4,'<span style="color:var(--c-orange);font-weight:600">'+T(bl.sum)+'</span>','center',13);
+    }
+    y+=ANNOT+BLOCKGAP+ROWH/2;
+    bi++;
+  }
+  if(tl>=pr.blocks.length){
+    s+=foLabel(W/2-160,2,320,40,'<span style="color:var(--c-orange);font-weight:700">'+T(pr.goalLab)+'</span>','center',17);
+  }
+  const g=document.getElementById('graph');
+  g.setAttribute('viewBox','0 0 '+W+' '+H);
+  g.innerHTML=s;
+
+  const shown=Math.min(pr.blocks[0].rows.length,Math.floor(p+1e-9));
+  let txt='';
+  bi=0;
+  for(const bl of pr.blocks){
+    let acc=R(0);
+    const parts=[];
+    for(let i=0;i<shown;i++){ acc=radd(acc,bl.rows[i].e); parts.push(rtex(bl.rows[i].e)); }
+    const body = parts.length ? parts.join('+').replace(/\+-/g,'-') : '0';
+    txt += '<div class="lc-line">'+T('\\text{底 }'+bl.base+':\\;'+body+'\\;=\\;'+rtexD(acc))+'</div>';
+    if(tl>bi) txt += '<div class="lc-line sumline">'+T('\\text{通分すると}\\;'+bl.sum)+'</div>';
+    bi++;
+  }
+  document.getElementById('live-calc').innerHTML=txt;
+}
+
+function gridRow(X,D,y){
+  let s='';
+  const h=16;
+  for(let k=-D;k<=D;k++){
+    s+='<line x1="'+X(k/D).toFixed(1)+'" y1="'+(y-h).toFixed(1)+'" x2="'+X(k/D).toFixed(1)+'" y2="'+(y+h).toFixed(1)+
+      '" stroke="'+(k===0?'#aaa':'#f0f0f0')+'" stroke-width="'+(k===0?1.5:1)+'"/>';
+  }
+  s+='<line x1="'+X(-1).toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+X(1).toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#f2f2f2" stroke-width="1"/>';
+  return s;
+}
+
+function tiles(X,D,y,e,f,col){
+  if(f<=0) return '';
+  const cells=Math.round(Math.abs(rval(e))*D);
+  if(cells===0) return '';
+  const sign=rval(e)<0?-1:1;
+  const h=24;
+  let s='';
+  for(let k=0;k<cells;k++){
+    const g=Math.max(0,Math.min(1,f*cells-k));
+    if(g<=0) break;
+    const a=sign*k/D, b=sign*(k+g)/D;
+    const x1=Math.min(X(a),X(b));
+    s+='<rect x="'+x1.toFixed(1)+'" y="'+(y-h/2).toFixed(1)+'" width="'+Math.abs(X(b)-X(a)).toFixed(1)+
+      '" height="'+h+'" fill="'+col+'" opacity="0.8" stroke="#fff" stroke-width="1" rx="2"/>';
+  }
+  if(sign<0){
+    const xe=X(-cells/D*f);
+    s+='<line x1="'+X(0).toFixed(1)+'" y1="'+(y-h/2-5).toFixed(1)+'" x2="'+xe.toFixed(1)+'" y2="'+(y-h/2-5).toFixed(1)+
+      '" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="4 3"/>';
+  }
+  return s;
+}
+
+function drawRuler(){
+  const n=parseInt(document.getElementById('n-slider').value,10);
+  const m=parseInt(document.getElementById('m-slider').value,10);
+  document.getElementById('n-value').textContent=String(n);
+  document.getElementById('m-value').textContent=String(m);
+  const XA=50, XB=560, VMAX=4.6;
+  const X=v=>XA+(v/VMAX)*(XB-XA);
+  const axisY=142;
+  let s='';
+  for(let k=0;k<=Math.floor(VMAX*n);k++){
+    s+='<line x1="'+X(k/n).toFixed(1)+'" y1="'+(axisY-7)+'" x2="'+X(k/n).toFixed(1)+'" y2="'+(axisY+7)+'" stroke="#e6e6e6" stroke-width="1"/>';
+  }
+  s+='<line x1="'+XA+'" y1="'+axisY+'" x2="'+XB+'" y2="'+axisY+'" stroke="#999" stroke-width="1.5"/>';
+  for(let k=0;k<=4;k++){
+    s+='<line x1="'+X(k).toFixed(1)+'" y1="'+(axisY-12)+'" x2="'+X(k).toFixed(1)+'" y2="'+(axisY+12)+'" stroke="#999" stroke-width="1.5"/>';
+    s+='<text x="'+X(k).toFixed(1)+'" y="'+(axisY+30)+'" text-anchor="middle" font-size="12" fill="#aaa">'+k+'</text>';
+  }
+  s+=foLabel(XB-166,axisY+38,162,26,'<span style="color:#999">'+T('\\text{指数の目盛り}')+'</span>','right',12);
+  const v=m/n;
+  s+='<rect x="'+X(0).toFixed(1)+'" y="'+(axisY-13)+'" width="'+(X(v)-X(0)).toFixed(1)+'" height="26" fill="var(--c-blue)" opacity="0.18" rx="3"/>';
+  s+='<line x1="'+X(v).toFixed(1)+'" y1="112" x2="'+X(v).toFixed(1)+'" y2="'+(axisY-10)+'" stroke="var(--c-blue)" stroke-width="1" stroke-dasharray="4 3"/>';
+  s+='<circle cx="'+X(v).toFixed(1)+'" cy="'+axisY+'" r="7" fill="var(--c-blue)"/>';
+  s+='<circle cx="'+X(v).toFixed(1)+'" cy="'+axisY+'" r="7" fill="none" stroke="var(--c-blue)" stroke-width="2.5"><animate attributeName="r" values="7;14;7" dur="1.3s" repeatCount="indefinite"/></circle>';
+  const lx=Math.max(2,Math.min(X(v)-95,W-192));
+  const rr=R(m,n);
+  s+=foLabel(lx,30,190,40,'<span style="color:var(--c-blue);font-weight:700">'+T('a^{'+rtex(rr)+'}')+'</span>','center',16);
+  s+=foLabel(lx,72,190,38,'<span style="color:var(--c-blue)">'+T(rad(n,'a^{'+m+'}'))+'</span>','center',15);
+  document.getElementById('ruler').innerHTML=s;
+  let msg=LC(T(rad(n,'a^{'+m+'}')+'=a^{\\frac{'+m+'}{'+n+'}}'),
+    T('\\left(a^{\\frac{'+m+'}{'+n+'}}\\right)^{'+n+'}=a^{\\frac{'+m+'}{'+n+'}\\times '+n+'}=a^{'+m+'}'));
+  if(rr.d!==n) msg+=LC(T('a^{\\frac{'+m+'}{'+n+'}}=a^{'+rtex(rr)+'}'+(rr.d===1?'':'='+rad(rr.d,'a^{'+rr.n+'}'))));
+  document.getElementById('ruler-calc').innerHTML=msg;
+}
+
+function renderSteps(){
+  const pr=PROBLEMS[curP];
+  let html='';
+  for(let i=0;i<=curStep;i++){
+    html+='<div class="step '+(i===curStep?'current':'')+'"><div class="label">'+pr.steps[i].label+
+      '</div><div class="formula-line">'+T(pr.steps[i].f)+'</div></div>';
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=(curStep+1)+' / '+pr.steps.length;
+  document.getElementById('prev').disabled = curStep===0;
+  document.getElementById('next').disabled = curStep===pr.steps.length-1;
+}
+
+function selectProblem(i){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  animProg=null;
+  curP=i; curStep=0;
+  for(let k=0;k<2;k++) document.getElementById('tab'+k).classList.toggle('active',k===i);
+  tex(PROBLEMS[i].expr, document.getElementById('prob-box'), true);
+  renderSteps(); draw();
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const pr=PROBLEMS[curP];
+    const total=pr.blocks[0].rows.length, dur=900*total;
+    let t0=null;
+    curStep=0; renderSteps();
+    function frame(ts){
+      if(!t0) t0=ts;
+      const r=Math.min((ts-t0)/dur,1);
+      animProg=r*total;
+      draw();
+      if(r<1){ animId=requestAnimationFrame(frame); }
+      else { animId=null; animProg=null; curStep=pr.steps.length-1; renderSteps(); draw(); }
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function init(){
+  document.getElementById('f-cond').innerHTML=T('a>0\\;\\text{で}\\;m,\\;n');
+  document.getElementById('f-n').innerHTML=T('n');
+  document.getElementById('f-m').innerHTML=T('m');
+  document.getElementById('lbl-n').innerHTML=T('n');
+  document.getElementById('lbl-m').innerHTML=T('m');
+  tex('\\sqrt[n]{a^{m}}=a^{\\frac{m}{n}},\\qquad \\sqrt[n]{a}=a^{\\frac1n},\\qquad \\sqrt{a}=a^{\\frac12}', document.getElementById('def-box'), true);
+  for(let k=0;k<2;k++) document.getElementById('tab'+k).addEventListener('click',()=>selectProblem(k));
+  document.getElementById('prev').addEventListener('click',()=>{ if(curStep>0){curStep--;renderSteps();draw();} });
+  document.getElementById('next').addEventListener('click',()=>{ if(curStep<PROBLEMS[curP].steps.length-1){curStep++;renderSteps();draw();} });
+  ['n-slider','m-slider'].forEach(id=>document.getElementById(id).addEventListener('input',drawRuler));
+  setupAnimation();
+  selectProblem(0);
+  drawRuler();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

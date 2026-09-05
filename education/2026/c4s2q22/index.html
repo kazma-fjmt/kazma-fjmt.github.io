@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>小数の位と常用対数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .live-calc .big { font-size: 1.15rem; font-weight: 700; color: var(--c-orange); display: block; margin-top: .4rem; }
+  .live-calc .actual { font-size: .82rem; color: var(--muted); display: block; margin-top: .5rem; word-break: break-all; line-height: 1.5; }
+
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+
+  .strip-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem .75rem .5rem; margin: .75rem 0; overflow-x: auto;
+  }
+  .strip { display: flex; align-items: flex-end; gap: 3px; min-width: max-content; justify-content: center; }
+  .dcell { display: flex; flex-direction: column; align-items: center; }
+  .dcell .d {
+    width: 2.1rem; height: 2.6rem; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e3e6ee; border-radius: 6px; background: #fafbff;
+    font-size: 1.15rem; font-weight: 600; color: #bbb; font-variant-numeric: tabular-nums;
+  }
+  .dcell .d.first { color: #fff; background: var(--c-orange); border-color: var(--c-orange); animation: pop .35s ease; }
+  .dcell .d.rest { color: var(--c-blue); background: #fff; }
+  .dcell .d.lead { border: none; background: none; color: var(--fg); }
+  .dcell .idx { font-size: .7rem; color: #bbb; margin-top: .2rem; height: 1rem; }
+  .dcell .idx.on { color: var(--c-orange); font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { from { transform: scale(.6); } to { transform: scale(1); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>小数の位と常用対数</h1>
+  <p class="subtitle">常用対数が負のとき、小数第何位に初めて 0 でない数字が現れるかを読み取りましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>正の数 <span id="f-N"></span> が次を満たすとします。</p>
+  <div class="formula-box" id="f-key1"></div>
+  <p>各辺は <span id="f-ten"></span> を底とする対数とみなせます。底が 1 より大きいので大小の向きは変わりません。</p>
+  <div class="formula-box" id="f-key2"></div>
+  <p><span id="f-N2"></span> は <span id="f-lo"></span> 以上 <span id="f-hi"></span> 未満なので、小数第 1 位から第 3 位までは 0 が並び、小数第 <span id="f-n2"></span> 位に初めて 0 でない数字が現れます。</p>
+  <div class="note" id="note1"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p id="q-text"></p>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>スライダーで指数 <span id="f-nn"></span> を変えると、<span id="f-half"></span> が常用対数の数直線のどこに入るかが分かります。図を直接ドラッグしても動かせます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-n"></span> =</label>
+    <input type="range" id="n-slider" min="1" max="30" step="1" value="12">
+    <span class="slider-val" id="n-value">12</span>
+  </div>
+
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 236" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <p class="drag-hint">数直線の目盛り <span id="f-k"></span> は <span id="f-10k"></span> の位置です。帯の中の数字は、その範囲の数で初めて 0 でない数字が現れる位です。</p>
+
+  <div class="strip-wrap"><div class="strip" id="strip"></div></div>
+  <p class="drag-hint">小数の各位に並ぶ数字です。オレンジの枠が、初めて 0 でない数字が現れる位です。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="result-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const LOG2 = 0.3010;
+const W = 600;
+const AX0 = 40, AX1 = 568, VMIN = -11, VMAX = 0;
+const BAND_TOP = 90, BAND_BOT = 160;
+const PLACES = 12;
+
+function px(v){ return AX0 + (v - VMIN) * (AX1 - AX0) / (VMAX - VMIN); }
+
+let nVal = 12;
+let animId = null;
+
+function init(){
+  document.getElementById('f-N').innerHTML = T('N');
+  document.getElementById('f-N2').innerHTML = T('N');
+  document.getElementById('f-ten').innerHTML = T('10');
+  document.getElementById('f-lo').innerHTML = T('10^{-4} = 0.0001');
+  document.getElementById('f-hi').innerHTML = T('10^{-3} = 0.001');
+  document.getElementById('f-n2').innerHTML = T('4');
+  document.getElementById('f-nn').innerHTML = T('n');
+  document.getElementById('f-half').innerHTML = T('\\left(\\frac{1}{2}\\right)^{n}');
+  document.getElementById('f-k').innerHTML = T('k');
+  document.getElementById('f-10k').innerHTML = T('10^{k}');
+  document.getElementById('lbl-n').innerHTML = T('n');
+
+  tex('-4 \\le \\log_{10} N < -3', document.getElementById('f-key1'), true);
+  tex('10^{-4} \\le N < 10^{-3}', document.getElementById('f-key2'), true);
+
+  document.getElementById('note1').innerHTML =
+    '一般に ' + T('-n \\le \\log_{10} N < -n+1') + ' のとき ' + T('10^{-n} \\le N < 10^{-n+1}') +
+    ' となり、小数第 ' + T('n') + ' 位に初めて 0 でない数字が現れます。';
+
+  document.getElementById('q-text').innerHTML =
+    T('\\left(\\dfrac{1}{2}\\right)^{30}') + ' を小数で表したとき、小数第何位に初めて 0 でない数字が現れるかを求めましょう。ただし ' +
+    T('\\log_{10} 2 = 0.3010') + ' とします。';
+
+  tex('\\text{小数第}\\;10\\;\\text{位に初めて}\\;0\\;\\text{でない数字が現れる}', document.getElementById('result-box'), true);
+
+  initWalkthrough();
+  setupSlider();
+  setupAnimation();
+  setupDrag();
+  draw();
+}
+
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 方針を決める',
+      formula: '\\text{位を知るには両辺の常用対数をとればよい}' },
+    { label: 'Step 2: 常用対数をとる',
+      formula: '\\log_{10}\\left(\\dfrac{1}{2}\\right)^{30} = 30 \\log_{10}\\dfrac{1}{2}' },
+    { label: 'Step 3: 逆数の対数は符号が変わる',
+      formula: '\\log_{10}\\dfrac{1}{2} = -\\log_{10} 2 = -0.3010' },
+    { label: 'Step 4: 値を求める',
+      formula: '30 \\times (-0.3010) = -9.03' },
+    { label: 'Step 5: 整数で挟む',
+      formula: '-10 < \\log_{10}\\left(\\dfrac{1}{2}\\right)^{30} < -9' },
+    { label: 'Step 6: 10 の累乗で挟む',
+      formula: '10^{-10} < \\left(\\dfrac{1}{2}\\right)^{30} < 10^{-9}' },
+    { label: 'Step 7: 位を読み取る',
+      formula: '10^{-10} = 0.0000000001\\;\\text{は小数第}\\;10\\;\\text{位が初めての}\\;1' },
+    { label: 'Step 8: 結論',
+      formula: '\\text{小数第}\\;10\\;\\text{位に初めて}\\;0\\;\\text{でない数字が現れる}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += '<div class="step ' + (i===cur?'current':'') + '"><div class="label">' + steps[i].label +
+              '</div><div class="formula-line">' + T(steps[i].formula) + '</div></div>';
+    }
+    container.innerHTML = html;
+    counter.textContent = (cur+1) + ' / ' + steps.length;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* Exact decimal digits of (1/2)^n = 5^n / 10^n */
+function decimalDigits(n){
+  let r = 1n;
+  for(let i=0;i<n;i++) r *= 5n;
+  const s = r.toString();
+  let d = '0'.repeat(Math.max(0, n - s.length)) + s;
+  while(d.length < PLACES) d += '0';
+  return d;
+}
+
+function draw(){
+  const n = nVal;
+  const vAbs = n * LOG2;
+  const v = -vAbs;
+  const k = Math.ceil(vAbs);
+  const svg = document.getElementById('graph');
+  let s = '';
+
+  /* Place bands: band j covers -j <= v < -j+1 */
+  for(let j=1;j<=11;j++){
+    const x0 = px(-j), x1 = px(-j+1);
+    const active = (j === k);
+    const fill = active ? 'rgba(230,126,34,0.20)' : (j % 2 === 0 ? '#f6f8fd' : '#ffffff');
+    s += '<rect x="' + x0 + '" y="' + BAND_TOP + '" width="' + (x1-x0) + '" height="' + (BAND_BOT-BAND_TOP) +
+         '" fill="' + fill + '" stroke="#e6e9f2" stroke-width="1"/>';
+    s += '<text x="' + ((x0+x1)/2) + '" y="' + (BAND_TOP+42) + '" text-anchor="middle" font-size="' + (active?16:12) +
+         '" font-weight="' + (active?700:400) + '" fill="' + (active?'var(--c-orange)':'#aab') + '">' + j + '</text>';
+  }
+
+  /* Axis */
+  s += '<line x1="' + (AX0-12) + '" y1="' + BAND_BOT + '" x2="' + (AX1+16) + '" y2="' + BAND_BOT + '" stroke="#666" stroke-width="1.5"/>';
+  s += '<path d="M ' + (AX1+16) + ' ' + BAND_BOT + ' L ' + (AX1+6) + ' ' + (BAND_BOT-4) + ' L ' + (AX1+6) + ' ' + (BAND_BOT+4) + ' Z" fill="#666"/>';
+
+  for(let i=VMIN;i<=VMAX;i++){
+    const bound = (i === -k || i === -k+1);
+    s += '<line x1="' + px(i) + '" y1="' + BAND_BOT + '" x2="' + px(i) + '" y2="' + (BAND_BOT+8) +
+         '" stroke="' + (bound?'var(--c-green)':'#999') + '" stroke-width="' + (bound?2.5:1) + '"/>';
+    s += '<text x="' + px(i) + '" y="' + (BAND_BOT+24) + '" text-anchor="middle" font-size="' + (bound?13:11) +
+         '" font-weight="' + (bound?700:400) + '" fill="' + (bound?'var(--c-green)':'#aaa') + '">' + i + '</text>';
+  }
+
+  /* Boundary verticals */
+  s += '<line x1="' + px(-k) + '" y1="' + BAND_TOP + '" x2="' + px(-k) + '" y2="' + BAND_BOT + '" stroke="var(--c-green)" stroke-width="2"/>';
+  s += '<line x1="' + px(-k+1) + '" y1="' + BAND_TOP + '" x2="' + px(-k+1) + '" y2="' + BAND_BOT + '" stroke="var(--c-green)" stroke-width="2"/>';
+
+  /* Marker */
+  const mx = px(Math.max(v, VMIN));
+  s += '<line x1="' + mx + '" y1="54" x2="' + mx + '" y2="' + (BAND_BOT+8) + '" stroke="var(--c-orange)" stroke-width="3" stroke-dasharray="6 4"/>';
+  s += '<circle cx="' + mx + '" cy="' + BAND_BOT + '" r="7" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5">' +
+       '<animate attributeName="r" values="7;11;7" dur="1.4s" repeatCount="indefinite"/></circle>';
+
+  const lx = Math.max(2, Math.min(mx - 60, W - 122));
+  s += '<foreignObject x="' + lx + '" y="4" width="120" height="46"><div xmlns="http://www.w3.org/1999/xhtml" ' +
+       'style="font-size:15px;color:var(--c-orange);font-weight:700;text-align:center;white-space:nowrap"><span style="background:rgba(255,255,255,.88);border-radius:4px;padding:0 4px">' +
+       T('\\left(\\frac{1}{2}\\right)^{' + n + '}') + '</span></div></foreignObject>';
+
+  s += '<foreignObject x="150" y="' + (BAND_BOT+34) + '" width="300" height="36"><div xmlns="http://www.w3.org/1999/xhtml" ' +
+       'style="font-size:14px;color:var(--c-green);font-weight:600;text-align:center;white-space:nowrap">' +
+       T('10^{' + (-k) + '} \\le N < 10^{' + (-k+1) + '}') + '</div></foreignObject>';
+
+  svg.innerHTML = s;
+
+  /* Decimal place strip */
+  const digits = decimalDigits(n);
+  let h = '<div class="dcell"><div class="d lead">0.</div><div class="idx">&nbsp;</div></div>';
+  for(let i=1;i<=PLACES;i++){
+    const cls = i < k ? '' : (i === k ? 'first' : 'rest');
+    h += '<div class="dcell"><div class="d ' + cls + '">' + digits[i-1] + '</div>' +
+         '<div class="idx ' + (i===k?'on':'') + '">' + i + '</div></div>';
+  }
+  h += '<div class="dcell"><div class="d rest">&#8230;</div><div class="idx">&nbsp;</div></div>';
+  document.getElementById('strip').innerHTML = h;
+
+  /* Live calculation */
+  document.getElementById('live-calc').innerHTML =
+    T('\\log_{10}\\left(\\frac{1}{2}\\right)^{' + n + '} = ' + n + ' \\times (-0.3010) = -' + vAbs.toFixed(4)) + '<br>' +
+    T('-' + k + ' \\le \\log_{10}\\left(\\frac{1}{2}\\right)^{' + n + '} < ' + (-k+1)) + '<br>' +
+    T('10^{-' + k + '} \\le \\left(\\frac{1}{2}\\right)^{' + n + '} < 10^{' + (-k+1) + '}') +
+    '<span class="big">小数第 ' + k + ' 位に初めて 0 でない数字</span>' +
+    '<span class="actual">実際の値: 0.' + digits.slice(0, Math.max(n, 1)) + '</span>';
+}
+
+function setSlider(n){
+  nVal = n;
+  document.getElementById('n-slider').value = n;
+  document.getElementById('n-value').textContent = n;
+  draw();
+}
+
+function setupSlider(){
+  const slider = document.getElementById('n-slider');
+  slider.addEventListener('input', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    setSlider(parseInt(slider.value, 10));
+  });
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    const startN = 1, endN = 30, duration = 4000;
+    let startTime = null;
+    function animate(ts){
+      if(!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      const eased = progress < 0.5 ? 2*progress*progress : 1 - Math.pow(-2*progress+2, 2)/2;
+      const n = Math.round(startN + (endN - startN) * eased);
+      if(n !== nVal) setSlider(n);
+      if(progress < 1) animId = requestAnimationFrame(animate); else animId = null;
+    }
+    setSlider(startN);
+    animId = requestAnimationFrame(animate);
+  });
+}
+
+function setupDrag(){
+  const wrap = document.getElementById('svg-wrap');
+  const svg = document.getElementById('graph');
+  let dragging = false;
+
+  function toN(cx){
+    const rect = svg.getBoundingClientRect();
+    const sx = (cx - rect.left) / rect.width * W;
+    const v = VMIN + (sx - AX0) * (VMAX - VMIN) / (AX1 - AX0);
+    return Math.max(1, Math.min(30, Math.round(-v / LOG2)));
+  }
+  function startDrag(cx){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    dragging = true; setSlider(toN(cx));
+  }
+  function moveDrag(cx){ setSlider(toN(cx)); }
+  function endDrag(){ dragging = false; }
+
+  wrap.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientX); });
+  window.addEventListener('mousemove', e => { if(dragging){ e.preventDefault(); moveDrag(e.clientX); } });
+  window.addEventListener('mouseup', endDrag);
+
+  wrap.addEventListener('touchstart', e => { const t=e.touches[0]; startDrag(t.clientX); }, {passive:true});
+  wrap.addEventListener('touchmove', e => { if(dragging){ e.preventDefault(); const t=e.touches[0]; moveDrag(t.clientX); } }, {passive:false});
+  wrap.addEventListener('touchend', endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

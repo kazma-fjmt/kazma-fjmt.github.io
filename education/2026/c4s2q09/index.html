@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>底の変換公式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; padding: .6rem .9rem; border-radius: 10px;
+    cursor: pointer; min-height: 48px; min-width: 96px; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: .5rem 0; font-size: .9rem; }
+  .legend > span { display: inline-flex; align-items: center; gap: .35rem; }
+  .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>底の変換公式</h1>
+  <p class="subtitle">底のちがう対数を、そろえた底の対数の商に直して値を求めましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p>対数の値は「底を何乗すれば真数になるか」を測った目盛りの読みです。底を変えると目盛りの1目盛りの大きさが変わるだけなので、読みは決まった数で割った値になります。</p>
+  <div class="formula-box" id="f-key"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>見たい内容をタップして選び、「次へ」で1行ずつ進めましょう。</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="formula-box" id="f-expr"></div>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>目盛りを伸び縮みさせよう</h2>
+  <p>上下の尺には同じ数が並んでいます。底を大きくすると同じ数の読みは小さくなり、下の尺の並びは全体に縮みます。下の尺の読みは、上の尺の読みを <span id="f-ratio"></span> で割った値です。</p>
+  <div class="legend">
+    <span><i class="swatch" style="background:#2a6df4"></i><span id="lg-top"></span></span>
+    <span><i class="swatch" style="background:#7b61ff"></i><span id="lg-bot"></span></span>
+    <span><i class="swatch" style="background:#e67e22"></i><span id="lg-b"></span></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="1.5" max="30" step="0.1" value="8">
+    <span class="slider-val" id="a-value">8.0</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-t"></span> =</label>
+    <input type="range" id="t-slider" min="-5" max="4" step="0.25" value="4">
+    <span class="slider-val" id="t-value">4</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container">
+    <svg id="scale" viewBox="0 0 620 340" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const PROBS=[
+ {tag:'公式',c:2,a:4,t:3,
+  expr:'\\log_a b = \\dfrac{\\log_c b}{\\log_c a}',
+  ansTex:'\\log_4 8 = \\dfrac{3}{2}',
+  steps:[
+   {label:'Step 1: 求めたい値を文字でおく',f:'\\log_a b = p \\;\\text{とおくと}\\; a^p = b'},
+   {label:'Step 2: 両辺の底 c の対数をとる',f:'\\log_c a^p = \\log_c b'},
+   {label:'Step 3: 指数を前に出す',f:'p\\log_c a = \\log_c b'},
+   {label:'Step 4: 割ってよい理由を確かめる',f:'a \\neq 1 \\;\\text{より}\\; \\log_c a \\neq 0'},
+   {label:'Step 5: 公式が得られる',f:'p = \\dfrac{\\log_c b}{\\log_c a} \\;\\Longrightarrow\\; \\log_a b = \\dfrac{\\log_c b}{\\log_c a}'}
+  ]},
+ {tag:'(1)',c:2,a:8,t:4,
+  expr:'\\log_8 16',
+  ansTex:'\\log_8 16 = \\dfrac{4}{3}',
+  steps:[
+   {label:'Step 1: 底も真数も 2 のべき乗なので底を 2 にそろえる',f:'\\log_8 16 = \\dfrac{\\log_2 16}{\\log_2 8}'},
+   {label:'Step 2: 分子を求める',f:'\\log_2 16 = \\log_2 2^4 = 4'},
+   {label:'Step 3: 分母を求める',f:'\\log_2 8 = \\log_2 2^3 = 3'},
+   {label:'Step 4: 答え',f:'\\log_8 16 = \\dfrac{4}{3}'}
+  ]},
+ {tag:'(2)',c:5,a:25,t:1.5,
+  expr:'\\log_{25} \\sqrt{125}',
+  ansTex:'\\log_{25}\\sqrt{125} = \\dfrac{3}{4}',
+  steps:[
+   {label:'Step 1: 底も真数も 5 のべき乗なので底を 5 にそろえる',f:'\\log_{25}\\sqrt{125} = \\dfrac{\\log_5 \\sqrt{125}}{\\log_5 25}'},
+   {label:'Step 2: 真数を 5 のべき乗に直す',f:'\\sqrt{125} = \\left(5^3\\right)^{\\frac{1}{2}} = 5^{\\frac{3}{2}}'},
+   {label:'Step 3: 分子と分母を求める',f:'\\log_5 5^{\\frac{3}{2}} = \\dfrac{3}{2},\\quad \\log_5 25 = 2'},
+   {label:'Step 4: 答え',f:'\\log_{25}\\sqrt{125} = \\dfrac{3}{2} \\div 2 = \\dfrac{3}{4}'}
+  ]},
+ {tag:'(3)',c:3,a:9,t:-5,
+  expr:'\\log_9 \\dfrac{1}{243}',
+  ansTex:'\\log_9 \\dfrac{1}{243} = -\\dfrac{5}{2}',
+  steps:[
+   {label:'Step 1: 底も真数も 3 のべき乗なので底を 3 にそろえる',f:'\\log_9 \\dfrac{1}{243} = \\dfrac{\\log_3 \\frac{1}{243}}{\\log_3 9}'},
+   {label:'Step 2: 真数を 3 のべき乗に直す',f:'\\dfrac{1}{243} = \\dfrac{1}{3^5} = 3^{-5}'},
+   {label:'Step 3: 分子と分母を求める',f:'\\log_3 3^{-5} = -5,\\quad \\log_3 9 = 2'},
+   {label:'Step 4: 答え',f:'\\log_9 \\dfrac{1}{243} = \\dfrac{-5}{2} = -\\dfrac{5}{2}'}
+  ]}
+];
+
+let curProb=1, curStep=0, animId=null;
+
+function nz(x){return Math.abs(x)<5e-4?0:x;}
+function fmt(x,d){return nz(x).toFixed(d===undefined?3:d);}
+function aT(a){return Math.abs(a-Math.round(a))<1e-9?String(Math.round(a)):a.toFixed(1);}
+function tT(t){return Math.abs(t-Math.round(t))<1e-9?String(Math.round(t)):String(t);}
+
+function fo(cx,y,wid,hei,html,color,size,weight){
+  const x=Math.max(2,Math.min(cx-wid/2,620-wid-2));
+  return `<foreignObject x="${x}" y="${y}" width="${wid}" height="${hei}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${size}px;color:${color};font-weight:${weight||600};text-align:center;white-space:nowrap;background:#fff;line-height:1.5">${html}</div></foreignObject>`;
+}
+
+function powLab(c,k){
+  if(k>=0) return String(Math.round(Math.pow(c,k)));
+  return '\\tfrac{1}{'+Math.round(Math.pow(c,-k))+'}';
+}
+
+function bLab(c,t){
+  const b=Math.pow(c,t);
+  if(Math.abs(t-Math.round(t))<1e-9) return powLab(c,Math.round(t));
+  return String(Math.round(b*1000)/1000);
+}
+
+/* Two rulers carry the same numbers; the lower one is the upper one divided by the reading of the new base. */
+function drawScale(){
+  const p=PROBS[curProb];
+  const c=p.c;
+  const a=parseFloat(document.getElementById('a-slider').value);
+  const t=parseFloat(document.getElementById('t-slider').value);
+  const L=Math.log(a)/Math.log(c);
+  const W=620,topY=112,botY=254;
+  const kmin=Math.min(0,Math.floor(t)), kmax=Math.max(0,Math.ceil(t));
+  const lo=Math.min(kmin,t,0), hi=Math.max(kmax,t,0);
+  const U=(W-110)/Math.max(hi-lo,0.5);
+  const x0=55-lo*U;
+  const X=v=>x0+v*U;
+  const inCanvas=x=>x>=34&&x<=W-34;
+  let s='';
+
+  /* upper ruler: the scale of the old base */
+  s+=`<line x1="${X(lo)}" y1="${topY}" x2="${X(hi)}" y2="${topY}" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+  s+=`<polygon points="${X(hi)+10},${topY} ${X(hi)},${topY-5} ${X(hi)},${topY+5}" fill="var(--c-blue)"/>`;
+  /* lower ruler: the scale of the new base */
+  const blo=lo/L, bhi=hi/L;
+  const cl=v=>Math.max(34,Math.min(X(v),W-34));
+  s+=`<line x1="${cl(blo)}" y1="${botY}" x2="${cl(bhi)}" y2="${botY}" stroke="var(--c-purple)" stroke-width="2.5"/>`;
+
+  const tInt=Math.abs(t-Math.round(t))<1e-9;
+  /* A label sits on the centre that fo() will actually use, so reserve that span. */
+  const cc=(cx,wid)=>Math.max(2,Math.min(cx-wid/2,620-wid-2))+wid/2;
+  const fits=(list,x,hw)=>list.every(q=>Math.abs(q.x-x)>=hw+q.hw+3);
+  /* The label of b is reserved first; a tick label that would be written over is dropped. */
+  const topTaken=[], botTaken=[];
+  if(!tInt) topTaken.push({x:cc(X(t),110),hw:55});
+  for(let k=kmin;k<=kmax;k++){
+    const xt=X(k), xb=X(k/L);
+    s+=`<line x1="${xt}" y1="${topY-8}" x2="${xt}" y2="${topY+8}" stroke="var(--c-blue)" stroke-width="1.5"/>`;
+    const ct=cc(xt,70);
+    if(fits(topTaken,ct,35)){topTaken.push({x:ct,hw:35});s+=fo(xt,topY-46,70,38,T(powLab(c,k)),'#555',15);}
+    s+=`<text x="${xt}" y="${topY+22}" text-anchor="middle" font-size="11" fill="#bbb">${k}</text>`;
+    if(inCanvas(xb)){
+      s+=`<line x1="${xb}" y1="${botY-8}" x2="${xb}" y2="${botY+8}" stroke="var(--c-purple)" stroke-width="1.5"/>`;
+      const cb=cc(xb,70);
+      if(fits(botTaken,cb,35)){botTaken.push({x:cb,hw:35});s+=fo(xb,botY+10,70,38,T(powLab(c,k)),'#555',15);}
+      s+=`<line x1="${xt}" y1="${topY+30}" x2="${xb}" y2="${botY-10}" stroke="#ddd" stroke-width="1" stroke-dasharray="4 4"/>`;
+    }
+  }
+
+  /* the number b, marked on both rulers */
+  const xtb=X(t), xbb=X(t/L);
+  s+=`<line x1="${xtb}" y1="${topY+30}" x2="${cl(t/L)}" y2="${botY-10}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s+=`<circle cx="${xtb}" cy="${topY}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>`;
+  if(!tInt) s+=fo(xtb,topY-46,110,38,T(bLab(c,t)),'var(--c-orange)',15,700);
+  s+=fo(xtb,10,300,38,T('b = '+bLab(c,t)+',\\quad \\log_{'+c+'} b = '+tT(t)),'var(--c-orange)',15,700);
+
+  if(inCanvas(xbb)){
+    s+=`<circle cx="${xbb}" cy="${botY}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2"/>`;
+    s+=`<circle cx="${xbb}" cy="${botY}" r="8" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="8;16;8" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite"/></circle>`;
+    s+=fo(xbb,botY+48,320,38,T('\\log_{'+aT(a)+'} b = '+fmt(t/L,3)),'var(--c-orange)',15,700);
+  } else {
+    const dir=xbb<34?-1:1;
+    const ex=dir>0?W-24:24;
+    s+=`<polygon points="${ex+dir*12},${botY} ${ex},${botY-9} ${ex},${botY+9}" fill="var(--c-orange)"/>`;
+    s+=fo(W/2,botY+48,460,38,T('\\log_{'+aT(a)+'} b = '+fmt(t/L,3)+'\\;\\text{（目盛りが図の外に出ています）}'),'var(--c-orange)',15,700);
+  }
+  document.getElementById('scale').innerHTML=s;
+
+  const exact=(Math.abs(a-p.a)<1e-9&&Math.abs(t-p.t)<1e-9);
+  document.getElementById('live-calc').innerHTML=
+    T('\\log_{'+c+'} b = '+tT(t)+',\\quad \\log_{'+c+'} '+aT(a)+' = '+fmt(L,3))+'<br>'+
+    T('\\log_{'+aT(a)+'} b = \\dfrac{'+tT(t)+'}{'+fmt(L,3)+'} = '+fmt(t/L,3))+'<br>'+
+    (exact?`<span style="color:var(--c-orange);font-weight:600">${T(p.ansTex)}</span>`
+          :`<span style="color:var(--muted)">底 ${T('a')} を動かすと読みだけが変わり、真数 ${T('b')} は同じ数のままです</span>`);
+}
+
+function renderTabs(){
+  const box=document.getElementById('tabs');
+  box.innerHTML='';
+  PROBS.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(i===curProb?' active':'');
+    b.textContent=p.tag;
+    b.addEventListener('click',()=>{
+      curProb=i;curStep=0;renderTabs();renderSteps();
+      document.getElementById('t-slider').value=String(p.t);
+      document.getElementById('t-value').textContent=p.t;
+      startAnim();
+    });
+    box.appendChild(b);
+  });
+  tex(PROBS[curProb].expr,document.getElementById('f-expr'),true);
+}
+
+function renderSteps(){
+  const steps=PROBS[curProb].steps;
+  let html='';
+  for(let i=0;i<=curStep;i++){
+    html+=`<div class="step ${i===curStep?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].f)}</div></div>`;
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=`${curStep+1} / ${steps.length}`;
+  document.getElementById('prev').disabled=curStep===0;
+  document.getElementById('next').disabled=curStep===steps.length-1;
+}
+
+function setA(v){
+  const sl=document.getElementById('a-slider');
+  sl.value=String(v);
+  document.getElementById('a-value').textContent=parseFloat(sl.value).toFixed(1);
+}
+
+function startAnim(){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  const target=PROBS[curProb].a;
+  const dur=3600;
+  let t0=null;
+  function ease(u){return u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;}
+  function frame(ts){
+    if(!t0) t0=ts;
+    const u=Math.min((ts-t0)/dur,1);
+    let a;
+    if(u<0.6) a=1.5+(30-1.5)*ease(u/0.6);
+    else a=30+(target-30)*ease((u-0.6)/0.4);
+    setA(Math.round(a*10)/10);
+    drawScale();
+    if(u<1) animId=requestAnimationFrame(frame);
+    else {animId=null;setA(target);drawScale();}
+  }
+  animId=requestAnimationFrame(frame);
+}
+
+function init(){
+  tex('\\log_a b = \\dfrac{\\log_c b}{\\log_c a}\\qquad (a>0,\\; b>0,\\; c>0,\\; a\\neq 1,\\; c\\neq 1)',document.getElementById('f-key'),true);
+  document.getElementById('f-note').innerHTML=
+    '公式で '+T('c = b')+' とすると '+T('\\log_a b = \\dfrac{1}{\\log_b a}')+' が得られます。実際 '+
+    T('\\log_8 16 = \\dfrac{1}{\\log_{16} 8} = 1 \\div \\dfrac{3}{4} = \\dfrac{4}{3}')+' となり、同じ値になります。';
+  document.getElementById('f-ratio').innerHTML=T('\\log_c a');
+  document.getElementById('lg-top').innerHTML=T('\\text{上の尺: }\\log_c x');
+  document.getElementById('lg-bot').innerHTML=T('\\text{下の尺: }\\log_a x');
+  document.getElementById('lg-b').innerHTML=T('\\text{真数 }b');
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('lbl-t').innerHTML=T('\\log_c b');
+
+  document.getElementById('prev').addEventListener('click',()=>{if(curStep>0){curStep--;renderSteps();}});
+  document.getElementById('next').addEventListener('click',()=>{if(curStep<PROBS[curProb].steps.length-1){curStep++;renderSteps();}});
+  document.getElementById('anim-btn').addEventListener('click',startAnim);
+  document.getElementById('a-slider').addEventListener('input',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    document.getElementById('a-value').textContent=parseFloat(document.getElementById('a-slider').value).toFixed(1);
+    drawScale();
+  });
+  document.getElementById('t-slider').addEventListener('input',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    document.getElementById('t-value').textContent=parseFloat(document.getElementById('t-slider').value);
+    drawScale();
+  });
+
+  renderTabs();
+  renderSteps();
+  drawScale();
+  startAnim();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

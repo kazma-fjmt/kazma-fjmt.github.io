@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>有理数の指数の計算</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.15rem; }
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.12rem; }
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+  .tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+  .tab {
+    appearance: none; flex: 1; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 700; padding: .7rem .5rem; border-radius: 10px;
+    min-height: 48px; cursor: pointer; font-family: inherit; user-select: none;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  /* each read-out line is its own flex box: KaTeX \dfrac overflows a plain line box and would collide */
+  .live-calc .lc-line { display: flex; justify-content: center; align-items: center; min-height: 1.9rem; padding: .45rem 0; }
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; min-width: 2.5rem; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>有理数の指数の計算</h1>
+  <p class="subtitle">分数の指数をもつ累乗を、指数法則で計算できるようになりましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p><span id="f-cond"></span> が有理数のとき、次の指数法則が成り立ちます。</p>
+  <div class="formula-box" id="law-box"></div>
+  <div class="note">かけ算は<strong>指数の足し算</strong>、わり算は<strong>指数の引き算</strong>、累乗は<strong>指数のかけ算</strong>になります。底がちがうときは <span id="f-note1"></span> のように<strong>底をそろえて</strong>から指数を集めます。</div>
+
+  <h2>解法ウォークスルー</h2>
+  <p>次の計算をしましょう。タブをタップすると問題を切りかえられます。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" id="tab0">(1)</button>
+    <button class="tab" id="tab1">(2)</button>
+    <button class="tab" id="tab2">(3)</button>
+  </div>
+  <div class="formula-box" id="prob-box"></div>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>指数の矢印で見る</h2>
+  <p>底ごとに「指数」を軸にとると、かけ算は矢印をつなぐこと、わり算は逆向きの矢印、累乗は矢印を何倍かに伸ばすことになります。上のステップを進めると矢印が増えます。</p>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>動かして確かめよう</h2>
+  <p>底と 2 つの指数を動かして、指数の足し算が積になっていることを確かめましょう。上の帯は指数をつないだもの、下の帯は足した指数そのものです。</p>
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="2" max="10" step="1" value="7">
+    <span class="slider-val" id="a-value">7</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-p"></span> =</label>
+    <input type="range" id="p-slider" min="-12" max="12" step="1" value="3">
+    <span class="slider-val" id="p-value"></span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-q"></span> =</label>
+    <input type="range" id="q-slider" min="-12" max="12" step="1" value="4">
+    <span class="slider-val" id="q-value"></span>
+  </div>
+  <div class="svg-container">
+    <svg id="bars" viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="check-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+function LC(){return [...arguments].map(l=>'<div class="lc-line">'+l+'</div>').join('');}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function R(n,d){d=(d===undefined?1:d);if(d<0){n=-n;d=-d;}const g=gcd(n,d);return {n:n/g,d:d/g};}
+function radd(a,b){return R(a.n*b.d+b.n*a.d,a.d*b.d);}
+function rmul(a,b){return R(a.n*b.n,a.d*b.d);}
+function rval(a){return a.n/a.d;}
+function rtex(a){
+  if(a.d===1) return String(a.n);
+  return (a.n<0?'-\\frac{'+(-a.n)+'}{'+a.d+'}':'\\frac{'+a.n+'}{'+a.d+'}');
+}
+function rtexD(a){
+  if(a.d===1) return String(a.n);
+  return (a.n<0?'-\\dfrac{'+(-a.n)+'}{'+a.d+'}':'\\dfrac{'+a.n+'}{'+a.d+'}');
+}
+function exactTex(terms){
+  let num=1,den=1;
+  for(const t of terms){
+    if(t[1].d!==1) return null;
+    const k=t[1].n;
+    if(k>=0) num*=Math.pow(t[0],k); else den*=Math.pow(t[0],-k);
+  }
+  const g=gcd(num,den); num/=g; den/=g;
+  return den===1?String(num):'\\dfrac{'+num+'}{'+den+'}';
+}
+function tailTex(terms,v){
+  const e=exactTex(terms);
+  return e?'\\;=\\;'+e:'\\;\\approx\\;'+v.toFixed(4);
+}
+
+const PROBLEMS = [
+  {
+    dim:1, base:'7',
+    expr:'7^{\\frac12}\\div 7^{\\frac16}\\times 7^{\\frac23}',
+    xr:[-0.35,1.35],
+    ops:[
+      {t:'add', v:[R(1,2),R(0)], lab:'\\times 7^{\\frac12}', col:'var(--c-blue)'},
+      {t:'add', v:[R(-1,6),R(0)], lab:'\\div 7^{\\frac16}', col:'var(--c-red)'},
+      {t:'add', v:[R(2,3),R(0)], lab:'\\times 7^{\\frac23}', col:'var(--c-green)'}
+    ],
+    goalLab:'7^{1}=7',
+    steps:[
+      {n:1, label:'Step 1: 底はすべて 7 でそろっている', f:'7^{\\frac12}\\div 7^{\\frac16}\\times 7^{\\frac23}'},
+      {n:2, label:'Step 2: わり算は指数の引き算', f:'7^{\\frac12}\\div 7^{\\frac16}=7^{\\frac12-\\frac16}'},
+      {n:3, label:'Step 3: かけ算は指数の足し算', f:'=7^{\\frac12-\\frac16+\\frac23}'},
+      {n:3, label:'Step 4: 指数を通分して計算する', f:'\\dfrac12-\\dfrac16+\\dfrac23=\\dfrac{3-1+4}{6}=\\dfrac66=1'},
+      {n:3, goal:true, label:'Step 5: 答え', f:'7^{\\frac12}\\div 7^{\\frac16}\\times 7^{\\frac23}=7^{1}=7'}
+    ]
+  },
+  {
+    dim:1, base:'2',
+    expr:'\\left(16^{\\frac16}\\right)^{-\\frac32}',
+    xr:[-1.35,1.05],
+    ops:[
+      {t:'add', v:[R(2,3),R(0)], lab:'16^{\\frac16}=2^{\\frac23}', col:'var(--c-blue)'},
+      {t:'scale', k:R(-3,2), lab:'\\text{指数を }-\\dfrac32\\text{ 倍}', col:'var(--c-purple)'}
+    ],
+    goalLab:'2^{-1}=\\dfrac12',
+    steps:[
+      {n:1, label:'Step 1: 底を 2 にそろえる', f:'16=2^{4}\\;\\text{だから}\\;16^{\\frac16}=\\left(2^{4}\\right)^{\\frac16}=2^{4\\times\\frac16}=2^{\\frac23}'},
+      {n:2, label:'Step 2: 累乗の累乗は指数のかけ算', f:'\\left(2^{\\frac23}\\right)^{-\\frac32}=2^{\\frac23\\times\\left(-\\frac32\\right)}'},
+      {n:2, label:'Step 3: 指数を計算する', f:'\\dfrac23\\times\\left(-\\dfrac32\\right)=-\\dfrac{6}{6}=-1'},
+      {n:2, goal:true, label:'Step 4: 答え', f:'\\left(16^{\\frac16}\\right)^{-\\frac32}=2^{-1}=\\dfrac12'}
+    ]
+  },
+  {
+    dim:2, base:'5', base2:'3',
+    expr:'\\left(\\dfrac53\\right)^{\\frac52}\\times 27^{\\frac12}\\div 5^{\\frac32}',
+    xr:[-0.6,3.0], yr:[-3.0,2.0],
+    ops:[
+      {t:'add', v:[R(5,2),R(-5,2)], lab:'\\left(\\dfrac53\\right)^{\\frac52}=5^{\\frac52}\\,3^{-\\frac52}', col:'var(--c-blue)'},
+      {t:'add', v:[R(0),R(3,2)], lab:'\\times\\,27^{\\frac12}=\\times\\,3^{\\frac32}', col:'var(--c-green)'},
+      {t:'add', v:[R(-3,2),R(0)], lab:'\\div\\,5^{\\frac32}', col:'var(--c-red)'}
+    ],
+    goalLab:'5^{1}\\times 3^{-1}=\\dfrac53',
+    steps:[
+      {n:1, label:'Step 1: 分数の累乗を底ごとに分ける', f:'\\left(\\dfrac53\\right)^{\\frac52}=\\dfrac{5^{\\frac52}}{3^{\\frac52}}=5^{\\frac52}\\times 3^{-\\frac52}'},
+      {n:2, label:'Step 2: 27 を 3 の累乗に直す', f:'27^{\\frac12}=\\left(3^{3}\\right)^{\\frac12}=3^{\\frac32}'},
+      {n:3, label:'Step 3: 底 5、底 3 それぞれで指数を集める', f:'=5^{\\frac52-\\frac32}\\times 3^{-\\frac52+\\frac32}'},
+      {n:3, label:'Step 4: 指数を計算する', f:'\\dfrac52-\\dfrac32=1,\\qquad -\\dfrac52+\\dfrac32=-1'},
+      {n:3, goal:true, label:'Step 5: 答え', f:'\\left(\\dfrac53\\right)^{\\frac52}\\times 27^{\\frac12}\\div 5^{\\frac32}=5^{1}\\times 3^{-1}=\\dfrac53'}
+    ]
+  }
+];
+
+const W=600, H=420, PADX=72, PADY=52;
+let curP=0, curStep=0, animId=null, animProg=null;
+
+function cumPoints(pr){
+  let c=[R(0),R(0)];
+  const out=[c];
+  for(const o of pr.ops){
+    if(o.t==='add') c=[radd(c[0],o.v[0]), radd(c[1],o.v[1])];
+    else c=[rmul(c[0],o.k), rmul(c[1],o.k)];
+    out.push(c);
+  }
+  return out;
+}
+
+function arrow(x1,y1,x2,y2,col,w){
+  const L=Math.hypot(x2-x1,y2-y1);
+  if(L<0.7) return '';
+  const a=Math.atan2(y2-y1,x2-x1);
+  const h=Math.min(12,L*0.55), hw=Math.min(6,L*0.3);
+  const bx=x2-h*Math.cos(a), by=y2-h*Math.sin(a);
+  let s=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+  s+=`<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx-hw*Math.sin(a)).toFixed(1)},${(by+hw*Math.cos(a)).toFixed(1)} ${(bx+hw*Math.sin(a)).toFixed(1)},${(by-hw*Math.cos(a)).toFixed(1)}" fill="${col}"/>`;
+  return s;
+}
+function foLabel(x,y,w,h,html,align){
+  const j=align==='left'?'flex-start':(align==='right'?'flex-end':'center');
+  return `<foreignObject x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="height:${h}px;display:flex;align-items:center;justify-content:${j};font-size:13px;white-space:nowrap">${html}</div></foreignObject>`;
+}
+function progress(){
+  return animProg!==null ? animProg : PROBLEMS[curP].steps[curStep].n;
+}
+
+function draw(){
+  const pr=PROBLEMS[curP];
+  const p=progress();
+  const pts=cumPoints(pr);
+  const showGoal = p>=pr.ops.length-1e-6 && (animProg!==null || pr.steps[curStep].goal);
+  document.getElementById('graph').innerHTML = (pr.dim===1) ? draw1d(pr,p,pts,showGoal) : draw2d(pr,p,pts,showGoal);
+  const shown = Math.min(pr.ops.length, Math.floor(p+1e-9));
+  const c = pts[shown];
+  const el=document.getElementById('live-calc');
+  if(pr.dim===1){
+    const v=Math.pow(parseFloat(pr.base), rval(c[0]));
+    el.innerHTML = LC(T('\\text{ここまでの指数の合計}\\;=\\;'+rtexD(c[0])),
+      T(pr.base+'^{'+rtex(c[0])+'}'+tailTex([[parseFloat(pr.base),c[0]]],v)));
+  } else {
+    const v=Math.pow(5,rval(c[0]))*Math.pow(3,rval(c[1]));
+    el.innerHTML = LC(T('\\text{底 }5\\text{ の指数}='+rtexD(c[0])+',\\quad\\text{底 }3\\text{ の指数}='+rtexD(c[1])),
+      T('5^{'+rtex(c[0])+'}\\times 3^{'+rtex(c[1])+'}'+tailTex([[5,c[0]],[3,c[1]]],v)));
+  }
+}
+
+function draw1d(pr,p,pts,showGoal){
+  const x0=pr.xr[0], x1=pr.xr[1];
+  const sc=(W-2*PADX)/(x1-x0);
+  const X=x=>PADX+(x-x0)*sc;
+  const axisY=290;
+  let s='';
+  for(let i=Math.ceil(x0*6);i<=Math.floor(x1*6);i++){
+    s+=`<line x1="${X(i/6)}" y1="${axisY-4}" x2="${X(i/6)}" y2="${axisY+4}" stroke="#e8e8e8" stroke-width="1"/>`;
+  }
+  s+=`<line x1="${X(x0)}" y1="${axisY}" x2="${X(x1)}" y2="${axisY}" stroke="#999" stroke-width="1.5"/>`;
+  for(let i=Math.ceil(x0);i<=Math.floor(x1);i++){
+    s+=`<line x1="${X(i)}" y1="${axisY-8}" x2="${X(i)}" y2="${axisY+8}" stroke="#999" stroke-width="1.5"/>`;
+    s+=`<text x="${X(i)}" y="${axisY-14}" text-anchor="middle" font-size="12" fill="#aaa">${i}</text>`;
+  }
+  s+=foLabel(W-152,H-30,144,26,`<span style="color:#999">${T('\\text{底 }'+pr.base+'\\text{ の指数}')}</span>`,'right');
+  for(let i=0;i<pr.ops.length;i++){
+    const f=Math.max(0,Math.min(1,p-i));
+    if(f<=0) continue;
+    const o=pr.ops[i];
+    const ax=rval(pts[i][0]), bx=rval(pts[i+1][0]);
+    const laneY=axisY-52*(i+1);
+    const tipX=ax+(bx-ax)*f;
+    s+=`<line x1="${X(ax)}" y1="${laneY}" x2="${X(ax)}" y2="${axisY}" stroke="#ddd" stroke-width="1" stroke-dasharray="3 3"/>`;
+    if(f>=1) s+=`<line x1="${X(bx)}" y1="${laneY}" x2="${X(bx)}" y2="${axisY}" stroke="#ddd" stroke-width="1" stroke-dasharray="3 3"/>`;
+    s+=arrow(X(ax),laneY,X(tipX),laneY,o.col,3.5);
+    const mid=(X(ax)+X(tipX))/2;
+    s+=foLabel(Math.max(2,Math.min(mid-88,W-178)),laneY-50,176,44,`<span style="color:${o.col};font-weight:600">${T(o.lab)}</span>`);
+  }
+  for(let i=1;i<=pr.ops.length;i++){
+    if(p<i-1e-9) break;
+    const xv=rval(pts[i][0]);
+    s+=`<circle cx="${X(xv)}" cy="${axisY}" r="5" fill="${pr.ops[i-1].col}" stroke="#fff" stroke-width="2"/>`;
+    const dy=(i%2===1)?6:50;
+    s+=foLabel(Math.max(2,Math.min(X(xv)-46,W-94)),axisY+dy,92,44,`<span style="color:${pr.ops[i-1].col};font-weight:600">${T(rtexD(pts[i][0]))}</span>`);
+  }
+  if(showGoal){
+    const gx=rval(pts[pr.ops.length][0]);
+    s+=`<circle cx="${X(gx)}" cy="${axisY}" r="9" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="9;16;9" dur="1.1s" repeatCount="indefinite"/></circle>`;
+    s+=foLabel(Math.max(2,Math.min(X(gx)-95,W-192)),22,190,56,`<span style="color:var(--c-orange);font-weight:700;font-size:16px">${T(pr.goalLab)}</span>`);
+  }
+  return s;
+}
+
+function draw2d(pr,p,pts,showGoal){
+  const x0=pr.xr[0], x1=pr.xr[1], y0=pr.yr[0], y1=pr.yr[1];
+  const sc=Math.min((W-2*PADX)/(x1-x0),(H-2*PADY)/(y1-y0));
+  const ox=PADX+(0-x0)*sc, oy=H-PADY-(0-y0)*sc;
+  const X=x=>ox+x*sc, Y=y=>oy-y*sc;
+  let s='';
+  for(let i=Math.ceil(x0*2);i<=Math.floor(x1*2);i++){
+    s+=`<line x1="${X(i/2)}" y1="${Y(y1)}" x2="${X(i/2)}" y2="${Y(y0)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+  for(let i=Math.ceil(y0*2);i<=Math.floor(y1*2);i++){
+    s+=`<line x1="${X(x0)}" y1="${Y(i/2)}" x2="${X(x1)}" y2="${Y(i/2)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+  }
+  for(let i=Math.ceil(x0);i<=Math.floor(x1);i++){
+    if(i!==0) s+=`<text x="${X(i)}" y="${Y(0)+18}" text-anchor="middle" font-size="12" fill="#aaa">${i}</text>`;
+  }
+  for(let i=Math.ceil(y0);i<=Math.floor(y1);i++){
+    if(i!==0) s+=`<text x="${X(0)-10}" y="${Y(i)+4}" text-anchor="end" font-size="12" fill="#aaa">${i}</text>`;
+  }
+  s+=foLabel(W-158,Y(0)+8,150,26,`<span style="color:#999">${T('\\text{底 }5\\text{ の指数}')}</span>`,'right');
+  s+=foLabel(X(0)+10,4,150,26,`<span style="color:#999">${T('\\text{底 }3\\text{ の指数}')}</span>`,'left');
+  s+=`<circle cx="${X(0)}" cy="${Y(0)}" r="4" fill="#999"/>`;
+  for(let i=0;i<pr.ops.length;i++){
+    const f=Math.max(0,Math.min(1,p-i));
+    if(f<=0) continue;
+    const o=pr.ops[i];
+    const ax=rval(pts[i][0]), ay=rval(pts[i][1]);
+    const bx=rval(pts[i+1][0]), by=rval(pts[i+1][1]);
+    const tx=ax+(bx-ax)*f, ty=ay+(by-ay)*f;
+    s+=arrow(X(ax),Y(ay),X(tx),Y(ty),o.col,3.5);
+    const ly0=232+54*i;
+    s+=`<rect x="302" y="${ly0}" width="292" height="52" fill="#fff" opacity="0.93" rx="6"/>`;
+    s+=`<rect x="310" y="${ly0+12}" width="6" height="28" fill="${o.col}" rx="3"/>`;
+    s+=foLabel(326,ly0+2,262,48,`<span style="color:${o.col};font-weight:600">${T(o.lab)}</span>`,'left');
+    if(f>=1) s+=`<circle cx="${X(bx)}" cy="${Y(by)}" r="5" fill="${o.col}" stroke="#fff" stroke-width="2"/>`;
+  }
+  if(showGoal){
+    const gx=rval(pts[pr.ops.length][0]), gy=rval(pts[pr.ops.length][1]);
+    s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(gx)}" y2="${Y(gy)}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="8 5"/>`;
+    s+=`<circle cx="${X(gx)}" cy="${Y(gy)}" r="9" fill="none" stroke="var(--c-orange)" stroke-width="3"><animate attributeName="r" values="9;16;9" dur="1.1s" repeatCount="indefinite"/></circle>`;
+    const glx=Math.max(2,Math.min(X(gx)-95,110)), gly=54;
+    s+=`<rect x="${glx.toFixed(1)}" y="${gly.toFixed(1)}" width="190" height="54" fill="#fff" opacity="0.93" rx="6"/>`;
+    s+=foLabel(glx,gly,190,54,`<span style="color:var(--c-orange);font-weight:700;font-size:16px">${T(pr.goalLab)}</span>`);
+  }
+  return s;
+}
+
+function renderSteps(){
+  const pr=PROBLEMS[curP];
+  let html='';
+  for(let i=0;i<=curStep;i++){
+    html+=`<div class="step ${i===curStep?'current':''}"><div class="label">${pr.steps[i].label}</div><div class="formula-line">${T(pr.steps[i].f)}</div></div>`;
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=`${curStep+1} / ${pr.steps.length}`;
+  document.getElementById('prev').disabled = curStep===0;
+  document.getElementById('next').disabled = curStep===pr.steps.length-1;
+}
+
+function selectProblem(i){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  animProg=null;
+  curP=i; curStep=0;
+  for(let k=0;k<3;k++) document.getElementById('tab'+k).classList.toggle('active',k===i);
+  tex(PROBLEMS[i].expr, document.getElementById('prob-box'), true);
+  renderSteps(); draw();
+}
+
+function drawBars(){
+  const a=parseInt(document.getElementById('a-slider').value,10);
+  const P=R(parseInt(document.getElementById('p-slider').value,10),6);
+  const Q=R(parseInt(document.getElementById('q-slider').value,10),6);
+  const S=radd(P,Q);
+  document.getElementById('a-value').textContent=String(a);
+  document.getElementById('p-value').innerHTML=T(rtexD(P));
+  document.getElementById('q-value').innerHTML=T(rtexD(Q));
+  const ox=300, sc=52;
+  const X=v=>ox+v*sc;
+  let s='';
+  for(let i=-4;i<=4;i++){
+    s+=`<line x1="${X(i)}" y1="30" x2="${X(i)}" y2="170" stroke="${i===0?'#bbb':'#f0f0f0'}" stroke-width="${i===0?1.5:1}"/>`;
+    s+=`<text x="${X(i)}" y="190" text-anchor="middle" font-size="12" fill="#aaa">${i}</text>`;
+  }
+  const yA=72, yB=132, hh=22;
+  const seg=(x,y,w,col)=>Math.abs(w)<0.5?'':`<rect x="${Math.min(x,x+w)}" y="${y-hh/2}" width="${Math.abs(w)}" height="${hh}" fill="${col}" opacity="0.75" rx="4"/>`;
+  s+=seg(X(0),yA,rval(P)*sc,'var(--c-blue)');
+  s+=seg(X(rval(P)),yA,rval(Q)*sc,'var(--c-green)');
+  s+=seg(X(0),yB,rval(S)*sc,'var(--c-orange)');
+  s+=`<line x1="${X(rval(S))}" y1="${yA-hh/2-6}" x2="${X(rval(S))}" y2="${yB+hh/2+6}" stroke="var(--c-orange)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s+=`<circle cx="${X(rval(S))}" cy="${yB}" r="6" fill="var(--c-orange)"><animate attributeName="r" values="6;10;6" dur="1.2s" repeatCount="indefinite"/></circle>`;
+  s+=foLabel(8,yA-52,250,30,`<span style="color:var(--c-blue);font-weight:600">${T('a^{p}\\times a^{q}\\;\\text{の指数}')}</span>`,'left');
+  s+=foLabel(8,yB+18,250,30,`<span style="color:var(--c-orange);font-weight:600">${T('a^{p+q}\\;\\text{の指数}')}</span>`,'left');
+  document.getElementById('bars').innerHTML=s;
+  const v1=Math.pow(a,rval(P))*Math.pow(a,rval(Q));
+  const v2=Math.pow(a,rval(S));
+  document.getElementById('check-box').innerHTML = LC(
+    T(a+'^{'+rtex(P)+'}\\times '+a+'^{'+rtex(Q)+'}='+a+'^{'+rtex(P)+'+'+rtex(Q)+'}='+a+'^{'+rtex(S)+'}'),
+    T(a+'^{'+rtex(P)+'}\\times '+a+'^{'+rtex(Q)+'}'+tailTex([[a,P],[a,Q]],v1)),
+    T(a+'^{'+rtex(S)+'}'+tailTex([[a,S]],v2)));
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const pr=PROBLEMS[curP];
+    const total=pr.ops.length, dur=900*total;
+    let t0=null;
+    curStep=0; renderSteps();
+    function frame(ts){
+      if(!t0) t0=ts;
+      const r=Math.min((ts-t0)/dur,1);
+      animProg=r*total;
+      draw();
+      if(r<1){ animId=requestAnimationFrame(frame); }
+      else { animId=null; animProg=null; curStep=pr.steps.length-1; renderSteps(); draw(); }
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function init(){
+  document.getElementById('f-cond').innerHTML=T('a>0,\\;b>0\\;\\text{で}\\;p,\\;q');
+  document.getElementById('f-note1').innerHTML=T('16=2^{4},\\;27=3^{3}');
+  tex('\\begin{aligned}&\\boxed{1}\\;\\; a^{p}a^{q}=a^{p+q} &&\\boxed{1}\'\\;\\; a^{p}\\div a^{q}=a^{p-q}\\\\[2pt]&\\boxed{2}\\;\\; \\left(a^{p}\\right)^{q}=a^{pq}\\\\[2pt]&\\boxed{3}\\;\\; (ab)^{p}=a^{p}b^{p} &&\\boxed{3}\'\\;\\; \\left(\\dfrac{a}{b}\\right)^{p}=\\dfrac{a^{p}}{b^{p}}\\end{aligned}', document.getElementById('law-box'), true);
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('lbl-p').innerHTML=T('p');
+  document.getElementById('lbl-q').innerHTML=T('q');
+  for(let k=0;k<3;k++) document.getElementById('tab'+k).addEventListener('click',()=>selectProblem(k));
+  document.getElementById('prev').addEventListener('click',()=>{ if(curStep>0){curStep--;renderSteps();draw();} });
+  document.getElementById('next').addEventListener('click',()=>{ if(curStep<PROBLEMS[curP].steps.length-1){curStep++;renderSteps();draw();} });
+  ['a-slider','p-slider','q-slider'].forEach(id=>document.getElementById(id).addEventListener('input',drawBars));
+  setupAnimation();
+  selectProblem(0);
+  drawBars();
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

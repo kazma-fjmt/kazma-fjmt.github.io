@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>2次関数と指数関数の増え方</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto;
+  }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto;
+  }
+  .live-calc .katex { font-size: 1.05rem; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.2rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .tap-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .table-wrap {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .5rem; margin: .75rem 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  table.vtable { border-collapse: collapse; margin: 0 auto; min-width: 100%; }
+  table.vtable th, table.vtable td {
+    border: 1px solid #e8e8e8; padding: .55rem .5rem; text-align: center;
+    font-size: .95rem; white-space: nowrap; min-width: 3.4rem; cursor: pointer;
+  }
+  table.vtable th.rowhead { background: #f5f7fb; text-align: left; min-width: 7.5rem; cursor: default; }
+  table.vtable td.sel, table.vtable th.sel { background: #e8f0ff; font-weight: 700; }
+  table.vtable tr.frow td { color: var(--c-red); }
+  table.vtable tr.grow td { color: var(--c-blue); }
+  table.vtable td.win { box-shadow: inset 0 0 0 2px var(--c-orange); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>2次関数と指数関数の増え方</h1>
+  <p class="subtitle">値の表と増加量の表を並べて、指数関数が2次関数を追い越す瞬間を見つけましょう。</p>
+
+  <h2>対象の問</h2>
+  <p><span id="q-x"></span> は <span id="q-range"></span> を満たす整数とするとき、<span id="q-f"></span>、<span id="q-g"></span> について、次の問に答えよ。</p>
+  <div class="formula-box" id="q-box"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>値の表</h2>
+  <p class="tap-hint">表の列をタップすると、その <span id="hint-x"></span> の比較が下に出ます。</p>
+  <div class="table-wrap"><table class="vtable" id="value-table"></table></div>
+
+  <h2>増加量の表</h2>
+  <div class="table-wrap"><table class="vtable" id="diff-table"></table></div>
+  <div class="live-calc" id="cell-calc"></div>
+
+  <h2>グラフで見る追い越し</h2>
+  <p>横軸の右端 <span id="lbl-N-inline"></span> を動かすと、表示する範囲が変わります。範囲を広げるほど <span id="lbl-g-inline"></span> が急に立ち上がります。</p>
+  <div class="slider-row">
+    <label><span id="lbl-N"></span> =</label>
+    <input type="range" id="n-slider" min="6" max="14" step="0.1" value="6">
+    <span class="slider-val" id="n-value">6.0</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 460" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="live-calc" id="graph-calc"></div>
+
+  <div class="note" id="note-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const XS = [7,8,9,10,11,12,13];
+const f = x => 10*x*x;
+const g = x => Math.pow(2,x);
+const df = x => 10*(2*x+1);
+const dg = x => Math.pow(2,x);
+
+let selX = 7;
+let nVal = 6;
+let animId = null;
+let crossX = 0;
+
+/* SVG geometry */
+const W=600, H=460, ML=76, MR=24, MT=24, MB=44;
+const PW = W-ML-MR, PH = H-MT-MB;
+
+function init(){
+  document.getElementById('q-x').innerHTML = T('x');
+  document.getElementById('q-range').innerHTML = T('7 \\leq x \\leq 13');
+  document.getElementById('q-f').innerHTML = T('f(x)=10x^2');
+  document.getElementById('q-g').innerHTML = T('g(x)=2^x');
+  document.getElementById('hint-x').innerHTML = T('x');
+  document.getElementById('lbl-N').innerHTML = T('N');
+  document.getElementById('lbl-N-inline').innerHTML = T('N');
+  document.getElementById('lbl-g-inline').innerHTML = T('y=2^x');
+
+  tex('\\begin{aligned}&(1)\\;\\; f(x) \\text{ と } g(x) \\text{ の値を表にせよ。}\\\\[2pt]&(2)\\;\\; f(x+1)-f(x) \\text{ と } g(x+1)-g(x) \\text{ の値を表にせよ。}\\end{aligned}',
+      document.getElementById('q-box'), true);
+
+  crossX = findCross();
+
+  document.getElementById('note-box').innerHTML =
+    '一般に ' + T('b>1') + ' のとき、2つの関数 ' + T('f(x)=ax^2') + ' と ' + T('g(x)=b^x') +
+    ' について、' + T('a') + ' がどれほど大きくても、' + T('x') +
+    ' を大きくしていけば、いずれ ' + T('g(x)') + ' の値は ' + T('f(x)') +
+    ' の値を追い越します。増加量が ' + T('g(x+1)-g(x)=b^x \\cdot (b-1)') +
+    ' のように自分自身に比例して増えることが、その理由です。';
+
+  buildTables();
+  initWalkthrough();
+  setupSlider();
+  setupAnimation();
+  updateSelection();
+  drawGraph();
+}
+
+/* ---- tables ---- */
+function buildTables(){
+  const vt = document.getElementById('value-table');
+  let s = '<tr><th class="rowhead">' + T('x') + '</th>';
+  XS.forEach(x => { s += `<th data-x="${x}">${x}</th>`; });
+  s += '</tr><tr class="frow"><th class="rowhead">' + T('f(x)=10x^2') + '</th>';
+  XS.forEach(x => { s += `<td data-x="${x}">${f(x)}</td>`; });
+  s += '</tr><tr class="grow"><th class="rowhead">' + T('g(x)=2^x') + '</th>';
+  XS.forEach(x => { s += `<td data-x="${x}">${g(x)}</td>`; });
+  s += '</tr>';
+  vt.innerHTML = s;
+
+  const dt = document.getElementById('diff-table');
+  let d = '<tr><th class="rowhead">' + T('x') + '</th>';
+  XS.forEach(x => { d += `<th data-x="${x}">${x}</th>`; });
+  d += '</tr><tr class="frow"><th class="rowhead">' + T('f(x+1)-f(x)') + '</th>';
+  XS.forEach(x => { d += `<td data-x="${x}">${df(x)}</td>`; });
+  d += '</tr><tr class="grow"><th class="rowhead">' + T('g(x+1)-g(x)') + '</th>';
+  XS.forEach(x => { d += `<td data-x="${x}">${dg(x)}</td>`; });
+  d += '</tr>';
+  dt.innerHTML = d;
+
+  [vt, dt].forEach(tb => {
+    tb.addEventListener('click', e => {
+      const cell = e.target.closest('[data-x]');
+      if(!cell) return;
+      selX = parseInt(cell.getAttribute('data-x'), 10);
+      updateSelection();
+      drawGraph();
+    });
+  });
+}
+
+function updateSelection(){
+  document.querySelectorAll('table.vtable [data-x]').forEach(el => {
+    const x = parseInt(el.getAttribute('data-x'), 10);
+    el.classList.toggle('sel', x === selX);
+  });
+  /* mark the larger of the two in each table for the selected column */
+  document.querySelectorAll('table.vtable td').forEach(el => el.classList.remove('win'));
+  markWinner('value-table', f(selX) >= g(selX));
+  markWinner('diff-table', df(selX) >= dg(selX));
+
+  const x = selX;
+  const cmpV = f(x) > g(x) ? '>' : (f(x) < g(x) ? '<' : '=');
+  const cmpD = df(x) > dg(x) ? '>' : (df(x) < dg(x) ? '<' : '=');
+  document.getElementById('cell-calc').innerHTML =
+    T(`x=${x}\\;:\\quad f(${x})=10\\cdot ${x}^2=${f(x)},\\quad g(${x})=2^{${x}}=${g(x)}`) +
+    '<br>' + T(`\\therefore\\; f(${x}) ${cmpV} g(${x})`) +
+    '<br><br>' +
+    T(`f(${x+1})-f(${x})=${f(x+1)}-${f(x)}=${df(x)},\\quad g(${x+1})-g(${x})=${g(x+1)}-${g(x)}=${dg(x)}`) +
+    '<br>' + T(`\\therefore\\; \\text{増加量は }${df(x)} ${cmpD} ${dg(x)}`);
+}
+
+function markWinner(tableId, fWins){
+  const rows = document.getElementById(tableId).querySelectorAll('tr');
+  const row = fWins ? rows[1] : rows[2];
+  if(!row) return;
+  row.querySelectorAll('td').forEach(td => {
+    if(parseInt(td.getAttribute('data-x'),10) === selX) td.classList.add('win');
+  });
+}
+
+/* ---- walkthrough ---- */
+function initWalkthrough(){
+  const steps = [
+    { label: 'Step 1: 2つの関数を書き出す',
+      formula: 'f(x)=10x^2\\;\\text{（2次関数）},\\qquad g(x)=2^x\\;\\text{（指数関数）}' },
+    { label: 'Step 2: x=7 で値を比べる',
+      formula: 'f(7)=10\\cdot 7^2=490,\\qquad g(7)=2^7=128 \\;\\Rightarrow\\; f(7)>g(7)' },
+    { label: 'Step 3: x=9 まではまだ 2次関数が上',
+      formula: 'f(9)=810,\\qquad g(9)=512 \\;\\Rightarrow\\; f(9)>g(9)' },
+    { label: 'Step 4: x=10 で逆転する',
+      formula: 'f(10)=1000,\\qquad g(10)=1024 \\;\\Rightarrow\\; f(10)<g(10)' },
+    { label: 'Step 5: x=13 では差が大きく開く',
+      formula: 'f(13)=1690,\\qquad g(13)=8192 \\;\\Rightarrow\\; g(13)\\;\\text{は}\\;f(13)\\;\\text{の約 4.8 倍}' },
+    { label: 'Step 6: 2次関数の増加量は等差的',
+      formula: 'f(x+1)-f(x)=10\\{(x+1)^2-x^2\\}=10(2x+1)' },
+    { label: 'Step 7: 指数関数の増加量は自分自身',
+      formula: 'g(x+1)-g(x)=2^{x+1}-2^x=2^x(2-1)=2^x=g(x)' },
+    { label: 'Step 8: 増加量は値より先に逆転する',
+      formula: 'x=7:\\;150>128,\\qquad x=8:\\;170<256' },
+    { label: 'Step 9: 結論',
+      formula: '\\text{増加量が先に逆転し、その後 }x=10\\text{ で値も逆転する}' },
+  ];
+
+  let cur = 0;
+  const container = document.getElementById('walkthrough');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  function render(){
+    let html = '';
+    for(let i=0;i<=cur;i++){
+      html += `<div class="step ${i===cur?'current':''}"><div class="label">${steps[i].label}</div><div class="formula-line">${T(steps[i].formula)}</div></div>`;
+    }
+    container.innerHTML = html;
+    counter.textContent = `${cur+1} / ${steps.length}`;
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click', ()=>{ if(cur>0){cur--;render();} });
+  nextBtn.addEventListener('click', ()=>{ if(cur<steps.length-1){cur++;render();} });
+  render();
+}
+
+/* ---- graph ---- */
+function findCross(){
+  let lo = 5, hi = 12;
+  for(let i=0;i<80;i++){
+    const mid = (lo+hi)/2;
+    if(f(mid) > g(mid)) lo = mid; else hi = mid;
+  }
+  return (lo+hi)/2;
+}
+
+function niceStep(raw){
+  const e = Math.pow(10, Math.floor(Math.log10(raw)));
+  const m = raw/e;
+  const n = m<=1?1:(m<=2?2:(m<=5?5:10));
+  return n*e;
+}
+
+function drawGraph(){
+  const N = nVal;
+  const yMax = Math.max(f(N), g(N)) * 1.08;
+  const sx = v => ML + v/N*PW;
+  const sy = v => MT + PH - v/yMax*PH;
+  let s = '';
+
+  /* y grid */
+  const stepY = niceStep(yMax/6);
+  for(let i=0; i*stepY<=yMax; i++){
+    const v = Math.round(i*stepY);
+    const y = sy(v);
+    s += `<line x1="${ML}" y1="${y.toFixed(1)}" x2="${ML+PW}" y2="${y.toFixed(1)}" stroke="${i===0?'#999':'#eee'}" stroke-width="${i===0?1.5:1}"/>`;
+    s += `<text x="${ML-8}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" fill="#aaa">${v}</text>`;
+  }
+  /* x grid */
+  for(let i=0; i<=Math.floor(N); i++){
+    const x = sx(i);
+    s += `<line x1="${x.toFixed(1)}" y1="${MT}" x2="${x.toFixed(1)}" y2="${MT+PH}" stroke="${i===0?'#999':'#f2f2f2'}" stroke-width="${i===0?1.5:1}"/>`;
+    if(i%2===0 || N<=8) s += `<text x="${x.toFixed(1)}" y="${MT+PH+18}" text-anchor="middle" font-size="11" fill="#aaa">${i}</text>`;
+  }
+  s += `<line x1="${ML}" y1="${MT+PH}" x2="${ML+PW}" y2="${MT+PH}" stroke="#999" stroke-width="1.5"/>`;
+
+  /* axis names */
+  s += `<foreignObject x="${ML+PW-24}" y="${MT+PH-30}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('x')}</div></foreignObject>`;
+  s += `<foreignObject x="${ML+6}" y="${MT-6}" width="26" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">${T('y')}</div></foreignObject>`;
+
+  /* curves */
+  const SAMP = 240;
+  let pf = '', pg = '';
+  for(let i=0;i<=SAMP;i++){
+    const x = N*i/SAMP;
+    const yf = Math.min(f(x), yMax), yg = Math.min(g(x), yMax);
+    pf += (i===0?'M':'L') + ` ${sx(x).toFixed(1)} ${sy(yf).toFixed(1)}`;
+    pg += (i===0?'M':'L') + ` ${sx(x).toFixed(1)} ${sy(yg).toFixed(1)}`;
+  }
+  s += `<path d="${pf}" fill="none" stroke="var(--c-red)" stroke-width="2.5"/>`;
+  s += `<path d="${pg}" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>`;
+
+  /* integer dots inside the table range */
+  XS.forEach(x => {
+    if(x > N) return;
+    s += `<circle cx="${sx(x).toFixed(1)}" cy="${sy(Math.min(f(x),yMax)).toFixed(1)}" r="3.5" fill="var(--c-red)"/>`;
+    s += `<circle cx="${sx(x).toFixed(1)}" cy="${sy(Math.min(g(x),yMax)).toFixed(1)}" r="3.5" fill="var(--c-blue)"/>`;
+  });
+
+  /* crossing marker */
+  if(N >= crossX){
+    const cy = sy(Math.min(f(crossX), yMax));
+    s += `<circle cx="${sx(crossX).toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="none" stroke="var(--c-orange)" stroke-width="3">`;
+    s += `<animate attributeName="r" values="7;13;7" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  }
+
+  /* selected x marker */
+  if(selX <= N){
+    const xs = sx(selX);
+    s += `<line x1="${xs.toFixed(1)}" y1="${MT}" x2="${xs.toFixed(1)}" y2="${MT+PH}" stroke="var(--c-purple)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+    s += `<circle cx="${xs.toFixed(1)}" cy="${sy(Math.min(f(selX),yMax)).toFixed(1)}" r="6" fill="var(--c-red)" stroke="#fff" stroke-width="2"/>`;
+    s += `<circle cx="${xs.toFixed(1)}" cy="${sy(Math.min(g(selX),yMax)).toFixed(1)}" r="6" fill="var(--c-blue)" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${xs.toFixed(1)}" y="${MT+PH+34}" text-anchor="middle" font-size="12" fill="var(--c-purple)" font-weight="700">${selX}</text>`;
+  }
+
+  /* curve labels, pushed apart when close */
+  let lyF = sy(Math.min(f(N), yMax)), lyG = sy(Math.min(g(N), yMax));
+  if(Math.abs(lyF-lyG) < 26){ if(lyF<lyG){ lyF -= 13; lyG += 13; } else { lyF += 13; lyG -= 13; } }
+  const clamp = v => Math.max(MT+2, Math.min(MT+PH-26, v-13));
+  s += `<foreignObject x="${ML+PW-124}" y="${clamp(lyF).toFixed(1)}" width="120" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-red);font-weight:600;white-space:nowrap;text-align:right">${T('y=10x^2')}</div></foreignObject>`;
+  s += `<foreignObject x="${ML+PW-124}" y="${clamp(lyG).toFixed(1)}" width="120" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600;white-space:nowrap;text-align:right">${T('y=2^x')}</div></foreignObject>`;
+
+  document.getElementById('graph').innerHTML = s;
+
+  /* live caption */
+  const N1 = N.toFixed(1);
+  let msg;
+  if(N < crossX){
+    msg = `<span style="color:var(--c-red);font-weight:600;">この範囲では ${T('y=10x^2')} のグラフが上にあります</span>`;
+  } else {
+    msg = `<span style="color:var(--c-blue);font-weight:600;">${T('x \\fallingdotseq ' + crossX.toFixed(2))} で ${T('y=2^x')} が追い越しました</span>`;
+  }
+  document.getElementById('graph-calc').innerHTML =
+    T(`N=${N1}\\;:\\quad 10N^2=${f(N).toFixed(0)},\\quad 2^{N}=${g(N).toFixed(0)}`) + '<br>' + msg;
+}
+
+function setupSlider(){
+  const slider = document.getElementById('n-slider');
+  const valDisplay = document.getElementById('n-value');
+  slider.addEventListener('input', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    nVal = parseFloat(slider.value);
+    valDisplay.textContent = nVal.toFixed(1);
+    drawGraph();
+  });
+}
+
+function setupAnimation(){
+  const btn = document.getElementById('anim-btn');
+  const slider = document.getElementById('n-slider');
+  const valDisplay = document.getElementById('n-value');
+  btn.addEventListener('click', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    const startN = 6, endN = 14, duration = 4000;
+    let startTime = null;
+    function animate(ts){
+      if(!startTime) startTime = ts;
+      const progress = Math.min((ts-startTime)/duration, 1);
+      const eased = progress < 0.5 ? 2*progress*progress : 1 - Math.pow(-2*progress+2, 2)/2;
+      nVal = startN + (endN-startN)*eased;
+      slider.value = nVal;
+      valDisplay.textContent = nVal.toFixed(1);
+      drawGraph();
+      if(progress < 1) animId = requestAnimationFrame(animate); else animId = null;
+    }
+    animId = requestAnimationFrame(animate);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

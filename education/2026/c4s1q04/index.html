@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>累乗根の定義と個数</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn { appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px;
+    padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent);
+    font-size: 1rem; font-weight: 600; padding: .6rem .9rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 56px; font-family: inherit; user-select: none; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.97); }
+  .tab .katex { font-size: 1rem; }
+  .tabs-label { font-size: .95rem; font-weight: 600; margin: .75rem 0 .25rem; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: center;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .6rem 1rem; margin: .75rem 0; font-size: .9rem; }
+  .legend span.sw { display: inline-block; width: 22px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
+  .legend span.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; margin-right: .4rem; }
+
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; margin: .5rem 0; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>累乗根の定義と個数</h1>
+  <p class="subtitle">累乗根がいくつあるかを、グラフの交点として確かめましょう。</p>
+
+  <h2>基本の考え方</h2>
+  <p><span id="f-a"></span> を実数、<span id="f-n"></span> を正の整数とします。<span id="f-n2"></span> 乗して <span id="f-a2"></span> になる数、すなわち次の方程式を満たす <span id="f-x"></span> を <span id="f-a3"></span> の <span id="f-n3"></span> 乗根といいます。</p>
+  <div class="formula-box" id="f-def"></div>
+  <p>この方程式の解は、曲線 <span id="f-curve"></span> と直線 <span id="f-line"></span> の交点の <span id="f-x2"></span> 座標です。だから「解が何個あるか」は、図を見れば数えられます。</p>
+
+  <h2>動かして確かめよう</h2>
+  <p class="tabs-label"><span id="lbl-ntab"></span> を選ぶ</p>
+  <div class="tabs" id="n-tabs"></div>
+  <div class="slider-row">
+    <label><span id="lbl-a"></span> =</label>
+    <input type="range" id="a-slider" min="0" max="22" step="1" value="14">
+    <span class="slider-val" id="a-value">8</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+  </div>
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 520" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">図を上下にドラッグしても、オレンジの直線の高さ <span id="f-ah"></span> を変えられます。</p>
+  <div class="legend" id="legend"></div>
+  <div class="live-calc" id="live-calc"></div>
+
+  <p class="tabs-label">問の値をそのまま入れてみる</p>
+  <div class="tabs" id="preset-tabs"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+  <div class="note" id="note-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=520,PADL=55,PADR=25,PADT=25,PADB=45;
+const HALFW=(W-PADL-PADR)/2, HALFH=(H-PADT-PADB)/2;
+const ox=PADL+HALFW, oy=PADT+HALFH;
+
+const A_VALUES=[-243,-125,-64,-32,-27,-16,-8,-4,-2,-1,0,1,2,4,8,16,25,27,32,64,125,243,256];
+const PRESETS=[
+  {tag:'(1)',tex:'\\sqrt[3]{125}',n:3,a:125},
+  {tag:'(2)',tex:'\\sqrt[3]{-125}',n:3,a:-125},
+  {tag:'(3)',tex:'\\sqrt[4]{256}',n:4,a:256},
+  {tag:'(4)',tex:'\\sqrt[5]{-243}',n:5,a:-243}
+];
+
+let nVal=3, aIdx=14, animId=null, dragging=false, frozen=null;
+
+function aVal(){return A_VALUES[aIdx];}
+function xMaxOf(a,n){return Math.max(1.6, Math.pow(Math.abs(a),1/n)*1.45);}
+function yMaxOf(a){return Math.max(2, Math.abs(a)*1.6);}
+function scaleXOf(a,n){return HALFW/xMaxOf(a,n);}
+function scaleYOf(a){return HALFH/yMaxOf(a);}
+function px(x,sx){return ox+x*sx;}
+function py(y,sy){return oy-y*sy;}
+
+function niceStep(v){
+  const e=Math.pow(10,Math.floor(Math.log10(Math.max(v,1e-9))));
+  const f=v/e;
+  let s; if(f<1.5)s=1; else if(f<3.5)s=2; else if(f<7.5)s=5; else s=10;
+  return s*e;
+}
+function fmt(v){
+  if(Math.abs(v-Math.round(v))<1e-9) return String(Math.round(v));
+  return (Math.abs(v)<10)?v.toFixed(2):v.toFixed(1);
+}
+function roots(n,a){
+  if(a===0) return [0];
+  if(n%2===1) return [Math.sign(a)*Math.pow(Math.abs(a),1/n)];
+  if(a<0) return [];
+  const r=Math.pow(a,1/n); return [-r,r];
+}
+
+function init(){
+  document.getElementById('f-a').innerHTML=T('a');
+  document.getElementById('f-a2').innerHTML=T('a');
+  document.getElementById('f-a3').innerHTML=T('a');
+  document.getElementById('f-n').innerHTML=T('n');
+  document.getElementById('f-n2').innerHTML=T('n');
+  document.getElementById('f-n3').innerHTML=T('n');
+  document.getElementById('f-x').innerHTML=T('x');
+  document.getElementById('f-x2').innerHTML=T('x');
+  document.getElementById('f-curve').innerHTML=T('y=x^n');
+  document.getElementById('f-line').innerHTML=T('y=a');
+  document.getElementById('lbl-a').innerHTML=T('a');
+  document.getElementById('f-ah').innerHTML=T('y=a');
+  document.getElementById('lbl-ntab').innerHTML=T('n');
+  tex('x^{n}=a',document.getElementById('f-def'),true);
+  document.getElementById('legend').innerHTML=
+    '<span><span class="sw" style="background:var(--c-blue)"></span>'+T('y=x^n')+'</span>'+
+    '<span><span class="sw" style="background:var(--c-orange)"></span>'+T('y=a')+'</span>'+
+    '<span><span class="dot" style="background:var(--c-purple)"></span>交点の '+T('x')+' 座標が '+T('a')+' の '+T('n')+' 乗根</span>';
+  tex('\\text{偶数乗根では }\\sqrt[4]{256}=4\\text{ であって }\\pm4\\text{ ではない。記号 }\\sqrt[n]{a}\\text{ は正のほうだけを表す。}',
+      document.getElementById('note-box'),false);
+  buildTabs(); buildPresets(); initWalkthrough(); setupSlider(); setupAnim(); setupDrag(); draw();
+}
+
+function buildTabs(){
+  const box=document.getElementById('n-tabs');
+  let h='';
+  for(let n=2;n<=6;n++) h+='<button class="tab'+(n===nVal?' active':'')+'" data-n="'+n+'">'+T('n='+n)+'</button>';
+  box.innerHTML=h;
+  box.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+    nVal=parseInt(b.dataset.n,10); stopAnim();
+    document.querySelectorAll('#preset-tabs .tab').forEach(o=>o.classList.remove('active'));
+    box.querySelectorAll('.tab').forEach(o=>o.classList.remove('active'));
+    b.classList.add('active'); draw();
+  }));
+}
+
+function buildPresets(){
+  const box=document.getElementById('preset-tabs');
+  let h='';
+  PRESETS.forEach((p,i)=>{h+='<button class="tab" data-i="'+i+'">'+p.tag+' '+T(p.tex)+'</button>';});
+  box.innerHTML=h;
+  box.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+    const p=PRESETS[parseInt(b.dataset.i,10)];
+    stopAnim(); nVal=p.n; aIdx=A_VALUES.indexOf(p.a);
+    box.querySelectorAll('.tab').forEach(o=>o.classList.remove('active'));
+    b.classList.add('active'); syncControls(); draw();
+  }));
+}
+
+function syncControls(){
+  document.getElementById('a-slider').value=aIdx;
+  document.getElementById('a-value').textContent=String(aVal());
+  document.querySelectorAll('#n-tabs .tab').forEach(o=>{
+    o.classList.toggle('active',parseInt(o.dataset.n,10)===nVal);
+  });
+}
+
+function draw(){
+  const a=aVal(), n=nVal;
+  const sx=frozen?frozen.sx:scaleXOf(a,n);
+  const sy=frozen?frozen.sy:scaleYOf(a);
+  const xMax=HALFW/sx, yMax=HALFH/sy;
+  const xs=niceStep(xMax/3), ys=niceStep(yMax/3);
+  let s='';
+  for(let k=-Math.floor(xMax/xs);k<=Math.floor(xMax/xs);k++){
+    const X=px(k*xs,sx);
+    s+='<line x1="'+X+'" y1="'+PADT+'" x2="'+X+'" y2="'+(H-PADB)+'" stroke="'+(k===0?'#999':'#eee')+'" stroke-width="'+(k===0?1.5:1)+'"/>';
+  }
+  for(let k=-Math.floor(yMax/ys);k<=Math.floor(yMax/ys);k++){
+    const Y=py(k*ys,sy);
+    s+='<line x1="'+PADL+'" y1="'+Y+'" x2="'+(W-PADR)+'" y2="'+Y+'" stroke="'+(k===0?'#999':'#eee')+'" stroke-width="'+(k===0?1.5:1)+'"/>';
+  }
+  for(let k=-Math.floor(xMax/xs);k<=Math.floor(xMax/xs);k++){
+    if(k===0) continue;
+    s+='<text x="'+px(k*xs,sx)+'" y="'+(oy+16)+'" text-anchor="middle" font-size="11" fill="#aaa" stroke="#fff" stroke-width="3" paint-order="stroke">'+fmt(k*xs)+'</text>';
+  }
+  for(let k=-Math.floor(yMax/ys);k<=Math.floor(yMax/ys);k++){
+    if(k===0) continue;
+    s+='<text x="'+(ox-8)+'" y="'+(py(k*ys,sy)+4)+'" text-anchor="end" font-size="11" fill="#aaa" stroke="#fff" stroke-width="3" paint-order="stroke">'+fmt(k*ys)+'</text>';
+  }
+  s+='<text x="'+(ox-8)+'" y="'+(oy+16)+'" text-anchor="end" font-size="11" fill="#aaa">O</text>';
+
+  let d='',pen=false;
+  for(let i=0;i<=480;i++){
+    const x=-xMax+2*xMax*i/480, y=Math.pow(x,n);
+    if(!isFinite(y)||Math.abs(y)>yMax){pen=false;continue;}
+    d+=(pen?' L ':' M ')+px(x,sx).toFixed(2)+' '+py(y,sy).toFixed(2); pen=true;
+  }
+  s+='<path d="'+d+'" fill="none" stroke="var(--c-blue)" stroke-width="2.5"/>';
+
+  const aY=py(a,sy);
+  if(aY>=PADT-1&&aY<=H-PADB+1){
+    s+='<line x1="'+PADL+'" y1="'+aY+'" x2="'+(W-PADR)+'" y2="'+aY+'" stroke="var(--c-orange)" stroke-width="3" stroke-dasharray="10 5"/>';
+    s+='<text x="'+(W-PADR-30)+'" y="'+(aY-8)+'" text-anchor="end" font-size="13" font-weight="700" fill="var(--c-orange)" stroke="#fff" stroke-width="3.5" paint-order="stroke">'+a+'</text>';
+  }
+
+  const rs=roots(n,a);
+  rs.forEach(r=>{
+    const X=px(r,sx);
+    if(X<PADL-1||X>W-PADR+1) return;
+    s+='<line x1="'+X+'" y1="'+aY+'" x2="'+X+'" y2="'+oy+'" stroke="var(--c-purple)" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    s+='<circle cx="'+X+'" cy="'+aY+'" r="7" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5"/>';
+    s+='<circle cx="'+X+'" cy="'+aY+'" r="7" fill="none" stroke="var(--c-purple)" stroke-width="2.5"><animate attributeName="r" values="7;14;7" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0;0.9" dur="1.4s" repeatCount="indefinite"/></circle>';
+    s+='<text x="'+X+'" y="'+(oy+34)+'" text-anchor="middle" font-size="13" font-weight="700" fill="var(--c-purple)" stroke="#fff" stroke-width="3.5" paint-order="stroke">'+fmt(r)+'</text>';
+  });
+
+  s+='<foreignObject x="'+(W-PADR-20)+'" y="'+(oy-24)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">'+T('x')+'</div></foreignObject>';
+  s+='<foreignObject x="'+(ox+6)+'" y="'+(PADT-2)+'" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#999">'+T('y')+'</div></foreignObject>';
+  document.getElementById('graph').innerHTML=s;
+
+  let head=T('x^{'+n+'}='+a),body='';
+  const isInt=v=>Math.abs(v-Math.round(v))<1e-9;
+  const rel=v=>isInt(v)?'=':'\\approx';
+  // 2 乗根はこれまで通り根指数を書かない
+  const rt=v=>n===2?'\\sqrt{'+v+'}':'\\sqrt['+n+']{'+v+'}';
+  if(rs.length===2){
+    const r=rs[1];
+    body='<span style="color:var(--c-purple);font-weight:600">解は 2 個</span><br>'+T('x=\\pm'+rt(a)+rel(r)+'\\pm'+fmt(r));
+  }else if(rs.length===1&&a===0){
+    body='<span style="color:var(--c-purple);font-weight:600">解は 1 個</span><br>'+T('x='+rt('0')+'=0');
+  }else if(rs.length===1){
+    body='<span style="color:var(--c-purple);font-weight:600">解は 1 個</span><br>'+T('x='+rt(a)+rel(rs[0])+fmt(rs[0]));
+  }else{
+    body='<span style="color:var(--c-red);font-weight:600">解は 0 個</span><br>'+T('n\\text{ が偶数で }a<0\\text{ だから実数の }'+n+'\\text{ 乗根はない}');
+  }
+  document.getElementById('live-calc').innerHTML=head+'<br>'+body;
+}
+
+function initWalkthrough(){
+  const steps=[
+    {label:'Step 1: 累乗根の定義',formula:'x^{n}=a\\;\\text{を満たす }x\\text{ を }a\\text{ の }n\\text{ 乗根という}'},
+    {label:'Step 2: n が奇数のとき',formula:'\\text{解はただ }1\\text{ つ。これを }\\sqrt[n]{a}\\text{ と書き、符号は }a\\text{ と同じ}'},
+    {label:'Step 3: n が偶数のとき',formula:'a>0:\\;\\pm\\sqrt[n]{a}\\text{ の }2\\text{ つ},\\quad a=0:\\;0,\\quad a<0:\\;\\text{解なし}'},
+    {label:'Step 4: (1) 3 乗して 125 になる数',formula:'125=5^{3}\\;\\Longrightarrow\\;\\sqrt[3]{125}=5'},
+    {label:'Step 5: (2) 奇数乗根は符号がそのまま',formula:'-125=(-5)^{3}\\;\\Longrightarrow\\;\\sqrt[3]{-125}=-5'},
+    {label:'Step 6: (3) 偶数乗根は正のほうを取る',formula:'256=4^{4}=(-4)^{4}\\;\\Longrightarrow\\;\\sqrt[4]{256}=4'},
+    {label:'Step 7: (4) 5 乗して −243 になる数',formula:'-243=(-3)^{5}\\;\\Longrightarrow\\;\\sqrt[5]{-243}=-3'},
+    {label:'Step 8: まとめ',formula:'\\sqrt[3]{125}=5,\\;\\sqrt[3]{-125}=-5,\\;\\sqrt[4]{256}=4,\\;\\sqrt[5]{-243}=-3'}
+  ];
+  let cur=0;
+  const container=document.getElementById('walkthrough');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  function render(){
+    let html='';
+    for(let i=0;i<=cur;i++){
+      html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+steps[i].label+'</div><div class="formula-line">'+T(steps[i].formula)+'</div></div>';
+    }
+    container.innerHTML=html;
+    counter.textContent=(cur+1)+' / '+steps.length;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function setupSlider(){
+  const sl=document.getElementById('a-slider');
+  sl.addEventListener('input',()=>{
+    stopAnim(); aIdx=parseInt(sl.value,10);
+    document.getElementById('a-value').textContent=String(aVal());
+    document.querySelectorAll('#preset-tabs .tab').forEach(o=>o.classList.remove('active'));
+    draw();
+  });
+}
+
+function stopAnim(){ if(animId){cancelAnimationFrame(animId);animId=null;} }
+
+function setupAnim(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    stopAnim();
+    const last=A_VALUES.length-1;
+    let start=null;
+    const dur=6000;
+    function frame(ts){
+      if(!start) start=ts;
+      const p=Math.min((ts-start)/dur,1);
+      const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      aIdx=Math.round(e*last);
+      syncControls(); draw();
+      if(p<1) animId=requestAnimationFrame(frame); else animId=null;
+    }
+    animId=requestAnimationFrame(frame);
+  });
+}
+
+function setupDrag(){
+  const wrap=document.getElementById('svg-wrap');
+  function toY(cy){
+    const rect=wrap.getBoundingClientRect();
+    const svgY=(cy-rect.top)/rect.height*H;
+    return (oy-svgY)/(frozen?frozen.sy:scaleYOf(aVal()));
+  }
+  function startDrag(cy){
+    stopAnim();
+    frozen={sx:scaleXOf(aVal(),nVal),sy:scaleYOf(aVal())};
+    dragging=true; moveDrag(cy);
+  }
+  function moveDrag(cy){
+    const y=toY(cy);
+    let best=aIdx,bd=Infinity;
+    const lim=HALFH/frozen.sy;
+    for(let i=0;i<A_VALUES.length;i++){
+      if(Math.abs(A_VALUES[i])>lim) continue;
+      const dd=Math.abs(A_VALUES[i]-y);
+      if(dd<bd){bd=dd;best=i;}
+    }
+    aIdx=best; syncControls();
+    document.querySelectorAll('#preset-tabs .tab').forEach(o=>o.classList.remove('active'));
+    draw();
+  }
+  function endDrag(){ if(dragging){dragging=false;frozen=null;draw();} }
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientY);});
+  window.addEventListener('mousemove',e=>{if(dragging){e.preventDefault();moveDrag(e.clientY);}});
+  window.addEventListener('mouseup',endDrag);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];startDrag(t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(dragging){e.preventDefault();const t=e.touches[0];moveDrag(t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

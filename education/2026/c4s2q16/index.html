@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>積の形の対数方程式</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX radical svg to 0 inside foreignObject; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .tabs { display: flex; flex-direction: column; gap: .5rem; margin: .75rem 0; }
+  .tab { appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: 1rem; font-weight: 600; padding: .85rem 1rem; border-radius: 10px; cursor: pointer; min-height: 48px; font-family: inherit; text-align: left; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:active { transform: scale(.99); }
+  .tab-inner { display: block; overflow-x: auto; }
+  .tab-name { display: block; font-size: .8rem; opacity: .85; margin-bottom: .15rem; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn { appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: 1rem; font-weight: 600; padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer; min-height: 48px; min-width: 110px; font-family: inherit; user-select: none; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .live-calc .row { margin: .3rem 0; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: .85rem; color: #555; margin: .25rem 0 .75rem; }
+  .legend i { display: inline-block; width: .75rem; height: .75rem; border-radius: 50%; margin-right: .35rem; }
+  .ok { color: var(--c-green); font-weight: 700; }
+  .ng { color: var(--c-red); font-weight: 700; }
+
+  .table-wrap { overflow-x: auto; }
+  .compare-table { border-collapse: collapse; width: 100%; background: #fff; font-size: .92rem; margin: .75rem 0; }
+  .compare-table th, .compare-table td { border: 1px solid #e8e8e8; padding: .6rem .5rem; text-align: center; }
+  .compare-table th { background: #f2f6ff; font-weight: 700; color: #445; }
+  .compare-table td.hl { background: #f7fff8; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>積の形の対数方程式</h1>
+  <p class="subtitle">左辺が和の形か積の形かで真数条件が変わることを見比べましょう。</p>
+
+  <h2>2 つの見た目のちがい</h2>
+  <p>次の 2 つの方程式は、変形すると同じ 2 次方程式になります。それでも答えは同じになりません。どちらかをタップして選びましょう。</p>
+  <div class="tabs" id="tabs">
+    <button class="tab" id="tab0"><span class="tab-name">和の形</span><span class="tab-inner" id="tab0i"></span></button>
+    <button class="tab active" id="tab1"><span class="tab-name">積の形（対象の問題）</span><span class="tab-inner" id="tab1i"></span></button>
+  </div>
+  <div class="note">真数条件は<b>書かれている対数の個数だけ</b>できます。和の形は真数が 2 つなので条件も 2 つ、積の形は真数が 1 つなので条件も 1 つです。</div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>動かして確かめよう</h2>
+  <p>スライダーで <span id="lbl-x-inline"></span> を動かすと、2 つの因数の符号と真数条件、そして放物線 <span id="lbl-para"></span> の高さが同時に変わります。放物線が高さ 8 になる点が方程式の解の候補です。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-x"></span> =</label>
+    <input type="range" id="x-slider" min="-1" max="12" step="0.01" value="10">
+    <span class="slider-val" id="x-value">10.00</span>
+  </div>
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="graph" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--c-green)"></i>各因数が正になる範囲</span>
+    <span><i style="background:var(--c-blue)"></i>選んだ形の真数条件</span>
+    <span><i style="background:var(--c-orange)"></i>右辺にあたる高さ 8</span>
+    <span><i style="background:var(--c-red)"></i>捨てる候補</span>
+    <span><i style="background:var(--c-purple)"></i>いま選んでいる値</span>
+  </div>
+  <div class="live-calc" id="live-calc"></div>
+
+  <h2>見比べてまとめる</h2>
+  <div class="table-wrap">
+    <table class="compare-table">
+      <tr><th></th><th>和の形</th><th>積の形</th></tr>
+      <tr><th>左辺</th><td id="t-lhs0"></td><td class="hl" id="t-lhs1"></td></tr>
+      <tr><th>真数条件</th><td id="t-cond0"></td><td class="hl" id="t-cond1"></td></tr>
+      <tr><th>2 次方程式</th><td id="t-quad0"></td><td class="hl" id="t-quad1"></td></tr>
+      <tr><th>候補</th><td id="t-cand0"></td><td class="hl" id="t-cand1"></td></tr>
+      <tr><th>答え</th><td id="t-ans0"></td><td class="hl" id="t-ans1"></td></tr>
+    </table>
+  </div>
+
+  <h2>答え</h2>
+  <div class="formula-box" id="answer-box"></div>
+  <div class="note" id="answer-note"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=600;
+const PL=120,PR=572;
+const XMIN=-1,XMAX=12,YMIN=-14,YMAX=22;
+const NL={c1:48,c2:82,c3:120,ax:158};
+const GT=230,GB=584;
+const HALO=' paint-order="stroke" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"';
+const ROOTS=[1,10];
+
+const MODES=[
+ {
+  name:'和の形',
+  eqTex:'\\log_2 (x-2) + \\log_2 (x-9) = 3',
+  lhsTex:'\\log_2 (x-2) + \\log_2 (x-9)',
+  condTex:'x>9',
+  condIv:[[9,XMAX]],
+  ok:[false,true],
+  ansTex:'x=10',
+  defined:function(x){return (x-2)>0 && (x-9)>0;},
+  steps:[
+    ['Step 1: 2 つの真数条件を書き出す','x-2>0 \\;\\text{かつ}\\; x-9>0'],
+    ['Step 2: 共通範囲をとる','x>9 \\quad \\cdots\\cdots\\; \\boxed{1}'],
+    ['Step 3: 左辺を 1 つの対数にまとめる','\\log_2 (x-2)+\\log_2 (x-9)=\\log_2 (x-2)(x-9)'],
+    ['Step 4: 右辺も対数の形に直す','3=\\log_2 8 \\;\\Longrightarrow\\; (x-2)(x-9)=8'],
+    ['Step 5: 整理する','x^2-11x+18=8 \\;\\Longrightarrow\\; x^2-11x+10=0'],
+    ['Step 6: 因数分解する','(x-1)(x-10)=0 \\;\\Longrightarrow\\; x=1,\\;10'],
+    ['Step 7: 真数条件でふるい分ける','\\boxed{1}\\;\\text{より}\\;x=1\\;\\text{は不適}'],
+    ['Step 8: 答え','x=10']
+  ],
+  noteTex:'\\text{和の形では}\\;x=1\\;\\text{のとき}\\;\\log_2 (x-2)\\;\\text{も}\\;\\log_2 (x-9)\\;\\text{も真数が負になり、左辺が意味をもちません。}'
+ },
+ {
+  name:'積の形',
+  eqTex:'\\log_2 (x-2)(x-9) = 3',
+  lhsTex:'\\log_2 (x-2)(x-9)',
+  condTex:'x<2,\\;x>9',
+  condIv:[[XMIN,2],[9,XMAX]],
+  ok:[true,true],
+  ansTex:'x=1,\\;10',
+  defined:function(x){return (x-2)*(x-9)>0;},
+  steps:[
+    ['Step 1: 真数は 1 つだけ','(x-2)(x-9)>0'],
+    ['Step 2: 積の符号を調べる','x<2 \\;\\text{または}\\; x>9 \\quad \\cdots\\cdots\\; \\boxed{1}'],
+    ['Step 3: 右辺を対数の形に直す','3=\\log_2 8'],
+    ['Step 4: 真数どうしを等しいとおく','(x-2)(x-9)=8'],
+    ['Step 5: 整理する','x^2-11x+18=8 \\;\\Longrightarrow\\; x^2-11x+10=0'],
+    ['Step 6: 因数分解する','(x-1)(x-10)=0 \\;\\Longrightarrow\\; x=1,\\;10'],
+    ['Step 7: 真数条件で確かめる','x=1\\;\\text{は}\\;x<2,\\quad x=10\\;\\text{は}\\;x>9\\;\\text{を満たす}'],
+    ['Step 8: 答え','x=1,\\;10']
+  ],
+  noteTex:'\\text{積の形では}\\;x=1\\;\\text{のとき}\\;(x-2)(x-9)=(-1)\\times(-8)=8>0\\;\\text{なので、真数条件を満たします。}'
+ }
+];
+
+let mi=1, xCur=10, cur=0, animId=null;
+
+function M(){return MODES[mi];}
+function px(x){return PL+(x-XMIN)/(XMAX-XMIN)*(PR-PL);}
+function pyG(y){return GT+(YMAX-y)/(YMAX-YMIN)*(GB-GT);}
+function par(x){return (x-2)*(x-9);}
+function fmt(v,d){let s=v.toFixed(d);if(/^-0(\.0+)?$/.test(s))s=s.slice(1);return s;}
+const FOHALO='text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;';
+function fo(x,y,w,h,style,inner){return '<foreignObject x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"><div xmlns="http://www.w3.org/1999/xhtml" style="'+FOHALO+style+'">'+inner+'</div></foreignObject>';}
+
+function init(){
+  document.getElementById('lbl-x').innerHTML=T('x');
+  document.getElementById('lbl-x-inline').innerHTML=T('x');
+  document.getElementById('lbl-para').innerHTML=T('y=(x-2)(x-9)');
+  document.getElementById('tab0i').innerHTML=T(MODES[0].eqTex);
+  document.getElementById('tab1i').innerHTML=T(MODES[1].eqTex);
+  document.getElementById('tab0').addEventListener('click',function(){setMode(0);});
+  document.getElementById('tab1').addEventListener('click',function(){setMode(1);});
+  document.getElementById('prev').addEventListener('click',function(){if(cur>0){cur--;renderSteps();}});
+  document.getElementById('next').addEventListener('click',function(){if(cur<M().steps.length-1){cur++;renderSteps();}});
+  document.getElementById('t-lhs0').innerHTML=T(MODES[0].lhsTex);
+  document.getElementById('t-lhs1').innerHTML=T(MODES[1].lhsTex);
+  document.getElementById('t-cond0').innerHTML=T('x>9');
+  document.getElementById('t-cond1').innerHTML=T('x<2\\;\\text{または}\\;x>9');
+  document.getElementById('t-quad0').innerHTML=T('x^2-11x+10=0');
+  document.getElementById('t-quad1').innerHTML=T('x^2-11x+10=0');
+  document.getElementById('t-cand0').innerHTML=T('x=1,\\;10');
+  document.getElementById('t-cand1').innerHTML=T('x=1,\\;10');
+  document.getElementById('t-ans0').innerHTML=T('x=10');
+  document.getElementById('t-ans1').innerHTML=T('x=1,\\;10');
+  setupSlider();
+  setupAnimation();
+  setMode(1);
+}
+
+function setMode(i){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  mi=i;cur=0;
+  document.getElementById('tab0').classList.toggle('active',i===0);
+  document.getElementById('tab1').classList.toggle('active',i===1);
+  tex(M().ansTex,document.getElementById('answer-box'),true);
+  document.getElementById('answer-note').innerHTML=T(M().noteTex);
+  renderSteps();
+  draw();
+}
+
+function renderSteps(){
+  const m=M();let html='';
+  for(let i=0;i<=cur;i++){
+    html+='<div class="step '+(i===cur?'current':'')+'"><div class="label">'+m.steps[i][0]+'</div><div class="formula-line">'+T(m.steps[i][1])+'</div></div>';
+  }
+  document.getElementById('walkthrough').innerHTML=html;
+  document.getElementById('counter').textContent=(cur+1)+' / '+m.steps.length;
+  document.getElementById('prev').disabled=(cur===0);
+  document.getElementById('next').disabled=(cur===m.steps.length-1);
+}
+
+function ivBar(y,ivs,color,labelTex,thick){
+  let s='';
+  s+='<line x1="'+PL+'" y1="'+y+'" x2="'+PR+'" y2="'+y+'" stroke="#ececec" stroke-width="'+thick+'" stroke-linecap="round"/>';
+  for(let i=0;i<ivs.length;i++){
+    const a=Math.max(px(ivs[i][0]),PL),b=Math.min(px(ivs[i][1]),PR);
+    s+='<line x1="'+a+'" y1="'+y+'" x2="'+b+'" y2="'+y+'" stroke="'+color+'" stroke-width="'+thick+'" stroke-linecap="round"/>';
+    if(ivs[i][0]>XMIN)s+='<circle cx="'+a+'" cy="'+y+'" r="'+(thick/2+2)+'" fill="#fff" stroke="'+color+'" stroke-width="2.5"/>';
+    if(ivs[i][1]<XMAX)s+='<circle cx="'+b+'" cy="'+y+'" r="'+(thick/2+2)+'" fill="#fff" stroke="'+color+'" stroke-width="2.5"/>';
+  }
+  s+=fo(2,y-17,104,34,'font-size:12px;color:'+color+';font-weight:600;white-space:nowrap;display:flex;align-items:center;justify-content:flex-end;height:100%',T(labelTex));
+  return s;
+}
+
+function draw(){
+  const m=M();let s='',tk='';
+
+  s+='<rect x="0" y="16" width="600" height="200" fill="#fbfcff" stroke="#eef1f7"/>';
+  s+=ivBar(NL.c1,[[2,XMAX]],'var(--c-green)','x-2>0',6);
+  s+=ivBar(NL.c2,[[9,XMAX]],'var(--c-green)','x-9>0',6);
+  s+=ivBar(NL.c3,m.condIv,'var(--c-blue)',m.condTex,9);
+  s+=fo(PL+2,NL.c3-25,220,20,'font-size:10px;color:var(--c-blue);font-weight:700','真数条件 '+T('\\boxed{1}'));
+
+  s+='<line x1="'+(PL-14)+'" y1="'+NL.ax+'" x2="'+(PR+14)+'" y2="'+NL.ax+'" stroke="#999" stroke-width="1.5"/>';
+  s+='<path d="M '+(PR+16)+' '+NL.ax+' l -9 -4.5 l 0 9 z" fill="#999"/>';
+  for(let i=XMIN;i<=XMAX;i++){
+    const X=px(i);
+    s+='<line x1="'+X+'" y1="'+(NL.ax-5)+'" x2="'+X+'" y2="'+(NL.ax+5)+'" stroke="#bbb" stroke-width="1"/>';
+    tk+='<text x="'+X+'" y="'+(NL.ax-11)+'" text-anchor="middle" font-size="11" fill="#aaa"'+HALO+'>'+i+'</text>';
+  }
+  s+=fo(PR+2,NL.ax+2,26,24,'font-size:14px;color:#999',T('x'));
+
+  for(let i=0;i<ROOTS.length;i++){
+    const r=ROOTS[i],ok=m.ok[i],X=px(r);
+    const col=ok?'var(--c-blue)':'var(--c-red)';
+    s+='<circle cx="'+X+'" cy="'+NL.ax+'" r="8" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+    if(ok){
+      s+='<circle cx="'+X+'" cy="'+NL.ax+'" r="8" fill="none" stroke="var(--c-orange)" stroke-width="2.5"><animate attributeName="r" values="8;15;8" dur="1.5s" repeatCount="indefinite"/></circle>';
+    }else{
+      s+='<path d="M '+(X-3.4)+' '+(NL.ax-3.4)+' L '+(X+3.4)+' '+(NL.ax+3.4)+' M '+(X+3.4)+' '+(NL.ax-3.4)+' L '+(X-3.4)+' '+(NL.ax+3.4)+'" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+    }
+    s+=fo(Math.min(Math.max(X-48,2),W-98),NL.ax+14,96,42,'font-size:12px;color:'+col+';font-weight:700;text-align:center;line-height:1.35',T('x='+r)+(ok?'':'<br/>不適'));
+  }
+
+  s+='<rect x="0" y="222" width="600" height="374" fill="#fff" stroke="#eef1f7"/>';
+  for(let i=0;i<m.condIv.length;i++){
+    const a=Math.max(px(m.condIv[i][0]),PL),b=Math.min(px(m.condIv[i][1]),PR);
+    s+='<rect x="'+a+'" y="'+GT+'" width="'+(b-a)+'" height="'+(GB-GT)+'" fill="rgba(42,109,244,0.06)"/>';
+  }
+
+  const y0=pyG(0);
+  s+='<line x1="'+PL+'" y1="'+y0+'" x2="'+PR+'" y2="'+y0+'" stroke="#bbb" stroke-width="1.5"/>';
+  const x0=px(0);
+  s+='<line x1="'+x0+'" y1="'+GT+'" x2="'+x0+'" y2="'+GB+'" stroke="#bbb" stroke-width="1.5"/>';
+  for(let i=XMIN;i<=XMAX;i++){
+    if(i===0)continue;
+    const X=px(i);
+    s+='<line x1="'+X+'" y1="'+(y0-4)+'" x2="'+X+'" y2="'+(y0+4)+'" stroke="#ccc" stroke-width="1"/>';
+    tk+='<text x="'+X+'" y="'+(y0+17)+'" text-anchor="middle" font-size="11" fill="#bbb"'+HALO+'>'+i+'</text>';
+  }
+  for(let i=-12;i<=20;i+=4){
+    const Y=pyG(i);
+    s+='<line x1="'+(x0-4)+'" y1="'+Y+'" x2="'+(x0+4)+'" y2="'+Y+'" stroke="#ccc" stroke-width="1"/>';
+    tk+='<text x="'+(x0-8)+'" y="'+(Y+4)+'" text-anchor="end" font-size="11" fill="#bbb"'+HALO+'>'+i+'</text>';
+  }
+
+  for(let i=0;i<m.condIv.length;i++){
+    const a=Math.max(px(m.condIv[i][0]),PL),b=Math.min(px(m.condIv[i][1]),PR);
+    s+='<line x1="'+a+'" y1="'+y0+'" x2="'+b+'" y2="'+y0+'" stroke="var(--c-blue)" stroke-width="5" opacity="0.55" stroke-linecap="round"/>';
+  }
+
+  const ky=pyG(8);
+  s+='<line x1="'+PL+'" y1="'+ky+'" x2="'+PR+'" y2="'+ky+'" stroke="var(--c-orange)" stroke-width="2.5" stroke-dasharray="10 5"/>';
+  s+=fo(px(3.9),ky-34,130,30,'font-size:13px;color:var(--c-orange);font-weight:700;text-align:center',T('y=8'));
+
+  const N=460;let seg=[],segs=[];
+  for(let i=0;i<=N;i++){
+    const x=XMIN+(XMAX-XMIN)*i/N,y=par(x);
+    if(y<YMIN||y>YMAX){if(seg.length>1)segs.push(seg);seg=[];continue;}
+    seg.push(px(x).toFixed(1)+','+pyG(y).toFixed(1));
+  }
+  if(seg.length>1)segs.push(seg);
+  for(let i=0;i<segs.length;i++){
+    s+='<polyline points="'+segs[i].join(' ')+'" fill="none" stroke="var(--c-purple)" stroke-width="3" stroke-linejoin="round"/>';
+  }
+  s+=fo(px(3.6),GT+4,160,30,'font-size:13px;color:var(--c-purple);font-weight:700;white-space:nowrap',T('y=(x-2)(x-9)'));
+
+  for(let i=0;i<ROOTS.length;i++){
+    const r=ROOTS[i],X=px(r),ok=m.ok[i];
+    s+='<line x1="'+X+'" y1="'+ky+'" x2="'+X+'" y2="'+y0+'" stroke="'+(ok?'var(--c-blue)':'var(--c-red)')+'" stroke-width="1.5" stroke-dasharray="5 4"/>';
+    const col=ok?'var(--c-blue)':'var(--c-red)';
+    s+='<circle cx="'+X+'" cy="'+ky+'" r="7" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+    if(ok){
+      s+='<circle cx="'+X+'" cy="'+ky+'" r="7" fill="none" stroke="var(--c-orange)" stroke-width="2.5"><animate attributeName="r" values="7;14;7" dur="1.5s" repeatCount="indefinite"/></circle>';
+    }else{
+      s+='<path d="M '+(X-3.2)+' '+(ky-3.2)+' L '+(X+3.2)+' '+(ky+3.2)+' M '+(X+3.2)+' '+(ky-3.2)+' L '+(X-3.2)+' '+(ky+3.2)+'" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+    }
+  }
+
+  const xc=Math.min(Math.max(xCur,XMIN),XMAX),XC=px(xc);
+  s+='<line x1="'+XC+'" y1="30" x2="'+XC+'" y2="'+NL.ax+'" stroke="var(--c-purple)" stroke-width="1.6" stroke-dasharray="6 5" opacity="0.85"/>';
+  s+='<line x1="'+XC+'" y1="'+GT+'" x2="'+XC+'" y2="'+GB+'" stroke="var(--c-purple)" stroke-width="1.6" stroke-dasharray="6 5" opacity="0.85"/>';
+  s+='<path d="M '+XC+' '+(NL.ax-21)+' l -5.5 -8 l 11 0 z" fill="var(--c-purple)"/>';
+  const yc=par(xc);
+  if(yc>=YMIN&&yc<=YMAX){
+    s+='<circle cx="'+XC+'" cy="'+pyG(yc)+'" r="7" fill="var(--c-purple)" stroke="#fff" stroke-width="2"/>';
+  }
+
+  document.getElementById('graph').innerHTML=s+tk;
+  updateLive(xc);
+}
+
+function updateLive(x){
+  const m=M();
+  const u=x-2,v=x-9,pr=u*v;
+  function mark(t,val){
+    const pos=val>0;
+    const sym=Math.abs(val)<0.005?'= 0':(pos?'&gt; 0':'&lt; 0');
+    return '<span class="'+(pos?'ok':'ng')+'">'+T(t+'='+fmt(val,2))+' '+sym+'</span>';
+  }
+  let html='<div class="row">'+T('x='+fmt(x,2))+'</div>';
+  html+='<div class="row">'+mark('x-2',u)+'　'+mark('x-9',v)+'</div>';
+  html+='<div class="row">'+T('(x-2)(x-9)='+fmt(pr,2))+' '+(pr>0?'<span class="ok">&gt; 0</span>':(Math.abs(pr)<0.005?'<span class="ng">= 0</span>':'<span class="ng">&lt; 0</span>'))+'</div>';
+  if(!m.defined(x)){
+    html+='<div class="row ng">'+m.name+'の左辺は、ここでは定義されません</div>';
+  }else{
+    const val=Math.log(pr)/Math.log(2);
+    html+='<div class="row">'+T(m.lhsTex+'='+fmt(val,3))+'</div>';
+    if(Math.abs(val-3)<0.005){
+      html+='<div class="row ok">右辺 3 と一致しました</div>';
+    }else{
+      html+='<div class="row" style="color:var(--muted)">右辺 3 より'+(val>3?'大きい':'小さい')+'</div>';
+    }
+  }
+  document.getElementById('live-calc').innerHTML=html;
+}
+
+function setupSlider(){
+  const sl=document.getElementById('x-slider'),vd=document.getElementById('x-value');
+  sl.addEventListener('input',function(){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    xCur=parseFloat(sl.value);vd.textContent=fmt(xCur,2);draw();
+  });
+}
+
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',function(){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const sl=document.getElementById('x-slider'),vd=document.getElementById('x-value');
+    const dur=4600;let t0=null;
+    function step(ts){
+      if(!t0)t0=ts;
+      const p=Math.min((ts-t0)/dur,1);
+      const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      xCur=XMIN+(XMAX-XMIN)*e;
+      sl.value=xCur;vd.textContent=fmt(xCur,2);draw();
+      if(p<1)animId=requestAnimationFrame(step);else animId=null;
+    }
+    animId=requestAnimationFrame(step);
+  });
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

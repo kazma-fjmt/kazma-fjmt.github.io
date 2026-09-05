@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>商の対数の証明</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0;
+  }
+  .formula-box .katex { font-size: 1.2rem; }
+  .formula-box.target { border-color: var(--c-purple); background: #faf8ff; }
+
+  .svg-container {
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    margin: .75rem 0; overflow: hidden; touch-action: none; position: relative;
+  }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .proof-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .9rem;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px;
+    padding: .75rem 1rem; margin: 0 0 .75rem; min-height: 7rem;
+  }
+  .proof-head { font-weight: 700; font-size: .85rem; padding: .3rem .4rem; border-radius: 6px; text-align: center; }
+  .proof-head.left { background: #eef4ff; color: var(--c-blue); }
+  .proof-head.right { background: #f4f0ff; color: var(--c-purple); }
+  .pcell { padding: .55rem .5rem; border-radius: 8px; overflow-x: auto; animation: fadeIn .3s ease; }
+  .pcell.current.left { background: #f0f5ff; }
+  .pcell.current.right { background: #f7f4ff; }
+  .pcell .plabel { color: var(--muted); font-size: .75rem; margin-bottom: .15rem; }
+  .pcell .katex { font-size: 1rem; }
+  @media (max-width: 560px) { .proof-grid { grid-template-columns: 1fr; } }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn {
+    appearance: none; border: 1px solid #d4dbeb; background: #fff;
+    color: var(--accent); font-size: 1rem; font-weight: 600;
+    padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer;
+    min-height: 48px; min-width: 110px; font-family: inherit; user-select: none;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn.case { min-width: 0; padding: .7rem 1rem; }
+  .btn.case.active { background: var(--c-purple); color: #fff; border-color: var(--c-purple); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.05rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 1rem; margin: .75rem 0;
+    background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem;
+  }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 3.5rem; text-align: center; }
+
+  .anim-btn-row { display: flex; justify-content: center; margin: .5rem 0; }
+  .case-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; margin: .75rem 0; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>商の対数の証明</h1>
+  <p class="subtitle">積の対数の証明をまねて、商の対数の公式を導きましょう。</p>
+
+  <h2>証明する等式</h2>
+  <p>すでに証明ずみの ① をまねて、② を証明します。使う道具は対数の定義と指数法則だけです。</p>
+  <div class="formula-box" id="f-known"></div>
+  <div class="formula-box target" id="f-target"></div>
+  <div class="note" id="f-note"></div>
+
+  <h2>並べて見る証明</h2>
+  <p>左が既知の ① の証明、右がそれをまねた ② の証明です。1 行ずつ見比べてください。</p>
+  <div class="proof-grid" id="proof">
+    <div class="proof-head left" id="head-l"></div>
+    <div class="proof-head right" id="head-r"></div>
+  </div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+
+  <h2>長さの引き算で確かめよう</h2>
+  <p>下のものさしは、目盛りの位置が対数の値になるように作ってあります。だから <span id="f-len"></span> はバーの長さそのものです。ここでは底を 2 にしていますが、どの底でも同じことが成り立ちます。</p>
+
+  <div class="slider-row">
+    <label><span id="lbl-M"></span> =</label>
+    <input type="range" id="m-slider" min="1" max="16" step="0.1" value="12">
+    <span class="slider-val" id="m-value">12.0</span>
+  </div>
+  <div class="slider-row">
+    <label><span id="lbl-N"></span> =</label>
+    <input type="range" id="n-slider" min="1" max="8" step="0.1" value="3">
+    <span class="slider-val" id="n-value">3.0</span>
+  </div>
+
+  <div class="anim-btn-row"><button class="btn primary" id="anim-btn">アニメーション</button></div>
+
+  <div class="svg-container" id="svg-wrap">
+    <svg id="ruler" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="drag-hint">青いバーの右端をドラッグすると <span id="h-M"></span>、緑のバーの右端をドラッグすると <span id="h-N"></span> が変わります。</p>
+
+  <div class="live-calc" id="live-calc"></div>
+
+  <div class="case-row">
+    <button class="btn case" id="case0"></button>
+    <button class="btn case" id="case1"></button>
+    <button class="btn case" id="case2"></button>
+  </div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600,H=300,LX0=110,LX1=496,UMIN=-3.5,UMAX=4.5;
+const YM=48,YN=84,YQ=120,BH=16,RY=190;
+function X(u){return LX0+(u-UMIN)/(UMAX-UMIN)*(LX1-LX0);}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function L2(v){return Math.log(v)/Math.log(2);}
+
+let mVal=12, nVal=3, animId=null, activeCase=-1;
+const CASES=[{m:8,n:2},{m:12,n:3},{m:2,n:8}];
+
+function fmt(v){return (Math.abs(v)<0.0005?0:v).toFixed(3);}
+function fmt1(v){return (Math.abs(v)<0.05?0:v).toFixed(1);}
+function fmtQ(v){return String(parseFloat(v.toPrecision(4)));}
+function tickTex(u){
+  if(u===0) return '1';
+  if(u>0) return String(Math.pow(2,u));
+  return '\\frac{1}{'+Math.pow(2,-u)+'}';
+}
+
+function init(){
+  document.getElementById('f-known').innerHTML='<b>①</b>　'+T('\\log_a MN = \\log_a M + \\log_a N');
+  document.getElementById('f-target').innerHTML='<b>②</b>　'+T('\\log_a \\dfrac{M}{N} = \\log_a M - \\log_a N');
+  document.getElementById('f-note').innerHTML=
+    '前提は '+T('a>0,\\; a \\ne 1,\\; M>0,\\; N>0')+' です。'+
+    '証明の出発点はいつも「対数を文字でおいて、指数の形に直す」ことです。';
+  document.getElementById('head-l').innerHTML='① 積の対数（既知）';
+  document.getElementById('head-r').innerHTML='② 商の対数（これを示す）';
+  document.getElementById('lbl-M').innerHTML=T('M');
+  document.getElementById('lbl-N').innerHTML=T('N');
+  document.getElementById('h-M').innerHTML=T('M');
+  document.getElementById('h-N').innerHTML=T('N');
+  document.getElementById('f-len').innerHTML=T('\\log_2 M');
+  for(let i=0;i<3;i++){
+    document.getElementById('case'+i).innerHTML=T('M='+CASES[i].m+',\\; N='+CASES[i].n);
+  }
+  initProof();
+  setupSliders();
+  setupCases();
+  setupAnimation();
+  setupDrag();
+  draw();
+}
+
+function initProof(){
+  const steps=[
+    {label:'Step 1: 対数を文字でおく',
+     l:'\\log_a M = p,\\quad \\log_a N = q',
+     r:'\\log_a M = p,\\quad \\log_a N = q'},
+    {label:'Step 2: 定義から指数の形に直す',
+     l:'M = a^p,\\quad N = a^q',
+     r:'M = a^p,\\quad N = a^q'},
+    {label:'Step 3: 辺々を掛ける／辺々を割る',
+     l:'MN = a^p \\cdot a^q',
+     r:'\\dfrac{M}{N} = \\dfrac{a^p}{a^q}'},
+    {label:'Step 4: 指数法則を使う',
+     l:'a^p \\cdot a^q = a^{p+q} \\;\\Rightarrow\\; MN = a^{p+q}',
+     r:'\\dfrac{a^p}{a^q} = a^{p-q} \\;\\Rightarrow\\; \\dfrac{M}{N} = a^{p-q}'},
+    {label:'Step 5: 対数の定義にもどす',
+     l:'\\log_a MN = p+q',
+     r:'\\log_a \\dfrac{M}{N} = p-q'},
+    {label:'Step 6: p, q をもとの対数に書きかえる',
+     l:'\\log_a MN = \\log_a M + \\log_a N',
+     r:'\\log_a \\dfrac{M}{N} = \\log_a M - \\log_a N'}
+  ];
+  let cur=0;
+  const grid=document.getElementById('proof');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  const headL=document.getElementById('head-l').outerHTML;
+  const headR=document.getElementById('head-r').outerHTML;
+  function render(){
+    let html=headL+headR;
+    for(let i=0;i<=cur;i++){
+      const c=i===cur?' current':'';
+      html+=`<div class="pcell left${c}"><div class="plabel">${steps[i].label}</div>${T(steps[i].l)}</div>`;
+      html+=`<div class="pcell right${c}"><div class="plabel">${steps[i].label}</div>${T(steps[i].r)}</div>`;
+    }
+    grid.innerHTML=html;
+    counter.textContent=`${cur+1} / ${steps.length}`;
+    prevBtn.disabled=cur===0;
+    nextBtn.disabled=cur===steps.length-1;
+  }
+  prevBtn.addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  nextBtn.addEventListener('click',()=>{if(cur<steps.length-1){cur++;render();}});
+  render();
+}
+
+function draw(){
+  const svg=document.getElementById('ruler');
+  const uM=L2(mVal), uN=L2(nVal), uQ=uM-uN;
+  const x0=X(0), xM=X(uM), xN=X(uN), xQ=X(uQ);
+  let s='';
+
+  s+=`<text x="14" y="22" font-size="12" fill="#999">バーの長さ ＝ 対数の値（右向きが正）</text>`;
+  s+=`<rect x="380" y="4" width="212" height="36" rx="9" fill="#faf8ff" stroke="var(--c-purple)" stroke-width="1.5"/>`;
+  s+=`<foreignObject x="384" y="6" width="204" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:var(--c-purple);font-weight:700;text-align:center;white-space:nowrap">${T('\\frac{M}{N} = '+fmtQ(mVal/nVal))}</div></foreignObject>`;
+
+  /* origin line at value 1 */
+  s+=`<line x1="${x0}" y1="36" x2="${x0}" y2="${RY+10}" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+
+  /* drop lines to the ruler (drawn first, bars painted over them) */
+  s+=`<line x1="${xM}" y1="${YM}" x2="${xM}" y2="${RY-8}" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.4"/>`;
+  s+=`<line x1="${xN}" y1="${YN}" x2="${xN}" y2="${RY-8}" stroke="var(--c-green)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.4"/>`;
+  s+=`<line x1="${xQ}" y1="${YQ}" x2="${xQ}" y2="${RY-8}" stroke="var(--c-purple)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.45"/>`;
+
+  /* row 1: log2 M */
+  s+=`<rect x="${x0}" y="${YM}" width="${Math.max(xM-x0,1)}" height="${BH}" rx="4" fill="var(--c-blue)" opacity="0.85"/>`;
+  /* row 2: log2 N */
+  s+=`<rect x="${x0}" y="${YN}" width="${Math.max(xN-x0,1)}" height="${BH}" rx="4" fill="var(--c-green)" opacity="0.85"/>`;
+  /* row 3: the subtraction */
+  s+=`<rect x="${x0}" y="${YQ}" width="${Math.max(xM-x0,1)}" height="${BH}" rx="4" fill="none" stroke="var(--c-blue)" stroke-width="1.5" opacity="0.7"/>`;
+  s+=`<rect x="${xQ}" y="${YQ}" width="${Math.max(xM-xQ,1)}" height="${BH}" rx="4" fill="var(--c-green)" opacity="0.4"/>`;
+  if(xQ>x0){
+    s+=`<rect x="${x0}" y="${YQ}" width="${xQ-x0}" height="${BH}" rx="4" fill="var(--c-purple)" opacity="0.85"/>`;
+  }else{
+    s+=`<rect x="${xQ}" y="${YQ}" width="${x0-xQ}" height="${BH}" rx="4" fill="var(--c-purple)" opacity="0.85"/>`;
+  }
+  /* arrow showing the removed length (omitted when N = 1, i.e. nothing is removed) */
+  if(xM-xQ>6){
+    s+=`<line x1="${xM}" y1="${YQ+BH+9}" x2="${xQ}" y2="${YQ+BH+9}" stroke="var(--c-green)" stroke-width="2"/>`;
+    s+=`<polygon points="${xQ},${YQ+BH+9} ${xQ+9},${YQ+BH+5} ${xQ+9},${YQ+BH+13}" fill="var(--c-green)"/>`;
+  }
+
+  /* drag handles at the bar ends */
+  s+=`<circle cx="${xM}" cy="${YM+BH/2}" r="9" fill="var(--c-blue)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${xN}" cy="${YN+BH/2}" r="9" fill="var(--c-green)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${xQ}" cy="${YQ+BH/2}" r="8" fill="var(--c-purple)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<circle cx="${xQ}" cy="${YQ+BH/2}" r="8" fill="none" stroke="var(--c-purple)" stroke-width="3"><animate attributeName="r" values="8;15;8" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0;0.8" dur="1.6s" repeatCount="indefinite"/></circle>`;
+
+  /* row labels on the left */
+  s+=`<foreignObject x="4" y="${YM-6}" width="100" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-blue);font-weight:600;text-align:right">${T('\\log_2 M')}</div></foreignObject>`;
+  s+=`<foreignObject x="4" y="${YN-6}" width="100" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-green);font-weight:600;text-align:right">${T('\\log_2 N')}</div></foreignObject>`;
+  s+=`<foreignObject x="4" y="${YQ-12}" width="100" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-purple);font-weight:600;text-align:right">${T('\\log_2 \\frac{M}{N}')}</div></foreignObject>`;
+
+  /* value chips at the bar ends */
+  s+=chip(xM+14,YM-3,'M = '+fmt1(mVal),'var(--c-blue)');
+  s+=chip(xN+14,YN-3,'N = '+fmt1(nVal),'var(--c-green)');
+
+  /* the ruler */
+  s+=`<line x1="${LX0-14}" y1="${RY}" x2="${LX1+16}" y2="${RY}" stroke="#555" stroke-width="2"/>`;
+  s+=`<polygon points="${LX1+16},${RY} ${LX1+6},${RY-5} ${LX1+6},${RY+5}" fill="#555"/>`;
+  for(let u=-3;u<=4;u++){
+    s+=`<line x1="${X(u)}" y1="${RY-8}" x2="${X(u)}" y2="${RY+8}" stroke="${u===0?'#555':'#999'}" stroke-width="${u===0?2.5:1.5}"/>`;
+    s+=`<rect x="${X(u)-22}" y="${RY+12}" width="44" height="40" fill="#fff" rx="4"/>`;
+    s+=`<foreignObject x="${X(u)-23}" y="${RY+12}" width="46" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#777;text-align:center;padding-top:5px">${T(tickTex(u))}</div></foreignObject>`;
+  }
+  /* markers on the ruler */
+  s+=tri(xM,'var(--c-blue)');
+  s+=tri(xN,'var(--c-green)');
+  s+=tri(xQ,'var(--c-purple)');
+
+  s+=`<text x="${W/2}" y="285" text-anchor="middle" font-size="12" fill="#999">青の長さから緑の長さを引くと、紫の長さ（商の対数）になります</text>`;
+
+  svg.innerHTML=s;
+
+  const uQ2=uM-uN;
+  document.getElementById('live-calc').innerHTML=
+    T('\\log_2 '+fmt1(mVal)+' - \\log_2 '+fmt1(nVal)+' = '+fmt(uM)+' - '+fmt(uN)+' = '+fmt(uQ2))+'<br>'+
+    T('\\log_2 \\dfrac{'+fmt1(mVal)+'}{'+fmt1(nVal)+'} = \\log_2 '+fmtQ(mVal/nVal)+' = '+fmt(L2(mVal/nVal)))+'<br>'+
+    '<span style="color:var(--c-purple);font-weight:600;">2 つの値はつねに一致します</span>';
+}
+
+function chip(x,y,latex,col){
+  const xx=clamp(x,2,W-86);
+  return `<rect x="${xx-4}" y="${y}" width="84" height="24" rx="5" fill="#fff" opacity="0.92"/>`+
+    `<foreignObject x="${xx}" y="${y}" width="80" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:${col};font-weight:700;white-space:nowrap;line-height:24px">${T(latex)}</div></foreignObject>`;
+}
+function tri(x,col){
+  return `<polygon points="${x},${RY-9} ${x-6},${RY-19} ${x+6},${RY-19}" fill="${col}"/>`;
+}
+
+function setupSliders(){
+  const ms=document.getElementById('m-slider'), mv=document.getElementById('m-value');
+  const ns=document.getElementById('n-slider'), nv=document.getElementById('n-value');
+  ms.addEventListener('input',()=>{mVal=parseFloat(ms.value);mv.textContent=fmt1(mVal);clearCase();draw();});
+  ns.addEventListener('input',()=>{nVal=parseFloat(ns.value);nv.textContent=fmt1(nVal);clearCase();draw();});
+}
+function sync(){
+  document.getElementById('m-slider').value=mVal;
+  document.getElementById('m-value').textContent=fmt1(mVal);
+  document.getElementById('n-slider').value=nVal;
+  document.getElementById('n-value').textContent=fmt1(nVal);
+}
+function clearCase(){
+  if(activeCase<0) return;
+  activeCase=-1;
+  for(let i=0;i<3;i++) document.getElementById('case'+i).classList.remove('active');
+}
+function tween(m1,n1,dur,after){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  const m0=mVal,n0=nVal;let t0=null;
+  function step(ts){
+    if(!t0) t0=ts;
+    const pr=Math.min((ts-t0)/dur,1);
+    const e=pr<0.5?2*pr*pr:1-Math.pow(-2*pr+2,2)/2;
+    mVal=m0+(m1-m0)*e; nVal=n0+(n1-n0)*e;
+    sync();draw();
+    if(pr<1) animId=requestAnimationFrame(step);
+    else{animId=null;mVal=m1;nVal=n1;sync();draw();if(after) after();}
+  }
+  animId=requestAnimationFrame(step);
+}
+function setupCases(){
+  for(let i=0;i<3;i++){
+    document.getElementById('case'+i).addEventListener('click',()=>{
+      clearCase();activeCase=i;
+      document.getElementById('case'+i).classList.add('active');
+      tween(CASES[i].m,CASES[i].n,700);
+    });
+  }
+}
+function setupAnimation(){
+  document.getElementById('anim-btn').addEventListener('click',()=>{
+    clearCase();
+    tween(16,1,1200,()=>{ tween(16,8,2600); });
+  });
+}
+function setupDrag(){
+  const svg=document.getElementById('ruler');
+  const wrap=document.getElementById('svg-wrap');
+  let drag=null;
+  function toSvg(cx,cy){
+    const rect=svg.getBoundingClientRect();
+    return {x:(cx-rect.left)/rect.width*W, y:(cy-rect.top)/rect.height*H};
+  }
+  function toVal(sx){
+    const u=clamp((sx-LX0)/(LX1-LX0)*(UMAX-UMIN)+UMIN,UMIN,UMAX);
+    return Math.pow(2,u);
+  }
+  function startDrag(cx,cy){
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    const p=toSvg(cx,cy);
+    if(p.y>=YM-14&&p.y<=YM+BH+14) drag='M';
+    else if(p.y>=YN-14&&p.y<=YN+BH+14) drag='N';
+    else drag=null;
+    if(drag){clearCase();moveDrag(cx,cy);}
+  }
+  function moveDrag(cx,cy){
+    if(!drag) return;
+    const p=toSvg(cx,cy);
+    const v=toVal(p.x);
+    if(drag==='M') mVal=clamp(Math.round(v*10)/10,1,16);
+    else nVal=clamp(Math.round(v*10)/10,1,8);
+    sync();draw();
+  }
+  function endDrag(){drag=null;}
+  wrap.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(drag){e.preventDefault();moveDrag(e.clientX,e.clientY);}});
+  window.addEventListener('mouseup',endDrag);
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];startDrag(t.clientX,t.clientY);},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(drag){e.preventDefault();const t=e.touches[0];moveDrag(t.clientX,t.clientY);}},{passive:false});
+  wrap.addEventListener('touchend',endDrag);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>

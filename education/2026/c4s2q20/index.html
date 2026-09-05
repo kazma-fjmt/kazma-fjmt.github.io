@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>常用対数の値</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #333; --muted: #888; --accent: #2a6df4;
+    --c-red: #d9534f; --c-blue: #2a6df4; --c-green: #28a745; --c-orange: #e67e22; --c-purple: #7b61ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .75rem; border-left: 4px solid var(--accent); padding-left: .6rem; }
+  p { margin: .75rem 0; }
+
+  .formula-box { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; text-align: center; overflow-x: auto; margin: .75rem 0; }
+  .formula-box .katex { font-size: 1.2rem; }
+
+  .svg-container { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; overflow: hidden; touch-action: none; position: relative; }
+  .svg-container svg { display: block; width: 100%; height: auto; }
+  /* Chrome sizes KaTeX's radical <svg> to 0 inside <foreignObject>; pin it to its box */
+  .svg-container foreignObject .hide-tail > svg { width: 100%; height: 100%; }
+
+  .walkthrough { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; margin: 0 0 .75rem; min-height: 6rem; overflow-x: auto; }
+  .step { padding: .75rem .25rem; border-bottom: 1px dashed #eee; animation: fadeIn .3s ease; }
+  .step:last-child { border-bottom: none; }
+  .step.current { background: #f0f5ff; border-radius: 8px; padding: .75rem; margin: .25rem -.5rem; border-bottom: none; }
+  .step .label { color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+  .step .formula-line { text-align: left; overflow-x: auto; }
+  .step .formula-line .katex { font-size: 1.05rem; }
+  .step.current .formula-line .katex { font-size: 1.15rem; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 0; }
+  .btn { appearance: none; border: 1px solid #d4dbeb; background: #fff; color: var(--accent); font-size: 1rem; font-weight: 600; padding: .85rem 1.2rem; border-radius: 10px; cursor: pointer; min-height: 48px; min-width: 110px; font-family: inherit; user-select: none; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .step-counter { color: var(--muted); font-size: .9rem; text-align: center; flex: 1; }
+
+  .note { background: #fffbe6; border: 1px solid #f5e6a3; border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; font-size: .95rem; }
+  .live-calc { background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: 1rem 1.25rem; margin: .75rem 0; text-align: center; overflow-x: auto; }
+  .live-calc .katex { font-size: 1.1rem; }
+  .drag-hint { text-align: center; color: var(--muted); font-size: .85rem; margin: .25rem 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: center; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .6rem 1rem; margin: .75rem 0; font-size: .9rem; }
+  .legend span.sw { display: inline-block; width: 26px; height: 10px; border-radius: 3px; vertical-align: middle; margin-right: .4rem; }
+
+  .slider-row { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; padding: .75rem 1.25rem; }
+  .slider-row label { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  .slider-row input[type="range"] { flex: 1; min-height: 44px; }
+  .slider-row .slider-val { font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 4.5rem; text-align: center; }
+  .anim-btn-row { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+
+  .table-wrap { position: relative; max-height: 320px; overflow: auto; background: #fff; border: 1px solid #e3e3e3; border-radius: 10px; margin: .75rem 0; -webkit-overflow-scrolling: touch; }
+  table.logtable { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  table.logtable th, table.logtable td { border: 1px solid #ececec; padding: .3rem .2rem; text-align: center; white-space: nowrap; }
+  table.logtable thead th { position: sticky; top: 0; background: #f4f7ff; z-index: 2; }
+  table.logtable td.rowhead, table.logtable th.rowhead { background: #f7f9ff; font-weight: 700; position: sticky; left: 0; z-index: 1; }
+  table.logtable td.sel { background: var(--c-orange); color: #fff; font-weight: 700; }
+  table.logtable td { cursor: pointer; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>常用対数の値</h1>
+  <p class="subtitle">10 の累乗を切り離すと、対数表に載っている値だけで答えが出ます。</p>
+
+  <h2>考える問題</h2>
+  <div class="formula-box" id="prob-box"></div>
+  <div class="note" id="note-1"></div>
+
+  <h2>動かして確かめよう</h2>
+  <p class="drag-hint">目盛りをドラッグするか、スライダーを動かしましょう。</p>
+  <div class="slider-row">
+    <label><span id="lbl-n"></span> =</label>
+    <input type="range" id="s-slider" min="0" max="3" step="0.0005" value="2.0792">
+    <span class="slider-val" id="n-value">120</span>
+  </div>
+  <div class="anim-btn-row">
+    <button class="btn primary" id="anim-btn">アニメーション</button>
+    <button class="btn" id="jump-btn">120 に合わせる</button>
+  </div>
+  <div class="svg-container" id="wrap">
+    <svg id="graph" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="legend">
+    <div><span class="sw" style="background:var(--c-blue)"></span>整数部分（10 の累乗ぶん）</div>
+    <div><span class="sw" style="background:var(--c-orange)"></span>小数部分（対数表の値）</div>
+  </div>
+  <div class="live-calc" id="live"></div>
+
+  <h2>常用対数表</h2>
+  <p>左端が上位 2 桁、上端が小数第 2 位の数字です。表の値をタップすると、その数に合わせて図が動きます。</p>
+  <div class="table-wrap" id="table-wrap"></div>
+
+  <h2>解法ウォークスルー</h2>
+  <div class="walkthrough" id="walkthrough"></div>
+  <div class="controls-row">
+    <button class="btn" id="prev" disabled>&larr; 戻る</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="btn primary" id="next">次へ &rarr;</button>
+  </div>
+  <div class="formula-box" id="answer-box"></div>
+</main>
+
+<script>
+function tex(l,el,dm){katex.render(l,el,{throwOnError:false,displayMode:!!dm});}
+function T(l){return katex.renderToString(l,{throwOnError:false});}
+
+const W=600, H=420, AX=60, BX=560, AXIS_Y=150, BAR_T=298, BAR_B=336;
+function SX(s){ return AX + s/3*(BX-AX); }
+function clamp(v,a,b){ return Math.min(b, Math.max(a, v)); }
+
+let aVal = 1.20, nVal = 2, animId = null, selCell = null;
+
+function sOf(){ return nVal + Math.log10(aVal); }
+function numOf(){ return aVal * Math.pow(10, nVal); }
+function numStr(){
+  const d = Math.max(0, 2 - nVal);
+  return numOf().toFixed(d);
+}
+
+function setFromS(s){
+  s = clamp(s, 0, 3);
+  let n = Math.floor(s);
+  let a = Math.pow(10, s - n);
+  a = Math.round(a * 100) / 100;
+  if(a >= 10){ a = 1.00; n += 1; }
+  if(n > 3){ n = 3; a = 1.00; }
+  if(n === 3 && a > 1){ n = 3; a = 1.00; }
+  aVal = a; nVal = n;
+  refresh();
+}
+function setAN(a, n){ aVal = a; nVal = n; refresh(); }
+
+function refresh(){
+  document.getElementById('s-slider').value = sOf();
+  document.getElementById('n-value').textContent = numStr();
+  draw(); updateTable(); updateLive();
+}
+
+function draw(){
+  const s = sOf(), n = nVal, m = Math.log10(aVal);
+  let sv = '';
+  sv+=`<text x="${AX}" y="58" font-size="12" fill="#aaa">10 の累乗の目盛り（対数目盛り）</text>`;
+  let lateLabels = '';
+  sv+=`<line x1="${AX}" y1="${AXIS_Y}" x2="${BX}" y2="${AXIS_Y}" stroke="#999" stroke-width="2"/>`;
+  for(let d=0; d<=3; d++){
+    const x = SX(d);
+    sv+=`<line x1="${x}" y1="${AXIS_Y-12}" x2="${x}" y2="${AXIS_Y+12}" stroke="#666" stroke-width="2.5"/>`;
+    lateLabels+=`<text x="${x}" y="${AXIS_Y+30}" text-anchor="middle" font-size="12" fill="#666" font-weight="600" stroke="#fff" stroke-width="3.5" paint-order="stroke">${Math.pow(10,d)}</text>`;
+    sv+=`<foreignObject x="${clamp(x-24, 2, W-50)}" y="82" width="48" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#666;text-align:center">${T('10^{'+d+'}')}</div></foreignObject>`;
+    if(d<3){
+      for(let k=2;k<=9;k++){
+        const xk = SX(d + Math.log10(k));
+        sv+=`<line x1="${xk}" y1="${AXIS_Y-6}" x2="${xk}" y2="${AXIS_Y+6}" stroke="#ccc" stroke-width="1.5"/>`;
+        if(k===2 || k===5) sv+=`<text x="${xk}" y="${AXIS_Y-11}" text-anchor="middle" font-size="10" fill="#c0c0c0">${k*Math.pow(10,d)}</text>`;
+      }
+    }
+  }
+  const px = SX(s);
+  sv+=`<line x1="${SX(n)}" y1="${AXIS_Y}" x2="${px}" y2="${AXIS_Y}" stroke="var(--c-orange)" stroke-width="5" opacity="0.55"/>`;
+  sv+=`<circle cx="${px}" cy="${AXIS_Y}" r="8" fill="var(--c-orange)" stroke="#fff" stroke-width="2.5"/>`;
+  sv+=`<circle cx="${px}" cy="${AXIS_Y}" r="8" fill="none" stroke="var(--c-orange)" stroke-width="2.5"><animate attributeName="r" values="8;16;8" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  sv+=`<text x="${clamp(px, AX+16, BX-16)}" y="${AXIS_Y-24}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--c-orange)" stroke="#fff" stroke-width="4" paint-order="stroke">${numStr()}</text>`;
+
+  /* bracket: distance from 10^n to N equals the fractional part */
+  const bx0 = SX(n), bx1 = px, by = 200;
+  sv+=`<line x1="${bx0}" y1="${AXIS_Y+14}" x2="${bx0}" y2="${by}" stroke="var(--c-blue)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+  sv+=`<line x1="${bx1}" y1="${AXIS_Y+14}" x2="${bx1}" y2="${by}" stroke="var(--c-orange)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+  sv+=`<line x1="${bx0}" y1="${by}" x2="${Math.max(bx1,bx0+2)}" y2="${by}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  sv+=`<line x1="${bx0}" y1="${by-6}" x2="${bx0}" y2="${by+6}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  sv+=`<line x1="${bx1}" y1="${by-6}" x2="${bx1}" y2="${by+6}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  const bl = clamp((bx0+bx1)/2 - 95, 2, W-194);
+  sv+=`<foreignObject x="${bl}" y="${by+8}" width="192" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:var(--c-orange);font-weight:700;text-align:center;white-space:nowrap">${T('\\log_{10} '+aVal.toFixed(2)+' = '+m.toFixed(4))}</div></foreignObject>`;
+
+  /* stacked bar: the common logarithm value on the same scale */
+  lateLabels+=`<text x="${AX}" y="278" font-size="12" fill="#aaa" stroke="#fff" stroke-width="3.5" paint-order="stroke">常用対数の値</text>`;
+  sv+=`<rect x="${SX(0)}" y="${BAR_T}" width="${SX(3)-SX(0)}" height="${BAR_B-BAR_T}" fill="#f2f2f2" stroke="#e0e0e0"/>`;
+  sv+=`<rect x="${SX(0)}" y="${BAR_T}" width="${SX(n)-SX(0)}" height="${BAR_B-BAR_T}" fill="var(--c-blue)" opacity="0.75"/>`;
+  sv+=`<rect x="${SX(n)}" y="${BAR_T}" width="${Math.max(px-SX(n), 1.5)}" height="${BAR_B-BAR_T}" fill="var(--c-orange)"/>`;
+  for(let d=0; d<=3; d++){
+    const x = SX(d);
+    sv+=`<line x1="${x}" y1="${BAR_T}" x2="${x}" y2="${BAR_B+8}" stroke="#bbb" stroke-width="1.5"/>`;
+    sv+=`<text x="${x}" y="${BAR_B+24}" text-anchor="middle" font-size="12" fill="#666" font-weight="600">${d}</text>`;
+  }
+  sv+=`<line x1="${px}" y1="252" x2="${px}" y2="${BAR_T}" stroke="var(--c-orange)" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
+  sv+=`<line x1="${px}" y1="${BAR_T-6}" x2="${px}" y2="${BAR_B+8}" stroke="var(--c-orange)" stroke-width="2.5"/>`;
+  const vl = clamp(px - 90, 2, W-184);
+  sv+=`<foreignObject x="${vl}" y="${BAR_B+26}" width="182" height="36"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;color:var(--c-orange);font-weight:700;text-align:center;white-space:nowrap">${T('\\log_{10} '+numStr()+' = '+s.toFixed(4))}</div></foreignObject>`;
+  /* the decade labels and the caption go on top, so no guide line is drawn across them */
+  sv += lateLabels;
+  document.getElementById('graph').innerHTML = sv;
+}
+
+function updateLive(){
+  const s = sOf(), m = Math.log10(aVal);
+  document.getElementById('live').innerHTML =
+    (nVal === 0
+      ? T(numStr()+'\\;\\text{ は表にそのまま載っている値です}') + '<br>' +
+        T('\\log_{10} '+numStr()+' = '+m.toFixed(4)) + '<br>'
+      : T(numStr()+' = '+aVal.toFixed(2)+' \\times 10^{'+nVal+'}') + '<br>' +
+        T('\\log_{10} '+numStr()+' = \\log_{10} '+aVal.toFixed(2)+' + \\log_{10} 10^{'+nVal+'}') + '<br>' +
+        T('= '+m.toFixed(4)+' + '+nVal+' = '+s.toFixed(4)) + '<br>') +
+    '<span style="color:var(--muted);font-size:.9rem">確かめ: ' + T('10^{'+s.toFixed(4)+'} = '+Math.pow(10,s).toFixed(2)) + '</span>';
+}
+
+function buildTable(){
+  let html = '<table class="logtable"><thead><tr><th class="rowhead">数</th>';
+  for(let c=0;c<10;c++) html += `<th>${c}</th>`;
+  html += '</tr></thead><tbody>';
+  for(let r=10;r<=99;r++){
+    html += `<tr><td class="rowhead">${(r/10).toFixed(1)}</td>`;
+    for(let c=0;c<10;c++){
+      const v = (r*10 + c)/100;
+      html += `<td data-a="${v.toFixed(2)}" id="cell-${r}-${c}">${Math.log10(v).toFixed(4).slice(1)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  const wrap = document.getElementById('table-wrap');
+  wrap.innerHTML = html;
+  wrap.addEventListener('click', e=>{
+    const td = e.target.closest('td[data-a]');
+    if(td) setAN(parseFloat(td.dataset.a), nVal);
+  });
+}
+
+function updateTable(){
+  const k = Math.round(aVal*100), r = Math.floor(k/10), c = k - r*10;
+  const cell = document.getElementById(`cell-${r}-${c}`);
+  if(selCell) selCell.classList.remove('sel');
+  if(cell){
+    cell.classList.add('sel');
+    selCell = cell;
+    const wrap = document.getElementById('table-wrap');
+    const top = cell.offsetTop, hh = wrap.clientHeight;
+    if(top < wrap.scrollTop + 30 || top > wrap.scrollTop + hh - 40){
+      wrap.scrollTop = Math.max(0, top - hh/2);
+    }
+  } else { selCell = null; }
+}
+
+const STEPS = [
+  {label:'Step 1: 10 の累乗を切り離す', formula:'120 = 1.20 \\times 10^{2}'},
+  {label:'Step 2: 積の対数は和になる', formula:'\\log_{10} 120 = \\log_{10} 1.20 + \\log_{10} 10^{2}'},
+  {label:'Step 3: 10 の累乗の対数は指数そのもの', formula:'\\log_{10} 10^{2} = 2'},
+  {label:'Step 4: 表から小数部分を読む', formula:'\\log_{10} 1.20 = 0.0792'},
+  {label:'Step 5: 足し合わせる', formula:'\\log_{10} 120 = 0.0792 + 2 = 2.0792'},
+  {label:'Step 6: 大きさを確かめる', formula:'10^{2} < 120 < 10^{3} \\quad\\Longrightarrow\\quad 2 < \\log_{10} 120 < 3'}
+];
+let curStep = 0;
+function renderSteps(){
+  let html = '';
+  for(let i=0;i<=curStep;i++){
+    html += `<div class="step ${i===curStep?'current':''}"><div class="label">${STEPS[i].label}</div><div class="formula-line">${T(STEPS[i].formula)}</div></div>`;
+  }
+  document.getElementById('walkthrough').innerHTML = html;
+  document.getElementById('counter').textContent = `${curStep+1} / ${STEPS.length}`;
+  document.getElementById('prev').disabled = curStep===0;
+  document.getElementById('next').disabled = curStep===STEPS.length-1;
+}
+
+function setupInput(){
+  const sl = document.getElementById('s-slider');
+  sl.addEventListener('input', ()=>{ setFromS(parseFloat(sl.value)); });
+
+  const wrap = document.getElementById('wrap'), svg = document.getElementById('graph');
+  let dragging = false;
+  function toS(cx){
+    const rect = svg.getBoundingClientRect();
+    const sx = (cx-rect.left)/rect.width*W;
+    return (sx-AX)/(BX-AX)*3;
+  }
+  wrap.addEventListener('mousedown', e=>{ e.preventDefault(); dragging=true; setFromS(toS(e.clientX)); });
+  window.addEventListener('mousemove', e=>{ if(dragging){ e.preventDefault(); setFromS(toS(e.clientX)); } });
+  window.addEventListener('mouseup', ()=>{ dragging=false; });
+  wrap.addEventListener('touchstart', e=>{ dragging=true; setFromS(toS(e.touches[0].clientX)); }, {passive:true});
+  wrap.addEventListener('touchmove', e=>{ if(dragging){ e.preventDefault(); setFromS(toS(e.touches[0].clientX)); } }, {passive:false});
+  wrap.addEventListener('touchend', ()=>{ dragging=false; });
+
+  document.getElementById('anim-btn').addEventListener('click', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    const dur = 5000; let t0 = null;
+    function step(ts){
+      if(!t0) t0 = ts;
+      const p = Math.min((ts-t0)/dur, 1);
+      setFromS(3*p);
+      animId = p < 1 ? requestAnimationFrame(step) : null;
+    }
+    animId = requestAnimationFrame(step);
+  });
+  document.getElementById('jump-btn').addEventListener('click', ()=>{
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    setAN(1.20, 2);
+  });
+}
+
+function init(){
+  tex('120 = 1.2 \\times 10^{2} \\;\\text{ から }\\; \\log_{10} 120 \\;\\text{ の値を求めよ}', document.getElementById('prob-box'), true);
+  document.getElementById('note-1').innerHTML =
+    '10 を底とする対数 ' + T('\\log_{10} M') + ' を常用対数といいます。表に載っているのは ' +
+    T('1.00 \\leq M < 10') + ' の範囲だけですが、' + T('M = a \\times 10^{n}') +
+    ' と書けば ' + T('\\log_{10} M = \\log_{10} a + n') + ' となり、どんな正の数でも値が求められます。';
+  document.getElementById('lbl-n').innerHTML = T('M');
+  tex('\\log_{10} 120 = 2.0792', document.getElementById('answer-box'), true);
+  document.getElementById('prev').addEventListener('click', ()=>{ if(curStep>0){ curStep--; renderSteps(); } });
+  document.getElementById('next').addEventListener('click', ()=>{ if(curStep<STEPS.length-1){ curStep++; renderSteps(); } });
+  buildTable(); setupInput(); renderSteps(); setAN(1.20, 2);
+}
+
+if(window.katex)init();else window.addEventListener("DOMContentLoaded",()=>{
+  if(window.katex)init();
+  else{const w=setInterval(()=>{if(window.katex){clearInterval(w);init();}},30);}
+});
+</script>
+</body>
+</html>
